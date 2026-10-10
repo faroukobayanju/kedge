@@ -6,7 +6,7 @@ Submit on X by quoting the official neatlogs post: team, name, project, public r
 
 | Judges check | Weight | Our evidence | Status |
 |---|---|---|---|
-| The agent handles a substantial task end to end | 30% | `kedge batch targets.json` over 10 real failing Dependabot/Renovate PRs ([targets.json](../targets.json)); summary line in [evidence.md](evidence.md#batch) | PENDING |
+| The agent handles a substantial task end to end | 30% | `kedge batch targets.json` over 10 failing dependency PRs (9 real Dependabot/Renovate + the kedge-demo target) ([targets.json](../targets.json)); summary line in [evidence.md](evidence.md#batch) | PENDING |
 | Agent improved (before/after run with numbers) | 25% | `--chaos --no-guard` vs `--chaos` on the same PR, table in [evidence.md](evidence.md#before-and-after) | PENDING |
 | neatlogs use | 25% | Trace links or screenshots, one per run in [evidence.md](evidence.md#neatlogs) | PENDING |
 | Entire use | 25% | `Entire-Checkpoint:` trailers on agent commits + `entire checkpoint explain` output in [evidence.md](evidence.md#entire) | PENDING |

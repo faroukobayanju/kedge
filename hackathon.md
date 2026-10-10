@@ -38,7 +38,7 @@ Pending: the builders choose which names and handles to publish.
 
 - **Done (Sat evening, Person B):**
   - **Task 5 check:** read the neatlogs OpenAPI spec and CLI docs. `traces list --json` returns `{data: {page, traces: [...]}}`, and each trace has `traceId` but no `url`. Reported to A; fix landed in `423216a`. The trace URL format is still pending a first live trace.
-  - **Task 9:** `targets.json` lists 10 failing Dependabot/Renovate PRs with CI under 3 minutes. Forked to Haikeysgit with Actions enabled, and A added as a collaborator. 8 of 10 have a green main branch. `w3hc/xszc` is build-only, so `tests_regressed` can't fire on it.
+  - **Task 9:** `targets.json` lists 10 failing Dependabot/Renovate PRs with CI under 3 minutes. Forked to Haikeysgit with Actions enabled, and A added as a collaborator. 7 of the 9 have a green main branch. `w3hc/xszc` was dropped later because it's build-only, and A added `kedge-demo` as the demo target, so the list is still 10.
   - **Tasks 13, 14, 17:** `trim_log` (CI log trimmed to error context), `wait_ci` plus the CI line in the report, and the voyage chart in `report.html` (PR #2). 45 tests passed on Linux with `PYTHONDONTWRITEBYTECODE=1`.
   - **Found on Linux:** without that variable, 3 loop tests failed. pytest wrote `__pycache__` into the fixture repo, and that counted as an `out_of_plan` edit. Fixed by A (test-run artifacts are now excluded and bytecode is off).
   - cfo.ai account created. The model is pending batch numbers.
