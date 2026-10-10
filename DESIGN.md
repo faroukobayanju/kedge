@@ -219,7 +219,7 @@ A night-match broadcast palette: cold navy neutrals and three saturated signal c
 ### Named Rules
 **The Three Decisions Rule.** Green means confirmed, yellow means under review or needing attention, red means disallowed. Each colour keeps that one meaning on every surface. Never use green or red as decoration, and never use yellow for success.
 
-**The Ink-On-Signal Rule.** Green and yellow fills carry their dark ink (`green-ink`, `yellow-ink`). Red fills carry white. White on `red` measures about 3.5:1, so it only passes as large or bold display text. Set red labels at title size or larger, or use `red-soft` text on navy.
+**The Ink-On-Signal Rule.** Green and yellow fills carry their dark ink (`green-ink`, `yellow-ink`). Red fills carry white, and any red fill that carries text uses `red-fill` (#c42419, 5.8:1 with white) rather than `red` (#ff3b30, 3.5:1). The brighter `red` is reserved for marks without text: the hatch, the stop bar, frame borders, and team bars.
 
 **The No-Fourth-Signal Rule.** There is no brand accent apart from the three decisions. Emphasis that isn't a decision uses white over `ink-2`/`ink-3`, or size.
 
@@ -278,7 +278,7 @@ Squared and loud, like broadcast lower-third plates.
 - **Unavailable:** stays in place at 45% opacity with a label that says what is missing ("Trace not recorded"). It is not removed.
 
 ### Chips / Tags
-- **No guard:** red fill, white condensed 12px uppercase.
+- **No guard:** `red-fill`, white condensed 12px uppercase.
 - **Storm:** transparent with a 1px yellow border and yellow text (attention, not a verdict).
 - **CI link:** 1px `line` border with a state cell. Text turns `red-soft` when CI failed.
 
@@ -333,7 +333,7 @@ Score = tests passed over the larger of the step's test total and the base branc
 
 ### Don't:
 - **Don't** use yellow for success or green for decoration; a fourth accent colour breaks the decision language.
-- **Don't** put white text on a red fill below title size; use `red-soft` text on navy for small red copy.
+- **Don't** put text on `red` (#ff3b30); text-bearing red fills use `red-fill` (#c42419).
 - **Don't** add drop shadows or glows apart from the live pulse.
 - **Don't** show a score with a shrunken denominator, or call a run green when it lost tests.
 - **Don't** render the nautical glyphs (anchor, sailboat, wave, compass, money bag, chequered flag, lying face) as emoji in the UI; icons are inline 2px-stroke SVG symbols that use `currentColor`.
