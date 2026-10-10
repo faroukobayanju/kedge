@@ -1,0 +1,7 @@
+[
+  {
+    "pr_url": "https://github.com/faroukobayanju/kedge-demo/pull/1",
+    "test_cmd": "uv run --no-project --with-requirements requirements.txt --with pytest python -m pytest -q -p no:cacheprovider",
+    "fork": "faroukobayanju/kedge-demo"
+  }
+]

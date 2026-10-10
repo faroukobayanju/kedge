@@ -10,7 +10,7 @@ import uuid
 from kedge import gitgh, report, supervisor, trace, worker
 
 PROMPT = ("You are fixing a failing dependency-bump PR.\nPR: {title}\nPlan: {hyp}\n"
-          "Only edit files matching: {allowed}\nFailing CI log tail:\n{log}\n"
+          "Only edit files matching: {allowed}\nFailure output:\n{log}\n"
           "Do ONE step toward making the tests pass, then stop. Never delete or skip tests.")
 
 
@@ -25,8 +25,12 @@ def run_one(pr_url, test_cmd, fork, *, guard, chaos, budget, max_rollbacks, max_
     cwd = os.path.join(tempfile.gettempdir(), "kedge", run_id)
     pr = gitgh.clone_pr(pr_url, cwd)
     agent = "claude-code" if os.environ.get("KEDGE_WORKER") == "claude" else "opencode"
+    gitgh.exclude(cwd, [".entire/", ".opencode/", ".claude/"])
     gitgh.sh(["entire", "enable", "--agent", agent], cwd, check=False)
-    log_tail = gitgh.ci_log(pr_url, pr["head"], pr["repo"])
+    log_tail = "Local test output:\n" + gitgh.test_output(cwd, test_cmd)
+    ci = gitgh.ci_log(pr_url, pr["head"], pr["repo"])
+    if ci.strip() and not ci.startswith("(no failed CI"):
+        log_tail += "\n\nCI log:\n" + ci
     pr_files = gitgh.sh(["git", "diff", "--name-only", f"origin/{pr['base']}...HEAD"], cwd, check=False).split()
     plan = worker.make_plan(pr["title"], log_tail, pr_files, cwd)
     json.dump(plan, open(os.path.join(run_dir, "plan.json"), "w"))

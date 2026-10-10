@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 import subprocess
 
 from kedge.checks import parse_summary
@@ -33,6 +34,18 @@ def commit(cwd, msg) -> tuple[str, str]:
 def reset(cwd, sha) -> None:
     sh(["git", "reset", "-q", "--hard", sha], cwd)
     sh(["git", "clean", "-qfd"], cwd)
+
+
+def exclude(cwd, patterns) -> None:
+    """Hide tool config (Entire, OpenCode) from drift checks; ignored files also survive `git clean -fd`."""
+    with open(os.path.join(cwd, ".git", "info", "exclude"), "a") as f:
+        f.write("\n".join(patterns) + "\n")
+
+
+def test_output(cwd, test_cmd, max_lines=200) -> str:
+    """Local failing-test output: ground truth for the planner, even when CI is unavailable."""
+    p = subprocess.run(test_cmd, cwd=cwd, shell=True, capture_output=True, text=True, timeout=600)
+    return "\n".join((p.stdout + p.stderr).splitlines()[-max_lines:])
 
 
 def run_tests(cwd, test_cmd) -> tuple[bool, int, int]:

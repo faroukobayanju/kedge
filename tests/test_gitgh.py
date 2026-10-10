@@ -41,3 +41,20 @@ def test_commit_returns_sha(tmp_path):
 def test_run_tests_parses(tmp_path):
     ok, passed, total = gitgh.run_tests(str(tmp_path), "echo '2 passed, 1 failed'; exit 1")
     assert (ok, passed, total) == (False, 2, 3)
+
+
+def test_excluded_paths_ignored_and_survive_reset(tmp_path):
+    cwd = _repo(tmp_path)
+    good = gitgh.head(cwd)
+    gitgh.exclude(cwd, [".entire/", ".opencode/"])
+    (tmp_path / ".entire").mkdir()
+    (tmp_path / ".entire" / "settings.json").write_text("{}")
+    assert gitgh.changed_files(cwd) == []
+    (tmp_path / "junk.py").write_text("x\n")
+    gitgh.reset(cwd, good)
+    assert (tmp_path / ".entire" / "settings.json").exists() and not (tmp_path / "junk.py").exists()
+
+
+def test_test_output_returns_tail(tmp_path):
+    out = gitgh.test_output(str(tmp_path), "echo line1; echo 'E   ImportError: boom'; exit 1")
+    assert "ImportError: boom" in out
