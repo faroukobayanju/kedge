@@ -1,5 +1,8 @@
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+const inline = (t) => esc(t).replace(/`([^`]+)`/g, "<code>$1</code>");
+const checkpoint = (r) => [...(r.steps || [])].reverse().map((s) => s.entire_checkpoint).find(Boolean) || null;
 const icon = (id) => `<svg aria-hidden="true"><use href="#i-${id}"/></svg>`;
 
 const DRIFT = {
@@ -22,20 +25,25 @@ let compare = false;
 let picks = [];
 let lastFingerprint = "";
 
+const lastGood = (r) => [...(r.steps || [])].reverse().find((s) => s.tests_total >= 0 && !s.rolled_back);
+// the denominator is the base branch's test count when tests went missing: 2/5, never a flattering 2/2
 const score = (r) => {
-  const last = [...(r.steps || [])].reverse().find((s) => s.tests_total >= 0 && !s.rolled_back);
-  return last ? `${last.tests_passed}/${last.tests_total}` : "–";
+  const last = lastGood(r);
+  if (!last) return "–";
+  const denom = r.base_total > last.tests_total ? r.base_total : last.tests_total;
+  return `${last.tests_passed}/${denom}`;
 };
 const prRef = (url) => {
   const m = /github\.com\/([^/]+\/[^/]+)\/pull\/(\d+)/.exec(url || "");
   return m ? `${m[1]}#${m[2]}` : url || "";
 };
 const lost = (r) => {
-  const last = [...(r.steps || [])].reverse().find((s) => s.tests_total >= 0 && !s.rolled_back);
+  const last = lastGood(r);
   return last && r.base_total > 0 && last.tests_total < r.base_total ? r.base_total - last.tests_total : 0;
 };
 const lostNote = (r) => (lost(r) ? `<span class="lost">${lost(r)} of ${r.base_total} tests missing vs base branch</span>` : "");
-const st = (r) => STATUS[r.status] || { cls: "open", text: r.status, cell: "open" };
+const st = (r) => (r.status === "green" && lost(r) ? { cls: "open", text: "Shipped short", cell: "struck" }
+  : STATUS[r.status] || { cls: "open", text: r.status, cell: "open" });
 const traceId = (t) => (t && t !== "unavailable" ? t : null);
 
 /* ---------- replay strip: one drawing, three scales ---------- */
@@ -44,7 +52,9 @@ function miniStrip(r) {
   const w = 260, h = 14, n = Math.max(steps.length, 1), gap = 3, cw = (w - gap * (n - 1)) / n;
   const cells = steps.map((s, i) => {
     const x = i * (cw + gap);
-    const fill = s.drift && s.drift !== "over_budget" ? "url(#hatch)" : s.false_claim ? "var(--yellow)" : "var(--green)";
+    const ok = r.status === "green" && !lost(r);
+    const fill = s.drift && s.drift !== "over_budget" ? "url(#hatch)" : s.false_claim ? "var(--yellow)"
+      : ok ? "var(--green)" : "var(--ink-3)";
     const op = s.drift ? 1 : s.tests_total > 0 ? 0.35 + 0.65 * (s.tests_passed / s.tests_total) : 0.35;
     return `<rect x="${x}" y="2" width="${cw}" height="${h - 4}" rx="2" fill="${fill}" opacity="${op}"/>`;
   });
@@ -65,7 +75,8 @@ function frames(r) {
       return;
     }
     const drift = s.drift && s.drift !== "over_budget";
-    const pct = s.tests_total > 0 ? Math.round((100 * s.tests_passed) / s.tests_total) : 0;
+    const denom = Math.max(s.tests_total, r.base_total || 0);
+    const pct = denom > 0 ? Math.round((100 * s.tests_passed) / denom) : 0;
     const files = (s.files_changed || []).length;
     const act = s.action === "worker_error" ? "Agent call failed or timed out" :
       files ? `Edited ${files} file${files > 1 ? "s" : ""}: ${esc(s.files_changed.slice(0, 2).join(", "))}` : "No files changed";
@@ -73,19 +84,23 @@ function frames(r) {
       ? `<svg class="haul" viewBox="0 0 200 30" preserveAspectRatio="none" aria-hidden="true">
            <path d="M196 2 C 196 26, 6 26, 6 4" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="5 4"/>
            <path d="M1 10 6 2l5 8" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-         <div class="haul-label">Hauled back to ${esc((s.checkpoint_sha || "").slice(0, 7))}</div>`
+         <div class="haul-label">Hauled back to <span class="sha">${esc((s.checkpoint_sha || "").slice(0, 7))}</span></div>`
       : "";
     out.push(`<li class="frame${drift ? " drift" : ""}" style="--i:${i}">
       ${drift ? `<div class="check">${icon("monitor")}Check: ${esc(DRIFT[s.drift]?.call.split(": ")[1] || s.drift)}</div>` : ""}
       ${s.false_claim ? `<div class="check lie">${icon("monitor")}Claim rejected</div>` : ""}
       <div class="f-no">Step ${s.step}</div>
-      <div class="f-score">${s.tests_total >= 0 ? `${s.tests_passed}/${s.tests_total}` : "?"}</div>
+      <div class="f-score">${s.tests_total >= 0 ? `${s.tests_passed}/${Math.max(s.tests_total, r.base_total || 0)}` : "?"}</div>
       <div class="f-act">${act}</div>
       <div class="f-bar"><i style="width:${drift ? 100 : pct}%"></i></div>
       ${back}</li>`);
     if (!drift) lastGood = s.step;
   });
-  if (r.status === "green") {
+  if (r.status === "green" && lost(r)) {
+    out.push(`<li class="frame drift short"><div class="check">${icon("monitor")}${lost(r)} tests gone</div>
+      <div class="f-no">Full time</div><div class="f-score">Shipped</div>
+      <div class="f-act">PR opened without ${plural(lost(r), "test")}. Nobody checked.</div></li>`);
+  } else if (r.status === "green") {
     out.push(`<li class="frame whistle"><div class="f-no">Full time</div><div class="f-score">Green</div>
       <div class="f-act">${r.draft_pr ? "Draft PR opened" : "All tests pass"}</div></li>`);
   } else if (r.status === "running") {
@@ -115,31 +130,37 @@ function rulings(r) {
 function planPanel(r) {
   const p = r.plan || {};
   return `<section class="plan" aria-label="Plan">
-    <p>${esc(p.hypothesis || "No plan recorded.")}</p>
+    <p>${p.hypothesis ? inline(p.hypothesis) : "No plan recorded."}</p>
     <h3>Allowed files</h3><div class="files">${(p.allowed_files || []).map((f) => `<code>${esc(f)}</code>`).join("")}</div>
-    ${(p.steps || []).length ? `<h3>Steps</h3><ol>${p.steps.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>` : ""}
+    ${(p.steps || []).length ? `<h3>Steps</h3><ol>${p.steps.map((x) => `<li>${inline(x)}</li>`).join("")}</ol>` : ""}
   </section>`;
 }
 
 function actions(r) {
   const t = traceId(r.trace);
+  const cp = checkpoint(r);
+  const off = (ic, label) => `<span class="btn ghost" aria-disabled="true">${icon(ic)}${label}</span>`;
   return `<div class="actions">
     ${r.draft_pr ? `<a class="btn primary" href="${esc(r.draft_pr)}" target="_blank" rel="noopener">${icon("pr")}Open draft PR</a>` : ""}
-    ${t ? `<button class="btn ghost" type="button" data-copy="${esc(t)}">${icon("trace")}Trace ${esc(t.slice(0, 8))}</button>` : ""}
-    <a class="btn ghost" href="${esc(r.pr_url)}" target="_blank" rel="noopener">${icon("flag")}Source PR</a>
+    ${t ? `<button class="btn ghost" type="button" data-copy="${esc(t)}" title="Copy neatlogs trace ID">${icon("trace")}neatlogs ${esc(t.slice(0, 8))}</button>` : off("trace", "Trace not recorded")}
+    ${cp ? `<button class="btn ghost" type="button" data-copy="${esc(cp)}" title="Copy Entire checkpoint ID">${icon("anchor")}Entire ${esc(cp.slice(0, 8))}</button>` : off("anchor", "No checkpoint")}
   </div>`;
 }
 
 function stageRun(r) {
   const s = st(r);
+  const n = (k, w) => `<b>${k}</b> ${w}${k === 1 ? "" : "s"}`;
   const facts = [
-    `<b>${r.steps.filter((x) => x.action !== "replan").length}</b> steps`,
-    `<b>${r.drifts}</b> checks`,
-    `<b>${r.rollbacks}</b> rollbacks`,
-    r.false_claims ? `<b>${r.false_claims}</b> false claims` : "",
+    n(r.steps.filter((x) => x.action !== "replan").length, "step"),
+    n(r.drifts, "check"),
+    n(r.rollbacks, "rollback"),
+    r.false_claims ? n(r.false_claims, "false claim") : "",
     `<b>$${Number(r.cost_usd_total || 0).toFixed(2)}</b>`,
-    r.ci_status ? `CI <b>${esc(r.ci_status)}</b>` : "",
   ].filter(Boolean).join(" · ");
+  const ci = r.ci_status && r.ci_status !== "not run"
+    ? `<a class="ci ${r.ci_status === "passed" ? "pass" : "fail"}" href="${esc((r.draft_pr || r.pr_url) + "/checks")}" target="_blank" rel="noopener"
+         title="${r.ci_status === "passed" ? "GitHub CI passed on the draft PR" : "GitHub CI did not pass on the draft PR. Kedge's verdict comes from running the tests itself."}">
+         <span class="cell ${r.ci_status === "passed" ? "green" : "struck"}"></span>GitHub CI ${esc(r.ci_status)}</a>` : "";
   $("#stage").innerHTML = `<article class="match">
     <header class="match-head">
       <div class="match-no" aria-hidden="true">${String(r.no).padStart(2, "0")}</div>
@@ -149,9 +170,10 @@ function stageRun(r) {
           ${r.guard === false ? '<span class="tag warn">No guard</span>' : ""}
           ${r.storm ? `<span class="tag storm">Storm: ${esc(r.storm)}</span>` : ""}</p>
       </div>
-      <div class="scoreline"><span class="num">${score(r)}</span><span class="lbl">Tests passing</span>${lostNote(r)}</div>
+      <div class="scoreline ${lost(r) ? "short" : r.status === "green" ? "won" : ""}"><span class="num">${score(r)}</span><span class="lbl">Tests passing</span>${lostNote(r)}</div>
     </header>
-    <div class="ruling-bar"><span class="verdict ${s.cls}">${s.text}</span><span class="facts">${facts}</span>${actions(r)}</div>
+    <div class="ruling-bar"><span class="verdict ${s.cls}">${s.text}</span><span class="facts">${facts}</span>${ci}${actions(r)}</div>
+    ${checkpoint(r) && r.entire_explain && !r.entire_explain.startsWith("(no") ? `<details class="checkpoint"><summary>Entire checkpoint ${esc(checkpoint(r).slice(0, 8))}: the agent's session behind the final commit</summary><pre>${esc(r.entire_explain)}</pre></details>` : ""}
     <section class="replay-wrap" aria-label="Replay">
       <div class="section-h"><h2>Replay</h2><span>Every step Kedge checked, left to right</span></div>
       ${frames(r)}
@@ -160,7 +182,6 @@ function stageRun(r) {
       <section><div class="section-h"><h2>Rulings</h2></div>${rulings(r)}</section>
       <section><div class="section-h"><h2>Plan</h2></div>${planPanel(r)}</section>
     </div>
-    ${r.entire_explain && !r.entire_explain.startsWith("(no") ? `<details class="checkpoint"><summary>Entire checkpoint</summary><pre>${esc(r.entire_explain)}</pre></details>` : ""}
   </article>`;
 }
 
@@ -171,11 +192,11 @@ function stageCompare() {
   }
   const side = (r, label) => {
     const s = st(r);
-    return `<section class="side"><h2>${label}</h2>
+    return `<section class="side ${r.guard === false ? "home" : "away"}"><h2>${label}</h2>
       <div class="sub">No. ${String(r.no).padStart(2, "0")} · ${esc(prRef(r.pr_url))}${r.storm ? ` · storm ${esc(r.storm)}` : ""}</div>
       <div class="big">${score(r)}</div>${lostNote(r)}<span class="verdict ${s.cls}">${s.text}</span>
-      <div class="stats"><span><b>${r.drifts}</b> checks caught · <b>${r.rollbacks}</b> rollbacks</span>
-        <span><b>${r.false_claims}</b> false claims</span><span><b>$${Number(r.cost_usd_total || 0).toFixed(2)}</b> spent</span></div>
+      <div class="stats"><span><b>${r.drifts}</b> ${r.drifts === 1 ? "check" : "checks"} caught · ${plural(r.rollbacks, "rollback")}</span>
+        <span>${plural(r.false_claims, "false claim")}</span><span><b>$${Number(r.cost_usd_total || 0).toFixed(2)}</b> spent</span></div>
       ${miniStrip(r)}</section>`;
   };
   const [a, b] = picks.map((id) => runs.find((r) => r.run_id === id)).filter(Boolean);

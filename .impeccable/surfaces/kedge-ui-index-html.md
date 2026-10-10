@@ -23,6 +23,6 @@ STORY: Judge sees the run list as a fixture list with scorelines, opens one, wat
 
 FIRST VIEWPORT: Top bar: Kedge wordmark, batch scoreline (green/total, drifts caught, false claims, $), Compare toggle. Left rail: fixture list (No. sequence headline per run, PR repo#n, status cell, small replay strip at thumbnail scale). Main: selected run header (No., PR title, final scoreline large), the replay strip full width as the signature move, then ruling cards for each check, then evidence row (draft PR, trace, checkpoint, plan). Primary action: open draft PR.
 
-FORM: VAR Review Room, my top-ranked grounded candidate (rank 1 of 7), shown as the pick card; seed key ff2e4c23. Raises kept: fixed state cells, one sequence number per run, colour-independent drift marks, one replay drawing at three scales.
+FORM: VAR Review Room. The concept roll (seed key ff2e4c23, mode operate) assigned Transit Diagram, candidate 3 of my 7 grounded directions; VAR Review Room was my rank-1 candidate, shown as the pick card, and the user chose it on the decision page. Raises kept from declined challengers: fixed state cells, one sequence number per run, colour-independent drift marks, one replay drawing at three scales.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
