@@ -51,7 +51,8 @@ def run_one(pr_url, test_cmd, fork, *, setup_cmd=None, guard, storm, budget, max
     pr_files = gitgh.sh(["git", "diff", "--name-only", f"origin/{pr['base']}...HEAD"], cwd, check=False).split()
     plan = worker.make_plan(pr["title"], log_tail, pr_files, cwd)
     json.dump(plan, open(os.path.join(run_dir, "plan.json"), "w"))
-    json.dump({"pr_url": pr_url, "test_cmd": test_cmd, "fork": fork, "cwd": cwd, "pr": pr, "log_tail": log_tail},
+    json.dump({"pr_url": pr_url, "test_cmd": test_cmd, "fork": fork, "cwd": cwd, "pr": pr, "log_tail": log_tail,
+               "kw": dict(guard=guard, storm=storm, budget=budget, max_rollbacks=max_rollbacks, max_steps=max_steps)},
               open(os.path.join(run_dir, "meta.json"), "w"))
     kw = dict(guard=guard, storm=storm, budget=budget, max_rollbacks=max_rollbacks, max_steps=max_steps)
     return _drive(run_id, run_dir, cwd, pr, plan, pr_url, test_cmd, fork, log_tail, None, **kw)
@@ -108,7 +109,7 @@ def resume(run_id) -> dict:
     m = json.load(open(os.path.join(run_dir, "meta.json")))
     state = json.load(open(os.path.join(run_dir, "state.json")))
     return _drive(run_id, run_dir, m["cwd"], m["pr"], state["plan"], m["pr_url"], m["test_cmd"], m["fork"],
-                  m["log_tail"], state, **DEFAULTS)
+                  m["log_tail"], state, **m.get("kw", DEFAULTS))  # keep --no-guard/--storm
 
 
 def _summary(res):
