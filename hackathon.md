@@ -36,6 +36,14 @@ Pending: the builders choose which names and handles to publish.
 
 - **Fixed: Entire capture of headless agent runs.** Root cause, from OpenCode's log: OpenCode **v2** rejects Entire's generated plugin with `failed to load plugin … Plugin must export a default definition with an id and an effect or setup function`, so Entire never sees the session. Fix: pin **OpenCode v1.18.35** (`scripts/setup-opencode.sh`, which installs into `.tools/`). Entire's commit hook runs `opencode export`, so v1 must come first on PATH, with its own XDG data dirs. Kedge's CLI now sets this up (`worker.use_pinned_opencode`). Verified in a scratch repo: a headless `opencode run` plus `git commit` produced the trailer `Entire-Checkpoint: 01M4JS2RDRFJW0SDNYSZYK0Z8H`, and `entire checkpoint explain HEAD` shows the intent, the write tool call, the file and 44.4k tokens. 37 tests pass.
 
+- **Done (Sat evening, Person B):**
+  - **Task 5 check:** read the neatlogs OpenAPI spec and CLI docs. `traces list --json` returns `{data: {page, traces: [...]}}`, and each trace has `traceId` but no `url`. Reported to A; fix landed in `423216a`. The trace URL format is still pending a first live trace.
+  - **Task 9:** `targets.json` lists 10 failing Dependabot/Renovate PRs with CI under 3 minutes. Forked to Haikeysgit with Actions enabled, and A added as a collaborator. 8 of 10 have a green main branch. `w3hc/xszc` is build-only, so `tests_regressed` can't fire on it.
+  - **Tasks 13, 14, 17:** `trim_log` (CI log trimmed to error context), `wait_ci` plus the CI line in the report, and the voyage chart in `report.html` (PR #2). 45 tests passed on Linux with `PYTHONDONTWRITEBYTECODE=1`.
+  - **Found on Linux:** without that variable, 3 loop tests failed. pytest wrote `__pycache__` into the fixture repo, and that counted as an `out_of_plan` edit. Fixed by A (test-run artifacts are now excluded and bytecode is off).
+  - cfo.ai account created. The model is pending batch numbers.
+  - Judge docs scaffolded: `docs/evidence.md`, `docs/submission-checklist.md`, README "For judges". All evidence is marked PENDING until real runs exist.
+
 ## Demo
 Pending.
 

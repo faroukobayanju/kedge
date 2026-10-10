@@ -8,6 +8,18 @@ Kedge is a supervisor for unattended coding agents. It runs a headless coding ag
 
 Built for [neatHack](https://neatlogs.com/hackathon), Oct 10–12, 2026. Uses neatlogs (tracing), Entire (checkpoints) and cfo.ai (business plan).
 
+## For judges
+
+| What | Where |
+|---|---|
+| Demo video | PENDING |
+| Before/after numbers | [docs/evidence.md](docs/evidence.md#before-and-after) |
+| A run that drifted and recovered (neatlogs trace) | [docs/evidence.md](docs/evidence.md#recovery) |
+| Entire checkpoint output | [docs/evidence.md](docs/evidence.md#entire) |
+| cfo.ai business plan | [docs/business-plan.pdf](docs/business-plan.pdf) (PENDING) |
+| #neatHack posts | [docs/evidence.md](docs/evidence.md#building-in-public) |
+| Every judging item mapped to proof | [docs/submission-checklist.md](docs/submission-checklist.md) |
+
 ## Status
 
 Work in progress. See [`hackathon.md`](hackathon.md) for the build log.
