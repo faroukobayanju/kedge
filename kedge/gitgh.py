@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import re
 import subprocess
 
 from kedge.checks import parse_summary
@@ -68,7 +69,7 @@ def ci_log(pr_url, head_branch, repo) -> str:
     if not runs:
         return "(no failed CI run found)"
     log = sh(["gh", "run", "view", str(runs[0]["databaseId"]), "-R", repo, "--log-failed"], check=False)
-    return "\n".join(log.splitlines()[-200:])
+    return trim_log(log)
 
 
 def open_draft_pr(cwd, fork, branch, title, body_path) -> str:
@@ -77,3 +78,14 @@ def open_draft_pr(cwd, fork, branch, title, body_path) -> str:
     base = json.loads(sh(["gh", "repo", "view", fork, "--json", "defaultBranchRef"]))["defaultBranchRef"]["name"]
     return sh(["gh", "pr", "create", "-R", fork, "--head", branch, "--base", base,
                "--draft", "--title", f"[kedge] {title}", "--body-file", body_path]).strip()
+
+
+ERR = re.compile(r"error|fail|traceback|exception|assert|cannot find|not found|undefined", re.I)
+
+
+def trim_log(log, max_lines=60) -> str:
+    lines = log.splitlines()
+    keep = sorted({j for i, l in enumerate(lines) if ERR.search(l)
+                   for j in range(max(0, i - 2), min(len(lines), i + 3))})
+    picked = [lines[i] for i in keep] or lines
+    return "\n".join(picked[-max_lines:])

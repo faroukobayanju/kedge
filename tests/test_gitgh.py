@@ -58,3 +58,16 @@ def test_excluded_paths_ignored_and_survive_reset(tmp_path):
 def test_test_output_returns_tail(tmp_path):
     out = gitgh.test_output(str(tmp_path), "echo line1; echo 'E   ImportError: boom'; exit 1")
     assert "ImportError: boom" in out
+
+
+def test_trim_log_keeps_errors_with_context():
+    log = "\n".join([f"noise {i}" for i in range(500)] + ["setup ok", "a", "E   ImportError: no module mathx", "b", "c"]
+                    + [f"noise2 {i}" for i in range(500)] + ["FAILED tests/test_a.py::test_1"])
+    out = gitgh.trim_log(log).splitlines()
+    assert "E   ImportError: no module mathx" in out and "FAILED tests/test_a.py::test_1" in out
+    assert "a" in out and "b" in out and "noise 0" not in out and len(out) <= 60
+
+
+def test_trim_log_fallback_tail():
+    out = gitgh.trim_log("\n".join(f"line {i}" for i in range(100))).splitlines()
+    assert out[-1] == "line 99" and len(out) == 60
