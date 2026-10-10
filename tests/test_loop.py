@@ -38,13 +38,13 @@ def test_green_in_one_step(tmp_path):
 
 
 def test_chaos_caught_and_recovered(tmp_path):
-    r = loop(fixture(tmp_path), TEST_CMD, PLAN, "fix it", worker=fixing_worker, chaos=True)
+    r = loop(fixture(tmp_path), TEST_CMD, PLAN, "fix it", worker=fixing_worker, storm="delete-test")
     assert r["steps"][0]["drift"] == "tests_regressed" and r["steps"][0]["rolled_back"]
     assert r["status"] == "green" and r["steps"][-1]["tests_total"] == 3
 
 
 def test_chaos_without_guard_ships_fewer_tests(tmp_path):
-    r = loop(fixture(tmp_path), TEST_CMD, PLAN, "fix it", worker=fixing_worker, chaos=True, guard=False)
+    r = loop(fixture(tmp_path), TEST_CMD, PLAN, "fix it", worker=fixing_worker, storm="delete-test", guard=False)
     assert r["status"] == "green" and r["steps"][-1]["tests_total"] < 3
 
 
@@ -100,3 +100,13 @@ def test_true_claim_not_flagged(tmp_path):
         return {**fixing_worker(p, c), "text": "Fixed, all tests pass."}
     r = loop(fixture(tmp_path), TEST_CMD, PLAN, "fix it", worker=honest)
     assert r["steps"][0]["false_claim"] is False and r["status"] == "green"
+
+
+def test_storm_stray_edit_is_out_of_plan(tmp_path):
+    r = loop(fixture(tmp_path), TEST_CMD, PLAN, "fix it", worker=fixing_worker, storm="stray-edit")
+    assert r["steps"][0]["drift"] == "out_of_plan" and r["status"] == "green"
+
+
+def test_storm_skip_test_is_regression(tmp_path):
+    r = loop(fixture(tmp_path), TEST_CMD, PLAN, "fix it", worker=fixing_worker, storm="skip-test")
+    assert r["steps"][0]["drift"] == "tests_regressed" and r["status"] == "green"

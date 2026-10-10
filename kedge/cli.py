@@ -7,13 +7,13 @@ import tempfile
 import time
 import uuid
 
-from kedge import gitgh, report, shiplog, supervisor, trace, worker
+from kedge import chaos, gitgh, report, shiplog, supervisor, trace, worker
 
 PROMPT = ("You are fixing a failing dependency-bump PR.\nPR: {title}\nPlan: {hyp}\n"
           "Only edit files matching: {allowed}\nFailure output:\n{log}\n"
           "Do ONE step toward making the tests pass, then stop. Never delete or skip tests.")
 LESSONS = os.path.abspath(os.path.join("runs", "lessons.jsonl"))
-DEFAULTS = dict(guard=True, chaos=False, budget=0.50, max_rollbacks=3, max_steps=6)
+DEFAULTS = dict(guard=True, storm=None, budget=0.50, max_rollbacks=3, max_steps=6)
 
 
 def load_dotenv(path=".env") -> None:
@@ -30,7 +30,7 @@ def _targets(path="targets.json"):
     return {t["pr_url"]: t for t in json.load(open(path))} if os.path.exists(path) else {}
 
 
-def run_one(pr_url, test_cmd, fork, *, setup_cmd=None, guard, chaos, budget, max_rollbacks, max_steps) -> dict:
+def run_one(pr_url, test_cmd, fork, *, setup_cmd=None, guard, storm, budget, max_rollbacks, max_steps) -> dict:
     run_id = time.strftime("%Y%m%d-%H%M") + "-" + uuid.uuid4().hex[:4]
     run_dir = os.path.abspath(os.path.join("runs", run_id))
     os.makedirs(run_dir)
@@ -53,13 +53,13 @@ def run_one(pr_url, test_cmd, fork, *, setup_cmd=None, guard, chaos, budget, max
     json.dump(plan, open(os.path.join(run_dir, "plan.json"), "w"))
     json.dump({"pr_url": pr_url, "test_cmd": test_cmd, "fork": fork, "cwd": cwd, "pr": pr, "log_tail": log_tail},
               open(os.path.join(run_dir, "meta.json"), "w"))
-    kw = dict(guard=guard, chaos=chaos, budget=budget, max_rollbacks=max_rollbacks, max_steps=max_steps)
+    kw = dict(guard=guard, storm=storm, budget=budget, max_rollbacks=max_rollbacks, max_steps=max_steps)
     return _drive(run_id, run_dir, cwd, pr, plan, pr_url, test_cmd, fork, log_tail, None, **kw)
 
 
 def _drive(run_id, run_dir, cwd, pr, plan, pr_url, test_cmd, fork, log_tail, state, **kw) -> dict:
     trace.start(run_id, {"pr_url": pr_url, "guard": "on" if kw["guard"] else "off",
-                         "chaos": "on" if kw["chaos"] else "off"})
+                         "storm": kw["storm"] or "off"})
     print(shiplog.header(pr["head"], kw["budget"]), file=sys.stderr, flush=True)
     steps_f = open(os.path.join(run_dir, "steps.jsonl"), "a")
 
@@ -112,7 +112,7 @@ def main(argv=None) -> int:
     for name in ("run", "batch"):
         p = sub.add_parser(name)
         p.add_argument("target")
-        p.add_argument("--chaos", action="store_true")
+        p.add_argument("--storm", choices=chaos.MODES)
         p.add_argument("--no-guard", action="store_true")
         p.add_argument("--budget", type=float, default=0.50)
         p.add_argument("--max-rollbacks", type=int, default=3)
@@ -128,7 +128,7 @@ def main(argv=None) -> int:
         res = resume(a.run_id)
         print(json.dumps(_summary(res)))
         return 0 if res["status"] in ("green", "already_green") else 1
-    kw = dict(guard=not a.no_guard, chaos=a.chaos, budget=a.budget, max_rollbacks=a.max_rollbacks,
+    kw = dict(guard=not a.no_guard, storm=a.storm, budget=a.budget, max_rollbacks=a.max_rollbacks,
               max_steps=a.max_steps)
     if a.cmd == "run":
         if not re.fullmatch(r"https://github\.com/[^/]+/[^/]+/pull/\d+", a.target):

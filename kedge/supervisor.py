@@ -46,7 +46,7 @@ def _finish(status, s):
             "rollbacks": sum(1 for x in s["steps"] if x.get("rolled_back")), "notes": s["notes"]}
 
 
-def loop(cwd, test_cmd, plan, prompt_base, *, worker, replanner=None, guard=True, chaos=False, budget=0.5,
+def loop(cwd, test_cmd, plan, prompt_base, *, worker, replanner=None, guard=True, storm=None, budget=0.5,
          max_rollbacks=3, max_steps=6, log=lambda rec: None, run_id="test", state=None, save=lambda s: None) -> dict:
     s = state
     if not s:
@@ -79,8 +79,8 @@ def loop(cwd, test_cmd, plan, prompt_base, *, worker, replanner=None, guard=True
                   + "".join(f"\nRECOVERY NOTE: {n}" for n in s["notes"][-3:]))
         r = worker(prompt, cwd)
         s["cost"] += r["cost_usd"]
-        if chaos and s["step"] == 1:
-            chaos_mod.delete_one_test(cwd)
+        if storm and s["step"] == 1:
+            chaos_mod.storm(storm, cwd)
         ok, passed, total = gitgh.run_tests(cwd, test_cmd)
         files, h = gitgh.changed_files(cwd), gitgh.diff_hash(cwd)
         d = checks.drift(passed=passed, total=total, best_passed=s["best"], baseline_total=s["baseline_total"],

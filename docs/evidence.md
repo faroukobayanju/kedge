@@ -7,8 +7,8 @@ Every number here comes from a real run. Nothing is filled in by hand. `PENDING`
 Same PR, same storm. Before: guard off. After: Kedge on.
 
 ```bash
-uv run kedge run <pr> --chaos --no-guard   # BEFORE
-uv run kedge run <pr> --chaos              # AFTER
+uv run kedge run <pr> --storm delete-test --no-guard   # BEFORE
+uv run kedge run <pr> --storm delete-test              # AFTER
 ```
 
 | Metric | Before (no guard) | After (Kedge) |
