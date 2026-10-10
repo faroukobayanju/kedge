@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kedge · Catch your coding agent cheating</title>
+<meta name="description" content="Kedge supervises unattended coding agents. When the agent deletes a test, edits off-plan or lies about passing, Kedge rewinds it to the last good commit and makes it try again.">
+<link rel="stylesheet" href="fonts2.css">
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="site.css">
+</head>
+<body class="site">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z" fill="currentColor"/></symbol>
+  <symbol id="i-pr" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="18" r="2.2"/><path d="M6 8.2v7.6M18 15.8V10a3 3 0 0 0-3-3h-4M13 4.5 10.5 7l2.5 2.5"/></g></symbol>
+  <symbol id="i-gh" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.3-1.1.6-1.3-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.7 1a9.4 9.4 0 0 1 5 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .4.3.7.9.7 1.8V21c0 .3.2.6.7.5A10 10 0 0 0 12 2z"/></symbol>
+</svg>
+
+<header class="lab">
+  <a class="label" href="#top" aria-label="Kedge"><span class="label-name">Kedge</span><span class="label-sub">built for #neatHack</span></a>
+  <nav class="site-nav" aria-label="Page">
+    <a href="#how">How it works</a>
+    <a href="#proof">Proof</a>
+    <a class="pill" href="https://github.com/faroukobayanju/kedge" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-gh"/></svg>GitHub</a>
+  </nav>
+</header>
+
+<main class="lightbox" id="top">
+  <section class="hero">
+    <h1>Your coding agent cheats.<br>Kedge <span class="circled">catches<svg viewBox="0 0 300 110" preserveAspectRatio="none" aria-hidden="true"><path d="M60 8 C 230 0, 300 30, 290 58 C 280 96, 120 106, 30 88 C -12 78, 0 30, 70 14"/></svg></span> it.</h1>
+    <p class="lede">Agents left alone delete the failing test, wander off the plan, then report “all tests pass.” Kedge supervises every step, strikes the cheat, rewinds the agent to its last good commit and makes it try again.</p>
+    <div class="hero-actions">
+      <button class="play" type="button" data-play><svg aria-hidden="true"><use href="#i-play"/></svg><span>Replay the race</span></button>
+      <a class="text-link" href="https://github.com/faroukobayanju/kedge#readme" target="_blank" rel="noopener">Read how it works on GitHub</a>
+    </div>
+    <p class="race-caption">Same Dependabot PR, same sabotage: the agent deletes a test file. Top strip runs unguarded. Bottom strip runs under Kedge. Real runs, replayed.</p>
+  </section>
+
+  <section class="bench" id="bench" aria-label="The race"></section>
+  <div class="loupe" id="loupe" aria-hidden="true"><div class="loupe-in" id="loupeIn"></div></div>
+
+  <section class="how" id="how" aria-labelledby="how-h">
+    <h2 id="how-h">How the catch works</h2>
+    <ol class="how-strip">
+      <li><span class="cell-num">1</span><h3>Plan</h3><p>Kedge reads the failing tests and the base branch, and writes down which files a fix may touch and how many tests must survive.</p></li>
+      <li><span class="cell-num">2</span><h3>Check every step</h3><p>After each agent step it re-runs the tests, diffs the files and compares the count against the base branch. No model judges the agent; the tests do.</p></li>
+      <li class="hit"><span class="cell-num">3</span><h3>Strike and rewind</h3><p>A deleted test, an off-plan edit, a repeat attempt or a false “fixed” is struck. Kedge resets to the last good commit and hands the agent a note on what it did wrong.</p></li>
+      <li class="keep"><span class="cell-num">4</span><h3>Keep</h3><p>Only a green result that holds on a second run becomes a draft PR, with every step traced and every agent commit checkpointed.</p></li>
+    </ol>
+  </section>
+
+  <section class="proof" id="proof" aria-labelledby="proof-h">
+    <h2 id="proof-h">Proof, not claims</h2>
+    <div class="proof-sheet">
+      <article class="print on proof-print">
+        <div class="img"><span class="big">2/5 → 5/5</span><span class="word">Kept</span>
+          <span class="why">Unguarded, the agent shipped a “green” PR with 3 of 5 tests deleted. Under Kedge the same sabotage was struck at step 1, rewound and fixed for real.</span></div>
+        <div class="cap"><span class="who">kedge-demo#1 · packaging 21.3 → 24.2 · --storm delete-test</span></div>
+      </article>
+      <ul class="facts">
+        <li><b>4</b> real failing Dependabot / Renovate PRs turned green unattended, in a batch over open-source repos.</li>
+        <li><b>$0</b> model spend: the agent ran on a free OpenCode model. Every token is still counted.</li>
+        <li><b>6</b> real bugs found and fixed by running Kedge on real PRs, including one in the agent stack it supervises: OpenCode v2 silently drops Entire's plugin.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="tools" aria-labelledby="tools-h">
+    <h2 id="tools-h">Built on</h2>
+    <div class="slips">
+      <div class="slip-card"><h3>neatlogs</h3><p>One trace per run, one span per supervisor step, with the drift, files, tests and tokens on every span. Read back by the CLI into each report.</p></div>
+      <div class="slip-card"><h3>Entire</h3><p>Every agent commit carries an Entire checkpoint: the prompt, the tool calls and the files behind the change, published with the run's branch.</p></div>
+      <div class="slip-card"><h3>cfo.ai</h3><p>Priced per green PR, planned in cfo.ai: model cost, gross margin, runway, in base and upside scenarios.</p></div>
+    </div>
+  </section>
+
+  <footer class="end">
+    <p class="mark-note big">Kedge doesn't trust what the agent says. It checks.</p>
+    <a class="play" href="https://github.com/faroukobayanju/kedge" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-gh"/></svg><span>Open the repo</span></a>
+    <p class="fine">Built in 48 hours for #neatHack. Every frame on this page is replayed from a real Kedge run.</p>
+  </footer>
+</main>
+
+<template id="emptyTpl"><div class="empty"><p class="mark-note big">Loading the film…</p></div></template>
+<script src="data.js"></script>
+<script src="app.js" type="module"></script>
+</body>
+</html>

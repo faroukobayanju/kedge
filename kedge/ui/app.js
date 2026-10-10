@@ -15,10 +15,11 @@ const DRIFT = {
   over_budget: ["out of budget", "The run hit its spend cap."],
 };
 
+const CFG = window.KEDGE || {};
 let runs = [];
 let current = null;
-let race = false;
-let picks = [];
+let race = !!CFG.race;
+let picks = CFG.race ? [...CFG.race] : [];
 let playToken = 0;
 let fingerprint = "";
 
@@ -334,10 +335,10 @@ function openSlip(btn) {
 function renderBench() {
   const bench = $("#bench");
   closeSlip();
-  if (!runs.length) { bench.replaceChildren($("#emptyTpl").content.cloneNode(true)); $("#envelope").innerHTML = ""; return; }
+  if (!runs.length) { bench.replaceChildren($("#emptyTpl").content.cloneNode(true)); if ($("#envelope")) $("#envelope").innerHTML = ""; return; }
   if (race) {
     const [a, b] = picks.map((id) => runs.find((r) => r.run_id === id));
-    $("#envelope").innerHTML = "";
+    if ($("#envelope")) $("#envelope").innerHTML = "";
     if (!a || !b) {
       bench.innerHTML = `<div class="empty"><p class="mark-note big">Pick two sheets to race.</p>
         <p>The same PR with <code>--no-guard</code> and with Kedge makes the point.</p></div>`;
@@ -358,6 +359,7 @@ function renderBench() {
 }
 
 function renderEnvelope(r) {
+  if (!$("#envelope")) return;
   const items = [];
   (r.steps || []).forEach((s) => {
     if (s.drift) {
@@ -385,6 +387,7 @@ function renderEnvelope(r) {
 }
 
 function renderSheets() {
+  if (!$("#sheetList")) return;
   $("#sheetList").innerHTML = runs.map((r) => {
     const v = verdict(r), pick = picks.indexOf(r.run_id);
     const film = framesOf(r).map((f) => `<i class="${f.kind === "step" && f.s.drift ? "x" : f.kind === "step" && f.s.false_claim ? "y" : f.kind === "final" && (f.v.key === "keep") ? "k" : f.kind === "final" && f.v.key === "short" ? "x" : ""}"></i>`).join("");
@@ -401,6 +404,7 @@ function renderTally() {
   const done = runs.filter((r) => r.status !== "running");
   const kept = runs.filter((r) => verdict(r).key === "keep").length;
   const cheats = runs.reduce((n, r) => n + r.drifts, 0), lies = runs.reduce((n, r) => n + r.false_claims, 0);
+  if (!$("#tally")) return;
   $("#tally").innerHTML = `<b>${kept}/${done.length}</b> kept · <b>${cheats}</b> cheats caught · <b>${lies}</b> lies overruled`;
   $("#labelSub").textContent = race ? "race" : current ? `sheet No. ${no(current)}` : "contact sheet";
 }
@@ -409,7 +413,7 @@ function show(autoplay) { renderTally(); renderSheets(); renderBench(); if (runs
 
 async function load(first) {
   try {
-    const data = await (await fetch("/api/runs", { cache: "no-store" })).json();
+    const data = CFG.data || await (await fetch("/api/runs", { cache: "no-store" })).json();
     [...data].sort((a, b) => a.run_id.localeCompare(b.run_id)).forEach((r, i) => (r.no = i + 1));
     const fp = JSON.stringify(data.map((r) => [r.run_id, r.status, r.steps.length]));
     if (fp === fingerprint) return;
@@ -423,17 +427,18 @@ async function load(first) {
 }
 
 /* ---------- interaction ---------- */
-const sheetsOpen = (open) => { $("#sheets").hidden = !open; $("#sheetsBtn").setAttribute("aria-expanded", String(open)); };
-$("#playBtn").addEventListener("click", () => { renderBench(); play(false); });
-$("#sheetsBtn").addEventListener("click", () => sheetsOpen($("#sheets").hidden));
-$("#raceBtn").addEventListener("click", (e) => {
+const on = (sel, ev, fn) => document.querySelectorAll(sel).forEach((el) => el.addEventListener(ev, fn));
+const sheetsOpen = (open) => { if (!$("#sheets")) return; $("#sheets").hidden = !open; $("#sheetsBtn").setAttribute("aria-expanded", String(open)); };
+on("#playBtn, [data-play]", "click", () => { renderBench(); play(false); });
+on("#sheetsBtn", "click", () => sheetsOpen($("#sheets").hidden));
+on("#raceBtn", "click", (e) => {
   race = !race;
   e.currentTarget.setAttribute("aria-pressed", String(race));
   $("#raceHint").hidden = !race;
   if (race && picks.length < 2) sheetsOpen(true);
   show(true);
 });
-$("#sheetList").addEventListener("click", (e) => {
+on("#sheetList", "click", (e) => {
   const b = e.target.closest(".sheet");
   if (!b) return;
   const id = b.dataset.id;
@@ -464,7 +469,7 @@ document.addEventListener("keydown", (e) => {
 /* the loupe: a magnified copy of the frame under the cursor */
 const loupe = $("#loupe"), loupeIn = $("#loupeIn");
 let loupeFrame = null;
-document.addEventListener("pointermove", (e) => {
+if (loupe) document.addEventListener("pointermove", (e) => {
   const fr = e.target.closest?.(".frame");
   if (!fr || e.pointerType !== "mouse") { loupe.classList.remove("on"); loupeFrame = null; return; }
   if (fr !== loupeFrame) {
@@ -481,5 +486,9 @@ document.addEventListener("pointermove", (e) => {
   loupe.classList.add("on");
 });
 
-load(true);
-setInterval(() => load(false), 5000);
+// embedded pages wait until the bench scrolls into view, so the race plays when someone is looking
+if (CFG.data && "IntersectionObserver" in window) {
+  const io = new IntersectionObserver((es) => { if (es.some((x) => x.isIntersecting)) { io.disconnect(); load(true); } }, { threshold: .35 });
+  io.observe($("#bench"));
+} else load(true);
+if (!CFG.data) setInterval(() => load(false), 5000);
