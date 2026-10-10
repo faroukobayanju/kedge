@@ -1,4 +1,5 @@
 import json
+import re
 import os
 import subprocess
 
@@ -71,7 +72,22 @@ SCHEMA = '{"hypothesis": str, "allowed_files": [glob, ...], "steps": [1-4 short 
 DEFAULT_STEPS = ["make the failing tests pass"]
 
 
-def _plan_call(prompt, cwd) -> dict:
+SRC = re.compile(r"([\w./-]+\.(?:py|js|jsx|ts|tsx|mjs|cjs|go|rs|rb|java))\b")
+TESTLIKE = re.compile(r"(^|/)(tests?|__tests__|spec)/|(^|/)test_[^/]*$|_test\.|\.(test|spec)\.")
+
+
+def files_in_log(log) -> list[str]:
+    """Non-test source files the failure output points at: the fallback plan may edit these."""
+    out = []
+    for f in SRC.findall(log or ""):
+        f = f.lstrip("./")
+        if "site-packages" in f or "node_modules" in f or f.startswith("/") or TESTLIKE.search(f) or f in out:
+            continue
+        out.append(f)
+    return out[:10]
+
+
+def _plan_call(prompt, cwd, extra_allowed=()) -> dict:
     try:
         d = _agent(prompt, cwd, edit=False)
     except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError):
@@ -82,18 +98,20 @@ def _plan_call(prompt, cwd) -> dict:
         return {"hypothesis": p["hypothesis"], "allowed_files": p["allowed_files"],
                 "steps": p.get("steps") or DEFAULT_STEPS, "cost_usd": cost}
     except (ValueError, KeyError):
-        return {"hypothesis": "unknown", "allowed_files": FALLBACK_ALLOWED, "steps": DEFAULT_STEPS, "cost_usd": cost}
+        return {"hypothesis": "unknown", "allowed_files": FALLBACK_ALLOWED + list(extra_allowed),
+                "steps": DEFAULT_STEPS, "cost_usd": cost}
 
 
 def make_plan(title, ci_log, files, cwd) -> dict:
     return _plan_call(
         f"A dependency-bump PR fails its tests. Reply with ONLY a JSON object {SCHEMA}. "
         "allowed_files lists the minimal file globs a fix may touch.\n"
-        f"PR title: {title}\nFiles in PR: {files}\nFailure output:\n{ci_log[-4000:]}", cwd)
+        f"PR title: {title}\nFiles in PR: {files}\nFailure output:\n{ci_log[-4000:]}", cwd,
+        extra_allowed=files_in_log(ci_log))
 
 
 def replan(plan, notes, cwd) -> dict:
     return _plan_call(
         f"The previous plan failed twice. Reply with ONLY a JSON object {SCHEMA} for a DIFFERENT approach.\n"
         f"Previous plan: {json.dumps({k: plan.get(k) for k in ('hypothesis', 'allowed_files', 'steps')})}\n"
-        f"What went wrong: {notes[-3:]}", cwd)
+        f"What went wrong: {notes[-3:]}", cwd, extra_allowed=plan.get("allowed_files", []))

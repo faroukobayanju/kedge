@@ -90,3 +90,22 @@ def test_replan_includes_notes(monkeypatch):
     monkeypatch.setattr(worker, "_agent", fake)
     p = worker.replan({"hypothesis": "h1", "allowed_files": ["a"], "steps": ["s"]}, ["Do not delete tests."], "/tmp")
     assert p["hypothesis"] == "h2" and "Do not delete tests." in seen["prompt"] and "h1" in seen["prompt"]
+
+
+def test_files_in_log_skips_tests_and_libs():
+    log = ('tests/test_versions.py:1: in <module>\n    from versions import is_legacy\n'
+           'versions.py:2: in <module>\nE   ImportError\n  File "/usr/lib/python3.12/site-packages/x.py"\n'
+           'src/app/util.ts:3:1 error\n')
+    assert worker.files_in_log(log) == ["versions.py", "src/app/util.ts"]
+
+
+def test_fallback_plan_allows_files_from_log(monkeypatch):
+    monkeypatch.setattr(worker, "_agent", lambda p, c, edit: {"result": "", "total_cost_usd": 0.0})
+    p = worker.make_plan("bump", "versions.py:2: in <module>", [], "/tmp")
+    assert "versions.py" in p["allowed_files"] and p["hypothesis"] == "unknown"
+
+
+def test_failed_replan_keeps_previous_files(monkeypatch):
+    monkeypatch.setattr(worker, "_agent", lambda p, c, edit: {"result": "", "total_cost_usd": 0.0})
+    p = worker.replan({"hypothesis": "h", "allowed_files": ["versions.py"], "steps": []}, [], "/tmp")
+    assert "versions.py" in p["allowed_files"]
