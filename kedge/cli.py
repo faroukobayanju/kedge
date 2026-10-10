@@ -14,6 +14,16 @@ PROMPT = ("You are fixing a failing dependency-bump PR.\nPR: {title}\nPlan: {hyp
           "Do ONE step toward making the tests pass, then stop. Never delete or skip tests.")
 
 
+def load_dotenv(path=".env") -> None:
+    """Minimal .env loader (KEY=VALUE lines); real environment variables win."""
+    if not os.path.exists(path):
+        return
+    for line in open(path):
+        k, sep, v = line.strip().partition("=")
+        if sep and k and not k.startswith("#"):
+            os.environ.setdefault(k.strip(), v.strip())
+
+
 def _targets(path="targets.json"):
     return {t["pr_url"]: t for t in json.load(open(path))} if os.path.exists(path) else {}
 
@@ -79,6 +89,7 @@ def main(argv=None) -> int:
         p.add_argument("--max-rollbacks", type=int, default=3)
         p.add_argument("--max-steps", type=int, default=6)
     a = ap.parse_args(argv)
+    load_dotenv()
     worker.use_pinned_opencode(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     kw = dict(guard=not a.no_guard, chaos=a.chaos, budget=a.budget, max_rollbacks=a.max_rollbacks,
               max_steps=a.max_steps)
