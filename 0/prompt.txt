@@ -1,0 +1,2 @@
+From Haikeys: starting cfo.ai now. One number needed: tokens for the 2 green batch runs (kedge-demo, cimd). For each, total input tokens and total output tokens (or just total tokens if that's all steps.jsonl has), plus how many steps it took. That gives me tokens_per_green to price Sonnet 5.5 ($2/$10 per M) + Haiku 4.5 ($1/$5 per M).
+Entire: installed on my machine and git hooks enabled in my clone. My next coding session runs in a fresh Claude Code session in the kedge repo so commits get Entire-Checkpoint trailers.
