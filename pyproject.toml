@@ -1,0 +1,27 @@
+[project]
+name = "kedge"
+version = "0.1.0"
+description = "Supervisor that pulls unattended coding agents back on course"
+readme = "README.md"
+authors = [
+    { name = "Farouk", email = "obayanjuadeshina571@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "neatlogs>=1.4.26",
+]
+
+[project.scripts]
+kedge = "kedge.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.11.3,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
+
+[tool.uv.build-backend]
+module-root = ""
