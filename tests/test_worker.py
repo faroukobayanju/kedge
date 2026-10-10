@@ -1,0 +1,57 @@
+import json
+import subprocess
+
+from kedge import worker
+
+JSONL = "\n".join(json.dumps(e) for e in [
+    {"type": "step_start", "part": {}},
+    {"type": "step_finish", "part": {"cost": 0.01, "tokens": {"input": 10, "output": 5}}},
+    {"type": "text", "part": {"text": "first"}},
+    {"type": "step_finish", "part": {"cost": 0.02}},
+    {"type": "text", "part": {"text": "Created hello.txt."}},
+])
+
+
+def test_parse_opencode_jsonl():
+    assert worker.parse_opencode(JSONL) == {"result": "Created hello.txt.", "total_cost_usd": 0.03}
+
+
+def test_parse_opencode_ignores_garbage_lines():
+    assert worker.parse_opencode("not json\n" + JSONL) == {"result": "Created hello.txt.", "total_cost_usd": 0.03}
+
+
+def test_worker_error_costs_zero(monkeypatch):
+    def boom(*a, **k):
+        raise subprocess.TimeoutExpired("opencode", 900)
+    monkeypatch.setattr(subprocess, "run", boom)
+    r = worker.run_edit_step("do it", "/tmp")
+    assert r["cost_usd"] == 0.0 and r["error"] == "TimeoutExpired"
+
+
+def test_make_plan_falls_back_on_bad_json(monkeypatch):
+    monkeypatch.setattr(worker, "_agent", lambda prompt, cwd, edit: {"result": "not json", "total_cost_usd": 0.01})
+    p = worker.make_plan("bump x", "log", ["package.json"], "/tmp")
+    assert p["allowed_files"] == worker.FALLBACK_ALLOWED and p["cost_usd"] == 0.01
+
+
+def test_make_plan_parses_json_in_prose(monkeypatch):
+    out = 'Sure: {"hypothesis": "h", "allowed_files": ["a.py"]} done'
+    monkeypatch.setattr(worker, "_agent", lambda prompt, cwd, edit: {"result": out, "total_cost_usd": 0.0})
+    assert worker.make_plan("t", "log", [], "/tmp")["allowed_files"] == ["a.py"]
+
+
+def test_opencode_command_shape(monkeypatch):
+    seen = {}
+
+    class P:
+        stdout, stderr, returncode = JSONL, "", 0
+
+    def fake(args, **k):
+        seen["args"] = args
+        return P()
+    monkeypatch.setattr(subprocess, "run", fake)
+    monkeypatch.delenv("KEDGE_WORKER", raising=False)
+    worker._agent("hi", "/tmp", edit=True)
+    assert seen["args"][:4] == ["opencode", "run", "--format", "json"] and "--auto" in seen["args"]
+    worker._agent("hi", "/tmp", edit=False)
+    assert "--auto" not in seen["args"] and ["--agent", "plan"] == seen["args"][4:6]
