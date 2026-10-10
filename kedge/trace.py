@@ -48,16 +48,20 @@ def finish() -> None:
         neatlogs.shutdown()
 
 
+def find_trace(resp, run_id) -> str:
+    for t in resp.get("data", {}).get("traces", []):
+        if f"run_id:{run_id}" in t.get("tags", []):
+            return t["traceId"]
+    return "unavailable"
+
+
 def trace_url(run_id) -> str:
     # Readback uses the neatlogs CLI with NEATLOGS_TOKEN, never the ingest key.
-    # ponytail: "--json" flag and response shape unverified; Task 5 spike confirms.
+    # Shape per neatlogs OpenAPI: {"data": {"traces": [{"traceId", "tags", ...}]}}; no URL field.
     try:
         env = {k: v for k, v in os.environ.items() if k != "NEATLOGS_API_KEY"}
-        out = subprocess.run(["neatlogs", "traces", "list", "--workflow", WORKFLOW, "--json"],
+        out = subprocess.run(["neatlogs", "traces", "list", "--workflow", WORKFLOW, "--limit", "50", "--json"],
                              capture_output=True, text=True, timeout=20, env=env).stdout
-        for t in json.loads(out).get("data", []):
-            if f"run_id:{run_id}" in json.dumps(t):
-                return t.get("url") or t["id"]
-        return "unavailable"
+        return find_trace(json.loads(out), run_id)
     except Exception:
         return "unavailable"

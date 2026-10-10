@@ -42,14 +42,20 @@ def exclude(cwd, patterns) -> None:
         f.write("\n".join(patterns) + "\n")
 
 
+# Test-run artifacts must not look like agent edits (excluded per clone in cli.run_one).
+ARTIFACTS = ["__pycache__/", "*.pyc", ".pytest_cache/", "node_modules/"]
+
+
 def test_output(cwd, test_cmd, max_lines=200) -> str:
     """Local failing-test output: ground truth for the planner, even when CI is unavailable."""
-    p = subprocess.run(test_cmd, cwd=cwd, shell=True, capture_output=True, text=True, timeout=600)
+    p = subprocess.run(test_cmd, cwd=cwd, shell=True, capture_output=True, text=True, timeout=600,
+                       env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
     return "\n".join((p.stdout + p.stderr).splitlines()[-max_lines:])
 
 
 def run_tests(cwd, test_cmd) -> tuple[bool, int, int]:
-    p = subprocess.run(test_cmd, cwd=cwd, shell=True, capture_output=True, text=True, timeout=600)
+    p = subprocess.run(test_cmd, cwd=cwd, shell=True, capture_output=True, text=True, timeout=600,
+                       env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
     passed, total = parse_summary(p.stdout + p.stderr)
     return p.returncode == 0, passed, total
 

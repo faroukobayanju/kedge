@@ -18,15 +18,21 @@ def _targets(path="targets.json"):
     return {t["pr_url"]: t for t in json.load(open(path))} if os.path.exists(path) else {}
 
 
-def run_one(pr_url, test_cmd, fork, *, guard, chaos, budget, max_rollbacks, max_steps) -> dict:
+def run_one(pr_url, test_cmd, fork, *, setup_cmd=None, guard, chaos, budget, max_rollbacks, max_steps) -> dict:
     run_id = time.strftime("%Y%m%d-%H%M") + "-" + uuid.uuid4().hex[:4]
     run_dir = os.path.abspath(os.path.join("runs", run_id))
     os.makedirs(run_dir)
     cwd = os.path.join(tempfile.gettempdir(), "kedge", run_id)
     pr = gitgh.clone_pr(pr_url, cwd)
     agent = "claude-code" if os.environ.get("KEDGE_WORKER") == "claude" else "opencode"
-    gitgh.exclude(cwd, [".entire/", ".opencode/", ".claude/"])
+    gitgh.exclude(cwd, [".entire/", ".opencode/", ".claude/", *gitgh.ARTIFACTS])
+    if setup_cmd:  # install deps once, not on every test run
+        gitgh.sh(["sh", "-c", setup_cmd], cwd, check=False)
     gitgh.sh(["entire", "enable", "--agent", agent], cwd, check=False)
+    plugin = os.path.join(cwd, ".opencode", "plugins", "entire.ts")
+    if agent == "opencode" and not os.path.exists(plugin):  # seen once: hooks "installed" but plugin file missing
+        gitgh.sh(["entire", "enable", "--agent", agent, "--force"], cwd, check=False)
+    print(f"entire plugin present: {os.path.exists(plugin)}", file=sys.stderr)
     log_tail = "Local test output:\n" + gitgh.test_output(cwd, test_cmd)
     ci = gitgh.ci_log(pr_url, pr["head"], pr["repo"])
     if ci.strip() and not ci.startswith("(no failed CI"):
@@ -81,13 +87,13 @@ def main(argv=None) -> int:
         if not t:
             print("error: PR not in targets.json allowlist", file=sys.stderr)
             return 2
-        res = run_one(a.target, t["test_cmd"], t["fork"], **kw)
+        res = run_one(a.target, t["test_cmd"], t["fork"], setup_cmd=t.get("setup_cmd"), **kw)
         print(json.dumps({k: res[k] for k in ("run_id", "status", "cost_usd_total", "rollbacks", "draft_pr")}))
         return 0 if res["status"] in ("green", "already_green") else 1
     results = []
     for t in json.load(open(a.target)):
         try:
-            r = run_one(t["pr_url"], t["test_cmd"], t["fork"], **kw)
+            r = run_one(t["pr_url"], t["test_cmd"], t["fork"], setup_cmd=t.get("setup_cmd"), **kw)
         except Exception as e:  # one broken target must not stop the batch
             r = {"pr_url": t["pr_url"], "status": f"error: {e}", "cost_usd_total": 0.0, "rollbacks": 0, "steps": []}
         results.append(r)

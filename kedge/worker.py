@@ -41,11 +41,12 @@ def _agent(prompt, cwd, edit) -> dict:
     if os.environ.get("KEDGE_WORKER") == "claude":
         args = ["claude", "-p", prompt, "--output-format", "json"]
         args += ["--permission-mode", "acceptEdits", "--max-turns", "15"] if edit else ["--model", "haiku", "--max-turns", "1"]
-        p = subprocess.run(args, cwd=cwd, capture_output=True, text=True, timeout=900)
+        p = subprocess.run(args, cwd=cwd, capture_output=True, text=True, timeout=300 if edit else 120)
         return json.loads(p.stdout)
     model = os.environ.get("KEDGE_MODEL", "opencode/big-pickle")
     args = ["opencode", "run", "--format", "json"] + (["--auto"] if edit else ["--agent", "plan"]) + ["-m", model, prompt]
-    p = subprocess.run(args, cwd=cwd, capture_output=True, text=True, timeout=900)
+    # free models occasionally stall; a step is short, so fail fast and let the loop retry
+    p = subprocess.run(args, cwd=cwd, capture_output=True, text=True, timeout=300 if edit else 120)
     return parse_opencode(p.stdout)
 
 

@@ -75,3 +75,10 @@ def test_worker_error_logged(tmp_path):
         return {"cost_usd": 0.0, "text": "", "error": "TimeoutExpired"}
     r = loop(fixture(tmp_path), TEST_CMD, PLAN, "fix it", worker=err, max_steps=2)
     assert [s["action"] for s in r["steps"]] == ["worker_error", "worker_error"]
+
+
+def test_pycache_from_tests_is_not_drift(tmp_path, monkeypatch):
+    # Linux has no global gitignore for __pycache__; the test run must not look like an agent edit
+    monkeypatch.delenv("PYTHONDONTWRITEBYTECODE", raising=False)
+    r = loop(fixture(tmp_path), TEST_CMD, PLAN, "fix it", worker=fixing_worker)
+    assert r["status"] == "green" and r["steps"][0]["files_changed"] == ["calc.py"]
