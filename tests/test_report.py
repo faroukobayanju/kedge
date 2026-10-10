@@ -29,3 +29,19 @@ def test_ci_status_shown(tmp_path):
             "trace_url": "t", "entire_explain": "e", "ci_status": "passed"}
     h, m = render(str(tmp_path), meta)
     assert "CI: passed" in open(h).read() and "CI: passed" in open(m).read()
+
+
+from kedge.report import voyage_svg
+
+
+def test_voyage_marks():
+    recs = [{"step": 1, "action": "worker", "drift": "tests_regressed", "rolled_back": True},
+            {"step": 1, "action": "replan", "drift": None, "rolled_back": False},
+            {"step": 2, "action": "worker", "drift": None, "rolled_back": False}]
+    svg = voyage_svg(recs)
+    assert svg.startswith("<svg") and svg.count('class="wave"') == 1
+    assert svg.count('class="anchor"') == 1 and svg.count('class="sail"') == 1 and svg.count('class="compass"') == 1
+
+
+def test_voyage_empty():
+    assert voyage_svg([]).startswith("<svg")
