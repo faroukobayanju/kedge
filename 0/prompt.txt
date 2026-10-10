@@ -1,0 +1,141 @@
+From Haikeys: starting cfo.ai now. One number needed: tokens for the 2 green batch runs (kedge-demo, cimd). For each, total input tokens and total output tokens (or just total tokens if that's all steps.jsonl has), plus how many steps it took. That gives me tokens_per_green to price Sonnet 5.5 ($2/$10 per M) + Haiku 4.5 ($1/$5 per M).
+Entire: installed on my machine and git hooks enabled in my clone. My next coding session runs in a fresh Claude Code session in the kedge repo so commits get Entire-Checkpoint trailers.
+
+---
+
+<task-notification>
+<task-id>bayrw2l3x</task-id>
+<tool-use-id>toolu_01RHBhcQ5UHniwu6h5s7bvYs</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-zorak-Documents-marketplace/cd9da397-cf5a-4398-8a9d-d5ceb647cbb1/tasks/bayrw2l3x.output</output-file>
+<status>completed</status>
+<summary>Background command "Rerun guarded storm after-run" completed (exit code 0)</summary>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>b59ct0yuf</task-id>
+<tool-use-id>toolu_0113tihY94gDrGa7LusYFPN4</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-zorak-Documents-marketplace/cd9da397-cf5a-4398-8a9d-d5ceb647cbb1/tasks/b59ct0yuf.output</output-file>
+<status>completed</status>
+<summary>Background command "Rerun guarded after-run with all fixes" completed (exit code 0)</summary>
+</task-notification>
+
+---
+
+is entire working now?. also are we done with the ui
+
+---
+
+continue
+
+---
+
+From Haikeys: cfo.ai business plan is done. PR #8: docs/business-plan.pdf + the raw cfo.ai exports (base + upside xlsx). $10/green PR, $0.45 model cost per green PR (your 62k avg tokens priced on Sonnet 5.5 + Haiku 4.5, grossed up for the 60% green rate), 92.5% gross margin. Base needs a $60k raise and ends with $14.4k; Upside needs no raise and ends with $358k at month 24. Please merge. When the batch ends I'll swap in the final $/green and green rate.
+
+---
+
+We’re still waiting on Farouk’s “after” run and the batch totals. Those feed evidence.md and LinkedIn post 04.
+
+---
+
+<task-notification>
+<task-id>bpsej6moe</task-id>
+<tool-use-id>toolu_01UywCGqvanbW9PvTR9v7MRb</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-zorak-Documents-marketplace/cd9da397-cf5a-4398-8a9d-d5ceb647cbb1/tasks/bpsej6moe.output</output-file>
+<status>killed</status>
+<summary>Background command "Run final batch over 10 targets with latest code" was stopped after reaching its background time limit</summary>
+<note>If the work in progress still needs it, start it again with `run_in_background` and a longer `timeout`. If it already had the longest `timeout` allowed, do not restart it. Either way, report that it was stopped.</note>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>a21b485097d96e648</task-id>
+<tool-use-id>toolu_01LkUntu5gQoaDQjeSX98Pgx</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-zorak-Documents-marketplace/cd9da397-cf5a-4398-8a9d-d5ceb647cbb1/tasks/a21b485097d96e648.output</output-file>
+<status>completed</status>
+<summary>Agent "Finish review of Kedge dashboard" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>disposition: fix
+
+Missing inputs: no QUALITY BAR card was provided, so the ceiling check is judged against OWN-WORLD and broadcast convention. I only grepped `server.py` and did not open the fonts directory. `mobile.png` shows the first viewport only, so the mobile replay strip has not been inspected. `desktop.png` and `compare.png` predate the `lostNote` change, so the red "tests missing" line has not been reviewed anywhere.
+
+## persistence
+Pass, with one open item.
+- `/Users/zorak/Documents/kedge/PRODUCT.md` exists. This is code-led, so no state file or comp-approval record is needed. No DESIGN.md is expected yet because this is a new world.
+- **Open item:** FORM records seed key `ff2e4c23` and says "my top-ranked grounded candidate (rank 1 of 7), shown as the pick card". But `/Users/zorak/Documents/kedge/.impeccable/decision-direction.json` says "The roll assigned Transit Diagram", and the seed key appears nowhere except the surface brief. The parent has to back up the key from the concept-seed output and correct the FORM provenance line. If it can't, that counts as a material finding (fix 4).
+
+## fidelity
+No comp. Each row is judged against the contract.
+
+- **TYPE: match.** Barlow Condensed 600/700/800 is self-hosted for display and scorelines, with Barlow for UI text and tabular numerals throughout.
+- **MATERIAL: match.** Flat broadcast graphics are the world's real medium. There is no faked bevel, emboss or glow.
+- **GROUND: match.** `--ground: #0e1621` and `--panel: #16212e` are exactly what OWN-WORLD names, and the captures read as the same cool navy. I read this from CSS plus a visual check, not pixel sampling (no PIL available). The rail's `#111b27` is off-palette but in the same temperature.
+- **Top bar (wordmark, batch tally, Compare toggle): match.** On mobile all tally labels and every stat except the green count are dropped, which is an uncited adaptation. A bare "9/14" reads as nothing.
+- **Fixture list (No., repo#n, status cell, mini strip): match.** Strip colour is contradicted on gave-up runs (see fix 5).
+- **Run header (No., title, final scoreline large): match.** The STORY beat "scoreline flips to green" is missing: the final 5/5 stays white and static.
+- **Replay strip with CHECK banner, hatch and stop bar, haul-back arc: match.** The drift frame's "2/2" hides the 3 deleted tests, which contradicts STORY ("Disallowed: test deleted").
+- **Ruling cards: match.**
+- **Evidence row (draft PR, trace, checkpoint, plan): missing in part.** On the showcased run, trace and Entire checkpoint just don't appear, with no "not recorded" state. When the checkpoint does exist, it is buried in a `&lt;details&gt;` at the bottom of the page.
+- **Primary action, Open draft PR: match.**
+- **Compare race (no-guard vs Kedge): contradicted.** The no-guard run shows "2/2 GREEN", a full green bar and a green "Full time" frame, after the agent deleted 3 of 5 tests. Side by side, the race reads as a draw, and that is the demo's central beat. PRODUCT principle 4 says Kedge never claims success the tests don't show.
+- **Ruling bar "GREEN" next to "CI failed": contradicted.** Shown with no explanation, it undermines "Kedge checks" the moment a judge reads it.
+
+## ceiling
+Broadcast devices the world offers but the build doesn't use:
+- **Score bug:** the final scoreline as a boxed plate in the verdict colour that flips on full time.
+- **Lower-third rulings:** the cards are generic panels, not the VAR "decision" plate.
+- **Match clock:** run duration or step timing next to the scoreline.
+- **Team colour blocks** for the No guard / Kedge sides in compare.
+
+Today the CHECK banner animation is the world's only fully committed move.
+
+## material_fixes
+1. **Truth/STORY: lost tests must be visible everywhere the score appears.** When `lost(r) &gt; 0`:
+   - use `base_total` as the denominator ("2/5", not "2/2") in the header, compare `.big`, fixture `.run-score` and the frame `.f-score`;
+   - show the verdict chip as not-green (for example a struck "Tests lost" chip);
+   - draw the no-guard "Full time" frame and step bar with hatch, not green.
+
+   Then recapture `desktop.png` and `compare.png`. Both predate `lostNote`, so the new line is unreviewed.
+2. **Truth:** "GREEN · CI failed" in the ruling bar needs CI as its own state cell (red, linked to the CI run, with a one-line reason). Otherwise the verdict must not read as unqualified green.
+3. **STORY:** the run-header scoreline should take green on `status === "green"` (and red/struck when tests were lost), so the "scoreline flips to green" beat exists on video.
+4. **FORM:** back up seed key `ff2e4c23` from the concept-seed output, and rewrite FORM's provenance to match `decision-direction.json`. The roll assigned Transit Diagram, and VAR Review Room was the user's pick.
+5. **OWN-WORLD (green = confirmed):** the mini strips of gave-up runs 14 and 11 are drawn in green at partial opacity. Steps that aren't drift on unfinished runs need a neutral or hollow fill (`miniStrip` in `app.js`).
+6. **FIRST VIEWPORT evidence row:** always render Trace and Entire checkpoint in the ruling-bar actions, with explicit "not recorded" disabled states when absent. Move the checkpoint out of the bottom-of-page `&lt;details&gt;`. Judges from neatlogs and Entire are looking for exactly these.
+7. **OWN-WORLD (yellow = CHECK/attention):** take yellow off the "Review room" badge, the "VS", the pressed Compare button and the pick-b border. In every frame of the video they compete with the CHECK banner.
+8. **Craft/accessibility, bundled:**
+   - plurals: "1 checks", "1 rollbacks";
+   - the mobile Compare button has no accessible name (its `&lt;span&gt;` is `display:none` and there is no `aria-label`);
+   - `text-transform: uppercase` turns the SHA in "Hauled back to 33A6358" into a commit that doesn't exist;
+   - the plan text shows raw markdown backticks;
+   - `&lt;b&gt;` asks for Barlow 700, which isn't self-hosted.
+
+## keep
+The replay strip as the signature move: the yellow-to-red CHECK banner wipe, the hatch-plus-stop-bar drift frame, the dashed haul-back arc and the green full-time frame, all in Barlow Condensed scorelines on #0e1621.
+
+Files reviewed:
+- /Users/zorak/Documents/kedge/kedge/ui/index.html
+- /Users/zorak/Documents/kedge/kedge/ui/app.css
+- /Users/zorak/Documents/kedge/kedge/ui/app.js
+- /Users/zorak/Documents/kedge/kedge/ui/fonts.css
+- /Users/zorak/Documents/kedge/.impeccable/surfaces/kedge-ui-index-html.md
+- /Users/zorak/Documents/kedge/.impeccable/decision-direction.json
+- /Users/zorak/Documents/kedge/.impeccable/review/desktop.png
+- /Users/zorak/Documents/kedge/.impeccable/review/mobile.png
+- /Users/zorak/Documents/kedge/.impeccable/review/compare.png
+
+disposition: fix</result>
+<usage><subagent_tokens>52481</subagent_tokens><tool_uses>11</tool_uses><duration_ms>135180</duration_ms></usage>
+</task-notification>
+
+---
+
+<pasted_content id="7781">
+Farouk’s message says “Before/after runs are attached (before-after-runs.zip)”. He meant to send a file called before-after-runs.zip with that message.
+
+If it came through on WhatsApp or wherever he sent it: download it into your Downloads folder.
+If you only got the text: ask him to send the file. Message: Please send before-after-runs.zip as a file. Only the text came through.
+
+I need it for two things: confirming which check caught the drift, and the kedge ui compare screenshot for post 04.
+</pasted_content id="7781">
