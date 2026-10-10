@@ -68,3 +68,7 @@ def test_negated_or_absent_claims_ignored():
     assert claimed_success("Tests still fail; could not fix the import.") is None
     assert claimed_success("Updated requirements.txt") is None
     assert claimed_success("") is None
+
+
+def test_no_tests_ran_counts_as_zero():
+    assert parse_summary("no tests ran in 0.01s") == (0, 0)

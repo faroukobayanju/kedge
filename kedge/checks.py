@@ -25,6 +25,8 @@ def parse_summary(output: str) -> tuple[int, int]:
     jest = re.search(r"Tests:\s+(?:(\d+) failed, )?(\d+) passed, (\d+) total", output)
     if jest:
         return int(jest[2]), int(jest[3])
+    if re.search(r"\bno tests ran\b", output):  # pytest exit 5: every test file gone or skipped
+        return 0, 0
     nums = {k: int(v) for v, k in re.findall(r"(\d+) (passed|failed|errors?)\b", output)}
     if "passed" not in nums and "failed" not in nums and "error" not in nums and "errors" not in nums:
         return -1, -1
