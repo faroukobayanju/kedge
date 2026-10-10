@@ -71,3 +71,17 @@ def test_trim_log_keeps_errors_with_context():
 def test_trim_log_fallback_tail():
     out = gitgh.trim_log("\n".join(f"line {i}" for i in range(100))).splitlines()
     assert out[-1] == "line 99" and len(out) == 60
+
+
+def test_wait_ci_maps_exit_codes(monkeypatch):
+    class R:
+        def __init__(self, rc, out=""): self.returncode, self.stdout, self.stderr = rc, out, ""
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: R(0))
+    assert gitgh.wait_ci("u") == "passed"
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: R(1))
+    assert gitgh.wait_ci("u") == "failed"
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: R(1, "no checks reported"))
+    assert gitgh.wait_ci("u") == "no checks"
+    def slow(*a, **k): raise subprocess.TimeoutExpired("gh", 1)
+    monkeypatch.setattr(subprocess, "run", slow)
+    assert gitgh.wait_ci("u") == "timeout"

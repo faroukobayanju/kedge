@@ -21,3 +21,11 @@ def test_render_both(tmp_path):
 def test_render_without_steps_file(tmp_path):
     html, _ = render(str(tmp_path), META)
     assert "Kedge run r1" in open(html).read()
+
+
+def test_ci_status_shown(tmp_path):
+    (tmp_path / "steps.jsonl").write_text("")
+    meta = {"run_id": "r", "pr_url": "u", "status": "green", "cost_usd_total": 0, "rollbacks": 0,
+            "trace_url": "t", "entire_explain": "e", "ci_status": "passed"}
+    h, m = render(str(tmp_path), meta)
+    assert "CI: passed" in open(h).read() and "CI: passed" in open(m).read()

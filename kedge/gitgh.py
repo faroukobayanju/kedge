@@ -80,6 +80,17 @@ def open_draft_pr(cwd, fork, branch, title, body_path) -> str:
                "--draft", "--title", f"[kedge] {title}", "--body-file", body_path]).strip()
 
 
+def wait_ci(pr_url, timeout_s=900) -> str:
+    try:
+        p = subprocess.run(["gh", "pr", "checks", pr_url, "--watch", "--fail-fast"],
+                           capture_output=True, text=True, timeout=timeout_s)
+    except subprocess.TimeoutExpired:
+        return "timeout"
+    if "no checks reported" in (p.stdout + p.stderr):
+        return "no checks"
+    return "passed" if p.returncode == 0 else "failed"
+
+
 ERR = re.compile(r"error|fail|traceback|exception|assert|cannot find|not found|undefined", re.I)
 
 

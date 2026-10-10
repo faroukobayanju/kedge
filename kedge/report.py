@@ -7,7 +7,7 @@ HTML = Template("""<!doctype html><meta charset="utf-8"><title>Kedge run $run_id
 <style>body{font:14px system-ui;margin:2rem;max-width:960px}td,th{padding:4px 8px;border-bottom:1px solid #ddd}
 .drift{background:#fde8e8}</style>
 <h1>Kedge run $run_id: $status</h1>
-<p>PR: <a href="$pr_url">$pr_url</a> · cost $$$cost · rollbacks $rollbacks · <a href="$trace_url">neatlogs trace</a></p>
+<p>CI: $ci · PR: <a href="$pr_url">$pr_url</a> · cost $$$cost · rollbacks $rollbacks · <a href="$trace_url">neatlogs trace</a></p>
 <table><tr><th>Step</th><th>Action</th><th>Files</th><th>Tests</th><th>Cost</th><th>Drift</th></tr>$rows</table>
 <h2>Entire checkpoint</h2><pre>$entire</pre>""")
 
@@ -25,9 +25,9 @@ def render(run_dir, meta) -> tuple[str, str]:
         f'<td>${r["cost_usd"]:.3f}</td><td>{_status(r)}</td></tr>' for r in recs)
     page = HTML.substitute(run_id=meta["run_id"], status=meta["status"], pr_url=meta["pr_url"],
                            cost=f'{meta["cost_usd_total"]:.3f}', rollbacks=meta["rollbacks"],
-                           trace_url=meta["trace_url"], rows=rows, entire=html.escape(meta["entire_explain"]))
+                           trace_url=meta["trace_url"], rows=rows, ci=meta.get("ci_status", "not run"), entire=html.escape(meta["entire_explain"]))
     md = [f"## Kedge run `{meta['run_id']}`: {meta['status']}",
-          f"Cost ${meta['cost_usd_total']:.3f} · rollbacks {meta['rollbacks']} · [neatlogs trace]({meta['trace_url']})", "",
+          f"CI: {meta.get('ci_status', 'not run')} · Cost ${meta['cost_usd_total']:.3f} · rollbacks {meta['rollbacks']} · [neatlogs trace]({meta['trace_url']})", "",
           "| Step | Action | Files | Tests | Cost | Drift |", "|---|---|---|---|---|---|"]
     md += [f"| {r['step']} | {r['action']} | {', '.join(r['files_changed'])} | {r['tests_passed']}/{r['tests_total']} "
            f"| ${r['cost_usd']:.3f} | {_status(r).replace('(rolled back)', 'rolled back')} |" for r in recs]
