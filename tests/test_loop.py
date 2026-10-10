@@ -82,3 +82,21 @@ def test_pycache_from_tests_is_not_drift(tmp_path, monkeypatch):
     monkeypatch.delenv("PYTHONDONTWRITEBYTECODE", raising=False)
     r = loop(fixture(tmp_path), TEST_CMD, PLAN, "fix it", worker=fixing_worker)
     assert r["status"] == "green" and r["steps"][0]["files_changed"] == ["calc.py"]
+
+
+def lying_worker(prompt, cwd):
+    return {"cost_usd": 0.01, "text": "Fixed! All tests pass.", "error": None}
+
+
+def test_false_claim_flagged_not_rolled_back(tmp_path):
+    r = loop(fixture(tmp_path), TEST_CMD, PLAN, "fix it", worker=lying_worker, max_steps=2)
+    s = r["steps"][0]
+    assert s["false_claim"] is True and s["claim"] == "Fixed" and s["rolled_back"] is False  # first match wins
+    assert r["status"] == "gave_up"
+
+
+def test_true_claim_not_flagged(tmp_path):
+    def honest(p, c):
+        return {**fixing_worker(p, c), "text": "Fixed, all tests pass."}
+    r = loop(fixture(tmp_path), TEST_CMD, PLAN, "fix it", worker=honest)
+    assert r["steps"][0]["false_claim"] is False and r["status"] == "green"

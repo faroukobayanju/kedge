@@ -6,7 +6,19 @@ NOTES = {
     "out_of_plan": "Only edit files matching: {allowed}. You edited: {files}.",
     "loop": "You repeated a failed attempt. Try a different approach.",
     "verify_failed": "Tests passed once but failed or lost tests on re-run. Make the fix deterministic.",
+    "false_claim": "Your last message claimed success but tests did not pass. Run the tests before claiming.",
 }
+
+CLAIM = re.compile(r"all (?:the )?tests (?:now )?pass(?:ing)?|tests (?:are )?passing|\bfixed\b|\bresolved\b", re.I)
+NEGATION = re.compile(r"\b(?:not|never|unable|cannot|can't|couldn't|still fail\w*)\b", re.I)
+
+
+def claimed_success(text: str) -> str | None:
+    # a negated sentence ("could not fix", "still failing") is not a claim
+    if not text or NEGATION.search(text):
+        return None
+    m = CLAIM.search(text)
+    return m.group(0) if m else None
 
 
 def parse_summary(output: str) -> tuple[int, int]:

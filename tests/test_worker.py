@@ -69,3 +69,24 @@ def test_pinned_opencode_env(tmp_path, monkeypatch):
     assert worker.use_pinned_opencode(str(tmp_path)) is True
     assert os.environ["PATH"].startswith(str(tmp_path / ".tools/opencode/node_modules/.bin"))
     assert os.environ["XDG_DATA_HOME"] == str(tmp_path / ".tools/opencode/data")
+
+
+def test_plan_has_steps(monkeypatch):
+    monkeypatch.setattr(worker, "_agent", lambda p, c, edit: {"result": '{"hypothesis":"h","allowed_files":["a"],"steps":["s1","s2"]}', "total_cost_usd": 0.0})
+    assert worker.make_plan("t", "log", [], "/tmp")["steps"] == ["s1", "s2"]
+
+
+def test_plan_steps_fallback(monkeypatch):
+    monkeypatch.setattr(worker, "_agent", lambda p, c, edit: {"result": '{"hypothesis":"h","allowed_files":["a"]}', "total_cost_usd": 0.0})
+    assert worker.make_plan("t", "log", [], "/tmp")["steps"] == ["make the failing tests pass"]
+
+
+def test_replan_includes_notes(monkeypatch):
+    seen = {}
+
+    def fake(prompt, cwd, edit):
+        seen["prompt"] = prompt
+        return {"result": '{"hypothesis":"h2","allowed_files":["b"],"steps":["x"]}', "total_cost_usd": 0.01}
+    monkeypatch.setattr(worker, "_agent", fake)
+    p = worker.replan({"hypothesis": "h1", "allowed_files": ["a"], "steps": ["s"]}, ["Do not delete tests."], "/tmp")
+    assert p["hypothesis"] == "h2" and "Do not delete tests." in seen["prompt"] and "h1" in seen["prompt"]

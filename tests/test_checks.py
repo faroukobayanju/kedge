@@ -54,3 +54,17 @@ def test_no_guard_ignores_drift():
 def test_collection_errors_only_counted():
     # broken import: pytest reports only errors, no passed/failed
     assert parse_summary("2 errors in 0.05s") == (0, 2)
+
+
+from kedge.checks import claimed_success  # noqa: E402
+
+
+def test_claims_detected():
+    assert claimed_success("Done! All tests pass now.") == "All tests pass"
+    assert claimed_success("I fixed the import.") == "fixed"
+
+
+def test_negated_or_absent_claims_ignored():
+    assert claimed_success("Tests still fail; could not fix the import.") is None
+    assert claimed_success("Updated requirements.txt") is None
+    assert claimed_success("") is None

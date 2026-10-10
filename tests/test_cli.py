@@ -20,3 +20,8 @@ def test_load_dotenv_does_not_override(tmp_path, monkeypatch):
     import os
     assert os.environ["KEDGE_T1"] == "from_file" and os.environ["KEDGE_T2"] == "real"
     monkeypatch.delenv("KEDGE_T1")
+
+
+def test_resume_without_state_exits_2(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    assert main(["resume", "nope"]) == 2

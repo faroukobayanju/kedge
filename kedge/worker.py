@@ -62,19 +62,33 @@ def run_edit_step(prompt, cwd) -> dict:
         return {"cost_usd": 0.0, "text": "", "tokens": 0, "error": type(e).__name__}
 
 
-def make_plan(title, ci_log, files, cwd) -> dict:
-    prompt = (
-        "A dependency-bump PR fails CI. Reply with ONLY a JSON object "
-        '{"hypothesis": str, "allowed_files": [glob, ...]} listing the minimal file globs a fix may touch.\n'
-        f"PR title: {title}\nFiles in PR: {files}\nFailing CI log tail:\n{ci_log[-4000:]}"
-    )
+SCHEMA = '{"hypothesis": str, "allowed_files": [glob, ...], "steps": [1-4 short imperative steps]}'
+DEFAULT_STEPS = ["make the failing tests pass"]
+
+
+def _plan_call(prompt, cwd) -> dict:
     try:
         d = _agent(prompt, cwd, edit=False)
     except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError):
         d = {"result": "", "total_cost_usd": 0.0}
     cost, text = float(d.get("total_cost_usd", 0.0)), d.get("result", "")
     try:
-        plan = json.loads(text[text.index("{"): text.rindex("}") + 1])
-        return {"hypothesis": plan["hypothesis"], "allowed_files": plan["allowed_files"], "cost_usd": cost}
+        p = json.loads(text[text.index("{"): text.rindex("}") + 1])
+        return {"hypothesis": p["hypothesis"], "allowed_files": p["allowed_files"],
+                "steps": p.get("steps") or DEFAULT_STEPS, "cost_usd": cost}
     except (ValueError, KeyError):
-        return {"hypothesis": "unknown", "allowed_files": FALLBACK_ALLOWED, "cost_usd": cost}
+        return {"hypothesis": "unknown", "allowed_files": FALLBACK_ALLOWED, "steps": DEFAULT_STEPS, "cost_usd": cost}
+
+
+def make_plan(title, ci_log, files, cwd) -> dict:
+    return _plan_call(
+        f"A dependency-bump PR fails its tests. Reply with ONLY a JSON object {SCHEMA}. "
+        "allowed_files lists the minimal file globs a fix may touch.\n"
+        f"PR title: {title}\nFiles in PR: {files}\nFailure output:\n{ci_log[-4000:]}", cwd)
+
+
+def replan(plan, notes, cwd) -> dict:
+    return _plan_call(
+        f"The previous plan failed twice. Reply with ONLY a JSON object {SCHEMA} for a DIFFERENT approach.\n"
+        f"Previous plan: {json.dumps({k: plan.get(k) for k in ('hypothesis', 'allowed_files', 'steps')})}\n"
+        f"What went wrong: {notes[-3:]}", cwd)
