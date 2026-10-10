@@ -231,6 +231,7 @@ details.checkpoint pre { white-space: pre-wrap; color: var(--ink-2); background:
 /* ---------- compare ---------- */
 .versus { display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; align-items: start; }
 .vs { font: 800 44px/1 var(--display); color: var(--ink-3); align-self: center; }
+.side.home, .side.away { border-radius: 0 0 4px 4px; }
 .side.home { border-top: 4px solid var(--red); }
 .side.away { border-top: 4px solid var(--green); }
 .side { padding: 18px; border-radius: 4px; background: var(--panel); border: 1px solid var(--line); min-width: 0; }
