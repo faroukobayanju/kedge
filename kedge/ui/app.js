@@ -4,9 +4,9 @@ const icon = (id) => `<svg aria-hidden="true"><use href="#i-${id}"/></svg>`;
 
 const DRIFT = {
   tests_regressed: { call: "Disallowed: tests lost", why: "The agent's change reduced the passing or total test count. Usually a deleted or skipped test." },
-  out_of_plan: { call: "Disallowed: off the plan", why: "The agent edited files outside the plan's allowed list." },
+  out_of_plan: { call: "Disallowed: off plan", why: "The agent edited files outside the plan's allowed list." },
   loop: { call: "Disallowed: repeat attempt", why: "The agent produced the same change Kedge had already rolled back." },
-  verify_failed: { call: "Disallowed: didn't hold", why: "Tests passed once but failed or lost tests when Kedge ran them again." },
+  verify_failed: { call: "Disallowed: not stable", why: "Tests passed once but failed or lost tests when Kedge ran them again." },
   over_budget: { call: "Stopped: out of budget", why: "The run hit its spend cap, so Kedge stopped calling the agent." },
 };
 const STATUS = {
@@ -30,6 +30,11 @@ const prRef = (url) => {
   const m = /github\.com\/([^/]+\/[^/]+)\/pull\/(\d+)/.exec(url || "");
   return m ? `${m[1]}#${m[2]}` : url || "";
 };
+const lost = (r) => {
+  const last = [...(r.steps || [])].reverse().find((s) => s.tests_total >= 0 && !s.rolled_back);
+  return last && r.base_total > 0 && last.tests_total < r.base_total ? r.base_total - last.tests_total : 0;
+};
+const lostNote = (r) => (lost(r) ? `<span class="lost">${lost(r)} of ${r.base_total} tests missing vs base branch</span>` : "");
 const st = (r) => STATUS[r.status] || { cls: "open", text: r.status, cell: "open" };
 const traceId = (t) => (t && t !== "unavailable" ? t : null);
 
@@ -144,7 +149,7 @@ function stageRun(r) {
           ${r.guard === false ? '<span class="tag warn">No guard</span>' : ""}
           ${r.storm ? `<span class="tag storm">Storm: ${esc(r.storm)}</span>` : ""}</p>
       </div>
-      <div class="scoreline"><span class="num">${score(r)}</span><span class="lbl">Tests passing</span></div>
+      <div class="scoreline"><span class="num">${score(r)}</span><span class="lbl">Tests passing</span>${lostNote(r)}</div>
     </header>
     <div class="ruling-bar"><span class="verdict ${s.cls}">${s.text}</span><span class="facts">${facts}</span>${actions(r)}</div>
     <section class="replay-wrap" aria-label="Replay">
@@ -168,7 +173,7 @@ function stageCompare() {
     const s = st(r);
     return `<section class="side"><h2>${label}</h2>
       <div class="sub">No. ${String(r.no).padStart(2, "0")} · ${esc(prRef(r.pr_url))}${r.storm ? ` · storm ${esc(r.storm)}` : ""}</div>
-      <div class="big">${score(r)}</div><span class="verdict ${s.cls}">${s.text}</span>
+      <div class="big">${score(r)}</div>${lostNote(r)}<span class="verdict ${s.cls}">${s.text}</span>
       <div class="stats"><span><b>${r.drifts}</b> checks caught · <b>${r.rollbacks}</b> rollbacks</span>
         <span><b>${r.false_claims}</b> false claims</span><span><b>$${Number(r.cost_usd_total || 0).toFixed(2)}</b> spent</span></div>
       ${miniStrip(r)}</section>`;
@@ -204,7 +209,7 @@ function renderList() {
     return `<li><button class="run" type="button" data-id="${esc(r.run_id)}"
         aria-current="${!compare && r.run_id === selected}" ${compare && pick >= 0 ? `data-pick="${"ab"[pick]}"` : ""}>
       <span class="run-no">${String(r.no).padStart(2, "0")}</span>
-      <span><span class="run-title">${esc(r.title || prRef(r.pr_url))}</span>
+      <span class="run-body"><span class="run-title">${esc(r.title || prRef(r.pr_url))}</span>
         <span class="run-sub"><span class="cell ${s.cell}"></span>${esc(s.text)} · ${esc(prRef(r.pr_url))}
           ${r.guard === false ? '<span class="tag warn">No guard</span>' : ""}${r.storm ? `<span class="tag storm">${esc(r.storm)}</span>` : ""}</span></span>
       <span class="run-score">${score(r)}</span>

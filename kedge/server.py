@@ -70,6 +70,7 @@ def run_detail(runs_dir, run_id) -> dict | None:
         "ci_status": (result or {}).get("ci_status"),
         "entire_explain": (result or {}).get("entire_explain", ""),
         "finished_at": (result or {}).get("finished_at"),
+        "base_total": meta.get("base_total", -1),
         "plan": _load(os.path.join(d, "plan.json"), {}),
         "steps": steps,
     }
