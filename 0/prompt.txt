@@ -139,3 +139,44 @@ If you only got the text: ask him to send the file. Message: Please send before-
 
 I need it for two things: confirming which check caught the drift, and the kedge ui compare screenshot for post 04.
 </pasted_content id="7781">
+
+---
+
+<task-notification>
+<task-id>a21b485097d96e648</task-id>
+<tool-use-id>toolu_013DsAiebgfVzLdZiP8JATHy</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-zorak-Documents-marketplace/cd9da397-cf5a-4398-8a9d-d5ceb647cbb1/tasks/a21b485097d96e648.output</output-file>
+<status>completed</status>
+<summary>Agent "Finish review of Kedge dashboard" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>## verdict
+1. **Lost tests visible everywhere the score appears: partial.** Compare now shows "2/5", "3 of 5 tests missing vs base branch", a red "Shipped short" chip, and a hatched "Shipped / 3 tests gone" full-time frame. Two gaps remain, both visible in the screenshots:
+   - On the Kedge run, the drift frame still reads "2/2" in desktop, mobile and compare. The fix named the frame score, and the replay is still where the deleted tests stay invisible.
+   - The no-guard Step 1 frame draws a green progress bar at 2/5 on a run that shipped short.
+2. **CI as its own cell: resolved.** A red-outlined, struck "GitHub CI failed" cell now sits next to the verdict on desktop and mobile, and links to the PR checks.
+3. **Scoreline flips green: resolved.** The header shows "5/5" in green on desktop and mobile.
+4. **FORM provenance: resolved.** `kedge-ui-index-html.md` line 26 now matches `decision-direction.json` (the roll assigned Transit Diagram; the user picked VAR Review Room, the rank-1 candidate). The seed key `ff2e4c23` is still recorded only in the brief, so the backing for it rests on the parent's word.
+5. **Neutral mini strips for gave-up runs: resolved.** Runs 14, 11 and 16 now draw in ink-3, and green appears only on clean green runs.
+6. **Evidence row: resolved.** The bar shows a disabled "Trace not recorded" button and an "Entire 01M4KYNC" button. The checkpoint disclosure now sits directly under the ruling bar.
+7. **Yellow back to CHECK and attention only: resolved.** The badge is outlined white, "VS" is ink-3, and the pressed Compare button and the second pick's border are white. Yellow is left only on live/under-review cells and the storm tag.
+8. **Copy and accessibility bundle: resolved.**
+   - Plurals now read "1 check · 1 rollback".
+   - The Compare button has `aria-label="Compare two runs"`.
+   - The SHA renders lowercase, as `33a6358`.
+   - Plan text with backticks now renders as code.
+   - `b` and `strong` use weight 600.
+
+Regressions from this batch:
+- **Ruling bar wraps on desktop.** The new CI cell pushes all the actions onto a second row. The first row ends in empty space, and Open draft PR, the primary action, drops below the verdict line.
+- **Ragged action stack on mobile.** CI, Open draft PR, Trace and Entire stack as left-aligned buttons of four different widths.
+
+## remaining
+- Fix 1 is still partial:
+  - When tests went missing, the Kedge drift frame should show the base denominator or the lost count (for example "2/5" or "3 gone"), not "2/2".
+  - When a run shipped short, its step bars should use a neutral fill, not green.
+- On desktop, keep the primary action on the first row of the ruling bar. Either let the facts and CI cell wrap instead, or move the CI cell under the facts.
+- On mobile, give the action buttons one consistent width or a two-column grid.
+
+disposition: fix</result>
+<usage><subagent_tokens>63869</subagent_tokens><tool_uses>5</tool_uses><duration_ms>40000</duration_ms></usage>
+</task-notification>
