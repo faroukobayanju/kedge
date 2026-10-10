@@ -56,7 +56,7 @@ PENDING
 
 [business-plan.pdf](business-plan.pdf): $10 per green PR, cost per PR from the batch, two scenarios (50 teams × 20 PRs/month, 200 teams × 30 PRs/month), runway from $0 plus hackathon credits.
 
-PENDING
+Built with cfo.ai's Ari on Oct 10. Base: $6k/month at 50 teams, 92.5% gross margin, $60k raise in Apr 2027, $14,430 cash at month 24. Upside: $36k/month at 200 teams, no raise, $358,192 cash at month 24. Source exports: [base](business-plan-base.xlsx), [upside](business-plan-upside.xlsx).
 
 ## Building in public
 
