@@ -11,6 +11,7 @@
   --yellow: #ffd400;
   --yellow-ink: #2b2400;
   --red: #ff3b30;
+  --red-fill: #c42419; /* white text on fills: 5.6:1 */
   --red-soft: #ff8a82;
   --display: "Barlow Condensed", "Arial Narrow", sans-serif;
   --ui: "Barlow", system-ui, sans-serif;
@@ -103,7 +104,7 @@ select {
   display: inline-block; font: 700 12px/1 var(--display); letter-spacing: .06em; text-transform: uppercase;
   padding: 3px 6px 2px; border-radius: 2px; margin-left: 6px; vertical-align: 1px;
 }
-.tag.warn { background: var(--red); color: #fff; }
+.tag.warn { background: var(--red-fill); color: #fff; }
 .tag.storm { background: transparent; border: 1px solid var(--yellow); color: var(--yellow); }
 
 /* fixed state cell: filled = held, hollow = not, struck = disallowed */
@@ -138,7 +139,7 @@ select {
   padding: 7px 12px 6px; border-radius: 2px;
 }
 .verdict.green { background: var(--green); color: var(--green-ink); }
-.verdict.open { background: var(--red); color: #fff; }
+.verdict.open { background: var(--red-fill); color: #fff; }
 .verdict.running { background: var(--yellow); color: var(--yellow-ink); }
 .verdict.neutral { background: var(--panel-2); color: var(--ink); }
 .ruling-bar .facts { color: var(--ink-2); font-size: 15px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
@@ -191,7 +192,7 @@ details.checkpoint summary { font-size: 16px; color: var(--ink-2); }
 .check {
   position: absolute; left: -1px; right: -1px; top: -34px; height: 26px; display: flex; align-items: center; gap: 6px;
   padding: 0 8px; white-space: nowrap; overflow: hidden; border-radius: 2px; font: 800 14px/1 var(--display); letter-spacing: .08em; text-transform: uppercase;
-  background: var(--red); color: #fff;
+  background: var(--red-fill); color: #fff;
 }
 .check svg { width: 16px; height: 16px; }
 .check.lie { background: var(--yellow); color: var(--yellow-ink); top: auto; bottom: -34px; }
@@ -200,7 +201,7 @@ details.checkpoint summary { font-size: 16px; color: var(--ink-2); }
   0% { background: var(--yellow); color: var(--yellow-ink); clip-path: inset(0 100% 0 0); }
   35% { background: var(--yellow); color: var(--yellow-ink); clip-path: inset(0 0 0 0); }
   70% { background: var(--yellow); color: var(--yellow-ink); }
-  100% { background: var(--red); color: #fff; }
+  100% { background: var(--red-fill); color: #fff; }
 }
 .haul {
   position: absolute; left: 50%; bottom: -46px; width: calc(100% + 20px); height: 30px; transform: translateX(-100%);

@@ -1,0 +1,483 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-10T23:03:52+00:00",
+  "title": "Design System: Kedge",
+  "extensions": {
+    "colorMeta": {
+      "ground": {
+        "role": "neutral",
+        "displayName": "Pitch Night",
+        "canonical": "oklch(19.8% 0.025 256)",
+        "tonalRamp": [
+          "#050b16",
+          "#1c2530",
+          "#37404d",
+          "#555e6c",
+          "#747e8d",
+          "#949fae",
+          "#bac5d5",
+          "#e5f0ff"
+        ]
+      },
+      "rail": {
+        "role": "neutral",
+        "displayName": "Dugout",
+        "canonical": "oklch(21.9% 0.028 253)",
+        "tonalRamp": [
+          "#040c17",
+          "#1a2531",
+          "#36414e",
+          "#535f6d",
+          "#727f8e",
+          "#93a0b0",
+          "#b8c6d6",
+          "#e4f0ff"
+        ]
+      },
+      "panel": {
+        "role": "neutral",
+        "displayName": "Gantry",
+        "canonical": "oklch(24.4% 0.030 253)",
+        "tonalRamp": [
+          "#030c17",
+          "#1a2532",
+          "#35414f",
+          "#525f6e",
+          "#717f8f",
+          "#92a0b1",
+          "#b7c6d7",
+          "#e4f0ff"
+        ]
+      },
+      "panel-2": {
+        "role": "neutral",
+        "displayName": "Monitor",
+        "canonical": "oklch(28.1% 0.035 254)",
+        "tonalRamp": [
+          "#030b19",
+          "#182535",
+          "#334152",
+          "#505f71",
+          "#6f7f92",
+          "#90a0b4",
+          "#b5c6db",
+          "#e4f0ff"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Touchline",
+        "canonical": "oklch(34.4% 0.041 254)",
+        "tonalRamp": [
+          "#010b1c",
+          "#162538",
+          "#314155",
+          "#4e5f75",
+          "#6d7f96",
+          "#8da0b8",
+          "#b2c6df",
+          "#e4f0fe"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Floodlight White",
+        "canonical": "oklch(100.0% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#7d7d7d",
+          "#9e9e9e",
+          "#c4c4c4",
+          "#eeeeee"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Commentary",
+        "canonical": "oklch(84.7% 0.022 253)",
+        "tonalRamp": [
+          "#050c14",
+          "#1d252e",
+          "#38414b",
+          "#555f6a",
+          "#747e8a",
+          "#95a0ac",
+          "#bac5d2",
+          "#e4f0fd"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Caption",
+        "canonical": "oklch(70.9% 0.033 253)",
+        "tonalRamp": [
+          "#030c19",
+          "#182534",
+          "#334151",
+          "#505f70",
+          "#707f91",
+          "#90a0b3",
+          "#b5c6da",
+          "#e4f0fe"
+        ]
+      },
+      "green": {
+        "role": "primary",
+        "displayName": "Confirmed Green",
+        "canonical": "oklch(80.4% 0.168 165)",
+        "tonalRamp": [
+          "#001007",
+          "#002c1d",
+          "#044c36",
+          "#006f4f",
+          "#1a936c",
+          "#08ba88",
+          "#1ae6a9",
+          "#c3fee3"
+        ]
+      },
+      "green-bright": {
+        "role": "primary",
+        "displayName": "Floodlit Green",
+        "canonical": "oklch(89.9% 0.159 169)",
+        "tonalRamp": [
+          "#001009",
+          "#002c20",
+          "#054c39",
+          "#006e54",
+          "#1c9272",
+          "#0fb990",
+          "#20e4b3",
+          "#bfffe7"
+        ]
+      },
+      "green-ink": {
+        "role": "primary",
+        "displayName": "Green Ink",
+        "canonical": "oklch(26.0% 0.045 173)",
+        "tonalRamp": [
+          "#00100a",
+          "#062b22",
+          "#25483d",
+          "#43665b",
+          "#62867b",
+          "#82a89c",
+          "#a8cec1",
+          "#d1f9ec"
+        ]
+      },
+      "green-pitch": {
+        "role": "primary",
+        "displayName": "Final-Whistle Pitch",
+        "canonical": "oklch(29.0% 0.042 178)",
+        "tonalRamp": [
+          "#00100b",
+          "#072b24",
+          "#26473f",
+          "#44665d",
+          "#63867d",
+          "#83a79e",
+          "#a8cdc4",
+          "#d2f8ee"
+        ]
+      },
+      "yellow": {
+        "role": "secondary",
+        "displayName": "Check Yellow",
+        "canonical": "oklch(88.1% 0.181 94)",
+        "tonalRamp": [
+          "#110a00",
+          "#2d2300",
+          "#4d3e00",
+          "#6f5c0c",
+          "#947b10",
+          "#ba9c20",
+          "#e8c101",
+          "#ffeeb5"
+        ]
+      },
+      "yellow-ink": {
+        "role": "secondary",
+        "displayName": "Yellow Ink",
+        "canonical": "oklch(26.0% 0.054 98)",
+        "tonalRamp": [
+          "#100b00",
+          "#2b2400",
+          "#47401c",
+          "#655e3a",
+          "#857e59",
+          "#a79f79",
+          "#cdc59d",
+          "#f8f0c7"
+        ]
+      },
+      "red": {
+        "role": "tertiary",
+        "displayName": "Disallowed Red",
+        "canonical": "oklch(65.4% 0.232 29)",
+        "tonalRamp": [
+          "#220000",
+          "#4b0101",
+          "#7c0203",
+          "#af1310",
+          "#e71916",
+          "#fd6757",
+          "#fdaca0",
+          "#ffe9e5"
+        ]
+      },
+      "red-soft": {
+        "role": "tertiary",
+        "displayName": "Ruling Red Soft",
+        "canonical": "oklch(76.0% 0.143 25)",
+        "tonalRamp": [
+          "#220000",
+          "#4b0005",
+          "#7a0913",
+          "#9f3331",
+          "#c45550",
+          "#ea7770",
+          "#feaba3",
+          "#fee9e7"
+        ]
+      },
+      "red-pitch": {
+        "role": "tertiary",
+        "displayName": "Short Pitch",
+        "canonical": "oklch(22.9% 0.033 13)",
+        "tonalRamp": [
+          "#170507",
+          "#321d1f",
+          "#50393b",
+          "#6f5658",
+          "#907677",
+          "#b29798",
+          "#d9bcbe",
+          "#ffe8ea"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "sequence": {
+        "displayName": "Sequence",
+        "purpose": "Two-digit fixture number beside the match header."
+      },
+      "scoreline": {
+        "displayName": "Scoreline",
+        "purpose": "Final tests-passing score; 52px below 900px."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "PR title, mixed case."
+      },
+      "frame-score": {
+        "displayName": "Frame score",
+        "purpose": "Score inside each replay frame."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Uppercase section heads, ruling heads, verdicts."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Uppercase condensed calls: buttons, step labels, check banners, tags."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Running text in ink-2, 70ch max in rulings."
+      },
+      "body-sm": {
+        "displayName": "Body small",
+        "purpose": "Fixture sub-lines, frame actions."
+      },
+      "label-ui": {
+        "displayName": "UI label",
+        "purpose": "Tally names and scoreline caption."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "File paths, SHAs, code only."
+      }
+    },
+    "shadows": [
+      {
+        "name": "live-pulse",
+        "value": "0 0 0 5px rgba(255, 212, 0, .18)",
+        "purpose": "Animated ring on live state cells only; the system has no elevation shadows."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(.16, 1, .3, 1)",
+        "purpose": "House ease for 0.2s state transitions and the ruling wipe."
+      },
+      {
+        "name": "ruling",
+        "value": "1.6s ease, yellow wipe in, hold, settle to red",
+        "purpose": "CHECK banner on a drift frame: review becoming a ruling."
+      },
+      {
+        "name": "pulse",
+        "value": "1.4s ease-in-out infinite",
+        "purpose": "Live state cell."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "animation and transition none",
+        "purpose": "All motion removed under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "stack",
+        "value": "900px"
+      }
+    ],
+    "patterns": {
+      "hatch": "SVG pattern 8x8 rotated 45deg: red fill with ground stripes 3px at 55% (thumbnail drift bars); progress bar uses red 3px stripes",
+      "stopBar": "repeating-linear-gradient(135deg, transparent 0 10px, rgba(255,59,48,.14) 10px 20px) over the whole drift frame",
+      "scoreDenominator": "max(step tests_total, base branch tests_total)"
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one primary action per view: open the draft PR.",
+      "html": "<button class=\"ds-btn ds-btn-primary\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><g fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"6\" cy=\"6\" r=\"2.2\"/><circle cx=\"6\" cy=\"18\" r=\"2.2\"/><circle cx=\"18\" cy=\"18\" r=\"2.2\"/><path d=\"M6 8.2v7.6M18 15.8V10a3 3 0 0 0-3-3h-4M13 4.5 10.5 7l2.5 2.5\"/></g></svg>Open draft PR</button>",
+      "css": ":root{--ground:#0e1621;--panel:#16212e;--panel-2:#1d2a3a;--line:#2a3a4e;--ink:#fff;--ink-2:#c3cedb;--ink-3:#93a3b6;--green:#00e0a4;--green-ink:#062b22;--yellow:#ffd400;--yellow-ink:#2b2400;--red:#ff3b30;--red-soft:#ff8a82;--display:'Barlow Condensed','Arial Narrow',sans-serif;--ui:Barlow,system-ui,sans-serif;--ease:cubic-bezier(.16,1,.3,1)}.ds-btn{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 16px;font:700 15px/1 var(--display);letter-spacing:.06em;text-transform:uppercase;border:1px solid transparent;border-radius:3px;cursor:pointer;color:var(--ink);transition:background .2s var(--ease),border-color .2s var(--ease)}.ds-btn svg{width:18px;height:18px}.ds-btn:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}.ds-btn-primary{background:var(--green);color:var(--green-ink)}.ds-btn-primary:hover{background:#4fffcc}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Evidence actions and the Compare toggle; pressed inverts to white.",
+      "html": "<button class=\"ds-btn ds-btn-ghost\">Entire 01m4kync</button> <button class=\"ds-btn ds-btn-ghost\" aria-pressed=\"true\">Compare</button>",
+      "css": ":root{--ground:#0e1621;--panel:#16212e;--panel-2:#1d2a3a;--line:#2a3a4e;--ink:#fff;--ink-2:#c3cedb;--ink-3:#93a3b6;--green:#00e0a4;--green-ink:#062b22;--yellow:#ffd400;--yellow-ink:#2b2400;--red:#ff3b30;--red-soft:#ff8a82;--display:'Barlow Condensed','Arial Narrow',sans-serif;--ui:Barlow,system-ui,sans-serif;--ease:cubic-bezier(.16,1,.3,1)}.ds-btn{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 16px;font:700 15px/1 var(--display);letter-spacing:.06em;text-transform:uppercase;border:1px solid transparent;border-radius:3px;cursor:pointer;color:var(--ink);transition:background .2s var(--ease),border-color .2s var(--ease)}.ds-btn svg{width:18px;height:18px}.ds-btn:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}.ds-btn-ghost{background:transparent;border-color:var(--line)}.ds-btn-ghost:hover{border-color:var(--ink-3)}.ds-btn-ghost[aria-pressed=true]{background:var(--ink);color:var(--ground);border-color:var(--ink)}"
+    },
+    {
+      "name": "Verdict",
+      "kind": "chip",
+      "refersTo": "verdict-green",
+      "description": "The ruling plate: green, disallowed/shipped short, under review, already green.",
+      "html": "<span class=\"ds-verdict ds-g\">Green</span> <span class=\"ds-verdict ds-r\">Shipped short</span> <span class=\"ds-verdict ds-y\">Under review</span> <span class=\"ds-verdict ds-n\">Already green</span>",
+      "css": ":root{--ground:#0e1621;--panel:#16212e;--panel-2:#1d2a3a;--line:#2a3a4e;--ink:#fff;--ink-2:#c3cedb;--ink-3:#93a3b6;--green:#00e0a4;--green-ink:#062b22;--yellow:#ffd400;--yellow-ink:#2b2400;--red:#ff3b30;--red-soft:#ff8a82;--display:'Barlow Condensed','Arial Narrow',sans-serif;--ui:Barlow,system-ui,sans-serif;--ease:cubic-bezier(.16,1,.3,1)}.ds-verdict{display:inline-block;font:800 22px/1 var(--display);text-transform:uppercase;letter-spacing:.05em;padding:7px 12px 6px;border-radius:2px}.ds-g{background:var(--green);color:var(--green-ink)}.ds-r{background:var(--red);color:#fff}.ds-y{background:var(--yellow);color:var(--yellow-ink)}.ds-n{background:var(--panel-2);color:var(--ink)}"
+    },
+    {
+      "name": "State Cell",
+      "kind": "custom",
+      "refersTo": "cell",
+      "description": "Fixed state cell: filled = held, hollow = not, struck = disallowed, pulsing = live.",
+      "html": "<span class=\"ds-cell ds-held\"></span><span class=\"ds-cell\"></span><span class=\"ds-cell ds-struck\"></span><span class=\"ds-cell ds-live\"></span>",
+      "css": ":root{--ground:#0e1621;--panel:#16212e;--panel-2:#1d2a3a;--line:#2a3a4e;--ink:#fff;--ink-2:#c3cedb;--ink-3:#93a3b6;--green:#00e0a4;--green-ink:#062b22;--yellow:#ffd400;--yellow-ink:#2b2400;--red:#ff3b30;--red-soft:#ff8a82;--display:'Barlow Condensed','Arial Narrow',sans-serif;--ui:Barlow,system-ui,sans-serif;--ease:cubic-bezier(.16,1,.3,1)}.ds-cell{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid var(--ink-3);margin-right:8px}.ds-held{background:var(--green);border-color:var(--green)}.ds-struck{border-color:var(--red);background:linear-gradient(135deg,transparent 42%,var(--red) 42% 58%,transparent 58%)}.ds-live{border-color:var(--yellow);animation:ds-pulse 1.4s ease-in-out infinite}@keyframes ds-pulse{50%{box-shadow:0 0 0 5px rgba(255,212,0,.18)}}@media (prefers-reduced-motion:reduce){.ds-live{animation:none}}"
+    },
+    {
+      "name": "Replay Frame with CHECK and Drift Mark",
+      "kind": "custom",
+      "refersTo": "frame",
+      "description": "Signature replay strip: a drift frame with CHECK banner, hatch bar and stop bar, followed by a final-whistle frame.",
+      "html": "<ol class=\"ds-replay\"><li class=\"ds-frame ds-drift\"><div class=\"ds-check\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><g fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"12\" rx=\"1.5\"/><path d=\"M8 20h8M12 16v4M10 8.5l4 1.5-4 1.5z\"/></g></svg>Check: off plan</div><div class=\"ds-fno\">Step 1</div><div class=\"ds-fscore\">2/5</div><div class=\"ds-fact\">Edited 2 files</div><div class=\"ds-fbar\"><i style=\"width:100%\"></i></div></li><li class=\"ds-frame\"><div class=\"ds-fno\">Step 2</div><div class=\"ds-fscore\">5/5</div><div class=\"ds-fact\">Edited 1 file</div><div class=\"ds-fbar\"><i style=\"width:100%\"></i></div></li><li class=\"ds-frame ds-whistle\"><div class=\"ds-fno\">Full time</div><div class=\"ds-fscore\">Green</div><div class=\"ds-fact\">Draft PR opened</div></li></ol>",
+      "css": ":root{--ground:#0e1621;--panel:#16212e;--panel-2:#1d2a3a;--line:#2a3a4e;--ink:#fff;--ink-2:#c3cedb;--ink-3:#93a3b6;--green:#00e0a4;--green-ink:#062b22;--yellow:#ffd400;--yellow-ink:#2b2400;--red:#ff3b30;--red-soft:#ff8a82;--display:'Barlow Condensed','Arial Narrow',sans-serif;--ui:Barlow,system-ui,sans-serif;--ease:cubic-bezier(.16,1,.3,1)}.ds-replay{list-style:none;margin:0;display:flex;padding:46px 4px 24px;background:var(--panel);border:1px solid var(--line);border-radius:4px;overflow-x:auto;font:500 15px/1.45 var(--ui);color:var(--ink);font-variant-numeric:tabular-nums}.ds-frame{position:relative;flex:0 0 168px;margin:0 10px;padding:14px 14px 12px;border-radius:3px;background:var(--panel-2);border:1px solid var(--line)}.ds-fno{font:700 14px/1 var(--display);color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em}.ds-fscore{font:800 40px/1 var(--display);margin:8px 0 4px}.ds-fact{font-size:13px;color:var(--ink-2)}.ds-fbar{height:6px;border-radius:3px;background:var(--line);margin-top:10px;overflow:hidden}.ds-fbar i{display:block;height:100%;background:var(--green)}.ds-drift{border-color:var(--red)}.ds-drift .ds-fbar i{background:repeating-linear-gradient(135deg,var(--red) 0 3px,transparent 3px 6px)}.ds-drift::after{content:'';position:absolute;inset:0;border-radius:3px;pointer-events:none;background:repeating-linear-gradient(135deg,transparent 0 10px,rgba(255,59,48,.14) 10px 20px)}.ds-whistle{border-color:var(--green);background:#10322b}.ds-whistle .ds-fscore{color:var(--green)}.ds-check{position:absolute;left:-1px;right:-1px;top:-34px;height:26px;display:flex;align-items:center;gap:6px;padding:0 8px;white-space:nowrap;overflow:hidden;border-radius:2px;font:800 14px/1 var(--display);letter-spacing:.08em;text-transform:uppercase;background:var(--red);color:#fff;animation:ds-ruling 1.6s var(--ease) both}.ds-check svg{width:16px;height:16px}@keyframes ds-ruling{0%{background:var(--yellow);color:var(--yellow-ink);clip-path:inset(0 100% 0 0)}35%{background:var(--yellow);color:var(--yellow-ink);clip-path:inset(0 0 0 0)}70%{background:var(--yellow);color:var(--yellow-ink)}100%{background:var(--red);color:#fff}}@media (prefers-reduced-motion:reduce){.ds-check{animation:none}}"
+    },
+    {
+      "name": "Scoreline",
+      "kind": "custom",
+      "refersTo": "scoreline",
+      "description": "Final score against the base-branch denominator, with the missing-tests note when short.",
+      "html": "<div class=\"ds-score ds-short\"><span class=\"ds-num\">2/5</span><span class=\"ds-lbl\">Tests passing</span><span class=\"ds-lost\">3 of 5 tests missing vs base branch</span></div>",
+      "css": ":root{--ground:#0e1621;--panel:#16212e;--panel-2:#1d2a3a;--line:#2a3a4e;--ink:#fff;--ink-2:#c3cedb;--ink-3:#93a3b6;--green:#00e0a4;--green-ink:#062b22;--yellow:#ffd400;--yellow-ink:#2b2400;--red:#ff3b30;--red-soft:#ff8a82;--display:'Barlow Condensed','Arial Narrow',sans-serif;--ui:Barlow,system-ui,sans-serif;--ease:cubic-bezier(.16,1,.3,1)}.ds-score{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}.ds-num{font:800 72px/.85 var(--display)}.ds-short .ds-num{color:var(--red-soft)}.ds-lbl{display:block;margin-top:6px;color:var(--ink-3);font:600 13px/1 var(--ui);text-transform:uppercase;letter-spacing:.06em}.ds-lost{display:block;margin-top:8px;font:700 15px/1.2 var(--display);letter-spacing:.04em;text-transform:uppercase;color:var(--red-soft)}"
+    },
+    {
+      "name": "Fixture Row",
+      "kind": "nav",
+      "refersTo": "fixture",
+      "description": "Run list item: sequence number, title, state sub-line, score, thumbnail strip.",
+      "html": "<button class=\"ds-run\" aria-current=\"true\"><span class=\"ds-no\">15</span><span><span class=\"ds-t\">build(deps): bump packaging</span><span class=\"ds-sub\"><span class=\"ds-c\"></span>Green · kedge-demo#1</span></span><span class=\"ds-rs\">5/5</span><svg class=\"ds-strip\" viewBox=\"0 0 260 14\" preserveAspectRatio=\"none\" aria-hidden=\"true\"><rect x=\"0\" y=\"2\" width=\"85\" height=\"10\" rx=\"2\" fill=\"#ff3b30\"/><rect x=\"88\" y=\"2\" width=\"84\" height=\"10\" rx=\"2\" fill=\"#00e0a4\" opacity=\".35\"/><rect x=\"175\" y=\"2\" width=\"85\" height=\"10\" rx=\"2\" fill=\"#00e0a4\"/></svg></button>",
+      "css": ":root{--ground:#0e1621;--panel:#16212e;--panel-2:#1d2a3a;--line:#2a3a4e;--ink:#fff;--ink-2:#c3cedb;--ink-3:#93a3b6;--green:#00e0a4;--green-ink:#062b22;--yellow:#ffd400;--yellow-ink:#2b2400;--red:#ff3b30;--red-soft:#ff8a82;--display:'Barlow Condensed','Arial Narrow',sans-serif;--ui:Barlow,system-ui,sans-serif;--ease:cubic-bezier(.16,1,.3,1)}.ds-run{display:grid;grid-template-columns:54px 1fr auto;column-gap:12px;width:320px;text-align:left;padding:12px 12px 10px;border-radius:4px;background:transparent;color:var(--ink);border:1px solid transparent;font:500 15px/1.45 var(--ui);cursor:pointer;transition:background .2s var(--ease)}.ds-run:hover{background:var(--panel)}.ds-run[aria-current=true]{background:var(--panel-2);border-color:var(--line)}.ds-run:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}.ds-no{grid-row:1/3;font:800 30px/1 var(--display);color:var(--ink)}.ds-t{display:block;font:600 15px/1.25 var(--ui)}.ds-sub{display:block;font:500 13px/1.35 var(--ui);color:var(--ink-3)}.ds-c{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--green);margin-right:6px;vertical-align:-1px}.ds-rs{font:800 24px/1 var(--display);font-variant-numeric:tabular-nums}.ds-strip{grid-column:2/4;width:100%;height:14px;margin-top:8px}"
+    },
+    {
+      "name": "Tags",
+      "kind": "chip",
+      "refersTo": "tag-storm",
+      "description": "No guard (red fill) and storm (yellow outline) tags.",
+      "html": "<span class=\"ds-tag ds-warn\">No guard</span> <span class=\"ds-tag ds-storm\">Storm: delete-test</span>",
+      "css": ":root{--ground:#0e1621;--panel:#16212e;--panel-2:#1d2a3a;--line:#2a3a4e;--ink:#fff;--ink-2:#c3cedb;--ink-3:#93a3b6;--green:#00e0a4;--green-ink:#062b22;--yellow:#ffd400;--yellow-ink:#2b2400;--red:#ff3b30;--red-soft:#ff8a82;--display:'Barlow Condensed','Arial Narrow',sans-serif;--ui:Barlow,system-ui,sans-serif;--ease:cubic-bezier(.16,1,.3,1)}.ds-tag{display:inline-block;font:700 12px/1 var(--display);letter-spacing:.06em;text-transform:uppercase;padding:3px 6px 2px;border-radius:2px}.ds-warn{background:var(--red);color:#fff}.ds-storm{border:1px solid var(--yellow);color:var(--yellow)}"
+    },
+    {
+      "name": "Select",
+      "kind": "input",
+      "refersTo": "select",
+      "description": "Fixture filter.",
+      "html": "<select class=\"ds-select\"><option>All runs</option><option>With checks</option></select>",
+      "css": ":root{--ground:#0e1621;--panel:#16212e;--panel-2:#1d2a3a;--line:#2a3a4e;--ink:#fff;--ink-2:#c3cedb;--ink-3:#93a3b6;--green:#00e0a4;--green-ink:#062b22;--yellow:#ffd400;--yellow-ink:#2b2400;--red:#ff3b30;--red-soft:#ff8a82;--display:'Barlow Condensed','Arial Narrow',sans-serif;--ui:Barlow,system-ui,sans-serif;--ease:cubic-bezier(.16,1,.3,1)}.ds-select{font:600 14px var(--ui);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:3px;height:32px;padding:0 10px}.ds-select:hover{border-color:var(--ink-3)}.ds-select:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "VAR Review Room",
+    "overview": "**Creative North Star: \"VAR Review Room\"**\n\nKedge looks like the graphics package of a football broadcast on match night: navy pitch-night ground, white condensed type, scorelines set huge, and a referee's review laid out frame by frame. Every agent claim goes to the monitor. A run is a fixture with a sequence number and a scoreline (tests passed over tests that should exist). Each drift is a VAR check that ends in a ruling. The viewer should grasp at demo speed that Kedge checks rather than trusts.\n\nThe world is dense and flat: tonal navy panels separated by one hairline colour, no shadows, small radii, and three signal colours with fixed meanings. Numbers carry the story, so they are the biggest things on the screen and always tabular. Motion is limited to broadcast cues: a live pulse on things under review and a yellow-to-red wipe when a check becomes a ruling.\n\nThe nautical brand (the anchor mark, \"hauled back to\", storm) lives inside this world as vocabulary and the inline SVG anchor, not as a second visual system.",
+    "keyCharacteristics": [
+      "Pitch-night navy ground with tonal panels and 1px hairline borders; no shadows.",
+      "Three signal colours with one meaning each: green confirmed, yellow under review, red disallowed.",
+      "Barlow Condensed for every number, heading and label; Barlow for running text; tabular numerals everywhere.",
+      "The replay strip: one drawing of a run, used at thumbnail and full width.",
+      "Drift always reads without colour: diagonal hatch plus stop bar.",
+      "Scores use the base-branch denominator, so a run that lost tests never looks perfect."
+    ],
+    "rules": [
+      {
+        "name": "The Three Decisions Rule",
+        "body": "Green means confirmed, yellow means under review or needing attention, red means disallowed. Each colour keeps that one meaning on every surface. Never use green or red as decoration, and never use yellow for success.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ink-On-Signal Rule",
+        "body": "Green and yellow fills carry their dark ink (`green-ink`, `yellow-ink`). Red fills carry white. White on `red` measures about 3.5:1, so it only passes as large or bold display text. Set red labels at title size or larger, or use `red-soft` text on navy.",
+        "section": "colors"
+      },
+      {
+        "name": "The No-Fourth-Signal Rule",
+        "body": "There is no brand accent apart from the three decisions. Emphasis that isn't a decision uses white over `ink-2`/`ink-3`, or size.",
+        "section": "colors"
+      },
+      {
+        "name": "The Numbers Are Headlines Rule",
+        "body": "Scores, counts and sequence numbers are set in Barlow Condensed 800 at the largest size in their container, always with tabular numerals (`font-variant-numeric: tabular-nums` on body). A number is never smaller than the words that describe it.",
+        "section": "typography"
+      },
+      {
+        "name": "The Condensed Calls Rule",
+        "body": "Every call (verdict, check, tag, button, section head) is Barlow Condensed in uppercase with positive tracking. Sentences are never uppercase and never condensed.",
+        "section": "typography"
+      },
+      {
+        "name": "The Gantry Rule",
+        "body": "A surface is lifted by moving one tonal step up and drawing a `line` hairline, never by adding a shadow.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep green, yellow and red to their one decision each: confirmed, under review/attention, disallowed.",
+      "Do set every score, count and sequence number in Barlow Condensed 800 with tabular numerals, larger than its label.",
+      "Do compute scores against the base branch's test total whenever tests went missing, and say how many are missing.",
+      "Do mark drift with hatch and stop bar as well as colour, so it survives greyscale and colour-blind viewing.",
+      "Do draw a run as the replay strip (frames left to right, CHECK above, haul arrow below), reusing the same drawing at thumbnail scale.",
+      "Do show state with the fixed cell (filled, hollow, struck, live) beside status text.",
+      "Do lift surfaces by tonal step plus a 1px `line` hairline.",
+      "Do use dashed borders only for things that were not played: plans, replans, empty notes.",
+      "Do keep unavailable evidence actions visible at 45% opacity with a label that says what is missing."
+    ],
+    "donts": [
+      "Don't use yellow for success or green for decoration; a fourth accent colour breaks the decision language.",
+      "Don't put white text on a red fill below title size; use `red-soft` text on navy for small red copy.",
+      "Don't add drop shadows or glows apart from the live pulse.",
+      "Don't show a score with a shrunken denominator, or call a run green when it lost tests.",
+      "Don't render the nautical glyphs (anchor, sailboat, wave, compass, money bag, chequered flag, lying face) as emoji in the UI; icons are inline 2px-stroke SVG symbols that use `currentColor`.",
+      "Don't set sentences in uppercase or in the condensed face."
+    ]
+  }
+}

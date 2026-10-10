@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "kedge/ui/app.css"
+        ],
+        "createdAt": "2026-10-10T23:01:21.719Z",
+        "reason": "agent decision: compare-side team bars sit on corners already squared (border-radius: 0 0 4px 4px, L234); detector reads the base .side radius"
+      }
+    ]
+  }
+}
