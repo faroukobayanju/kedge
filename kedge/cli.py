@@ -100,6 +100,9 @@ def _drive(run_id, run_dir, cwd, pr, plan, pr_url, test_cmd, fork, log_tail, sta
             meta["ci_status"] = gitgh.wait_ci(res["draft_pr"])
         report.render(run_dir, meta)  # re-render with real CI verdict
     res["ci_status"] = meta.get("ci_status", "not run")
+    json.dump({**meta, "draft_pr": res["draft_pr"], "trail": res.get("trail"), "guard": kw["guard"],
+               "storm": kw.get("storm"), "finished_at": time.strftime("%Y-%m-%dT%H:%M:%S")},
+              open(os.path.join(run_dir, "result.json"), "w"))  # read by `kedge ui`
     print(shiplog.footer(res, meta["trace_url"]), file=sys.stderr, flush=True)
     return res
 
@@ -128,7 +131,13 @@ def main(argv=None) -> int:
         p.add_argument("--max-rollbacks", type=int, default=3)
         p.add_argument("--max-steps", type=int, default=6)
     sub.add_parser("resume").add_argument("run_id")
+    up = sub.add_parser("ui")
+    up.add_argument("--port", type=int, default=8711)
     a = ap.parse_args(argv)
+    if a.cmd == "ui":
+        from kedge import server
+        server.serve(port=a.port)
+        return 0
     load_dotenv()
     worker.use_pinned_opencode(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     if a.cmd == "resume":
