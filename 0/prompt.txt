@@ -180,3 +180,29 @@ Regressions from this batch:
 disposition: fix</result>
 <usage><subagent_tokens>63869</subagent_tokens><tool_uses>5</tool_uses><duration_ms>40000</duration_ms></usage>
 </task-notification>
+
+---
+
+<task-notification>
+<task-id>ad469d2502e1bd04e</task-id>
+<tool-use-id>toolu_017GrmkBmrLVf3K1UEnyhSKk</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-zorak-Documents-marketplace/cd9da397-cf5a-4398-8a9d-d5ceb647cbb1/tasks/ad469d2502e1bd04e.output</output-file>
+<status>completed</status>
+<summary>Agent "Write DESIGN.md for Kedge UI" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>I wrote both files for the new "VAR Review Room" world, based on what the shipped build actually does: the stylesheet, the page and script, the fonts, and the three screenshots.
+
+**Paths written**
+- /Users/zorak/Documents/kedge/DESIGN.md
+- /Users/zorak/Documents/kedge/.impeccable/design.json (the sidecar: 17 colours with tonal ramps, 10 type roles, 6 named rules, motion and breakpoint values, the hatch and stop-bar patterns, and 9 self-contained component snippets)
+
+**System summary**
+1. **Palette:** pitch-night navy ground (#0e1621) with a darker rail and two lighter panel steps, 1px hairline borders, and white plus two greys for text. There are three signal colours: green #00e0a4 means confirmed, yellow #ffd400 means CHECK, attention or live, and red #ff3b30 means drift, disallowed or shipped short. A softer red (#ff8a82) is used for red text on navy.
+2. **Type ramp:** Barlow Condensed for every number, heading and label (88px sequence number, 72px scoreline, 40px frame score, 34px headline, 22px uppercase section titles, 12–15px uppercase labels). Barlow 500 at 15px and 13px for sentences. Tabular numerals everywhere; system monospace only for code and SHAs.
+3. **Signature components:** the replay strip is one drawing of a run, used as a thumbnail in the fixture list and at full width. Each drift frame gets a CHECK banner that wipes in yellow and settles to red, plus a "Hauled back to &lt;sha&gt;" arrow. The state cell has four fixed states: filled (held), hollow (not held), struck (disallowed), pulsing (live). Drift always carries a diagonal hatch and a stop-bar overlay, so it reads without colour.
+4. **Scoring:** the denominator is the larger of the step's test total and the base branch's total, so a run that deleted tests shows 2/5, never 2/2. When tests are missing, the score turns soft red, a note says how many are missing, and "green" becomes "Shipped short".
+5. **Named rules:** Three Decisions, Ink-On-Signal, No-Fourth-Signal, Numbers Are Headlines, Condensed Calls and Gantry. The system is flat: depth comes only from stepping to a lighter navy, never from shadows.
+
+**Not canonized or repaired:** white text on the red fill measures about 3.5:1, which fails at the 12px "No guard" tag and the 14px CHECK banner. I documented red fills with white text only at title size or larger and left the build as it is. The stylesheet also defines the checkpoint section's spacing and heading font twice, and the CI "passed" link has no style of its own. I left both alone because they're surface drift, not system rules, and the build was outside my write boundary.</result>
+<usage><subagent_tokens>70226</subagent_tokens><tool_uses>13</tool_uses><duration_ms>207183</duration_ms></usage>
+</task-notification>
