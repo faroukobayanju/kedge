@@ -60,7 +60,13 @@ def trace_url(run_id) -> str:
     # Shape per neatlogs OpenAPI: {"data": {"traces": [{"traceId", "tags", ...}]}}; no URL field.
     try:
         env = {k: v for k, v in os.environ.items() if k != "NEATLOGS_API_KEY"}
-        out = subprocess.run(["neatlogs", "traces", "list", "--workflow", WORKFLOW, "--limit", "50", "--json"],
+        # the Python SDK also installs a `neatlogs` script into the venv; use the npm CLI explicitly
+        exe = os.path.expanduser(os.environ.get("NEATLOGS_CLI", "~/.local/bin/neatlogs"))
+        cli = [exe, "--host", os.environ.get("NEATLOGS_HOST", "https://app.neatlogs.com"),
+               "--profile", os.environ.get("NEATLOGS_PROFILE", "setup-https---app-neatlogs-com")]
+        if os.environ.get("NEATLOGS_PROJECT_ID"):
+            cli += ["--project", os.environ["NEATLOGS_PROJECT_ID"]]
+        out = subprocess.run(cli + ["traces", "list", "--workflow", WORKFLOW, "--limit", "50", "--json"],
                              capture_output=True, text=True, timeout=20, env=env).stdout
         return find_trace(json.loads(out), run_id)
     except Exception:
