@@ -116,3 +116,10 @@ def test_base_total_catches_lost_tests_behind_import_errors(tmp_path):
     # PR branch reports "2 errors" (per file); base branch says 3 tests. Deleting a file must be tests_regressed.
     r = loop(fixture(tmp_path), TEST_CMD, PLAN, "fix it", worker=fixing_worker, storm="delete-test", base_total=3)
     assert r["steps"][0]["drift"] == "tests_regressed"
+
+
+def test_noop_step_not_regressed_with_base_total(tmp_path):
+    def noop(p, c):
+        return {"cost_usd": 0.0, "text": "", "error": None}
+    r = loop(fixture(tmp_path), TEST_CMD, PLAN, "fix it", worker=noop, max_steps=2, base_total=3)
+    assert [s["drift"] for s in r["steps"]] == [None, None]

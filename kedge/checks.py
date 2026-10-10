@@ -40,7 +40,7 @@ def _allowed(f: str, globs: list[str]) -> bool:
 
 
 def drift(*, passed, total, best_passed, baseline_total, files, allowed,
-          diff_hash, seen_hashes, cost_total, budget, guard) -> str | None:
+          diff_hash, seen_hashes, cost_total, budget, guard, base_total=-1) -> str | None:
     if cost_total > budget:
         return "over_budget"
     if not guard:
@@ -48,6 +48,9 @@ def drift(*, passed, total, best_passed, baseline_total, files, allowed,
     if diff_hash in seen_hashes:
         return "loop"
     if total >= 0 and (passed < best_passed or total < baseline_total):
+        return "tests_regressed"
+    # base-branch count applies once tests execute; while the import is broken pytest counts files, not tests
+    if passed > 0 and 0 <= total < base_total:
         return "tests_regressed"
     if any(not _allowed(f, allowed) for f in files):
         return "out_of_plan"

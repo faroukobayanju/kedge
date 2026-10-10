@@ -53,7 +53,7 @@ def loop(cwd, test_cmd, plan, prompt_base, *, worker, replanner=None, guard=True
     if not s:
         ok, best, baseline_total = gitgh.run_tests(cwd, test_cmd)
         s = {"step": 0, "good": gitgh.head(cwd), "notes": [], "seen": [], "cost": plan.get("cost_usd", 0.0),
-             "best": best, "baseline_total": max(baseline_total, base_total), "plan": plan, "plan_idx": 0, "steps": []}
+             "best": best, "baseline_total": baseline_total, "base_total": base_total, "plan": plan, "plan_idx": 0, "steps": []}
         if ok:
             return _finish("already_green", s)
         save(s)
@@ -86,10 +86,10 @@ def loop(cwd, test_cmd, plan, prompt_base, *, worker, replanner=None, guard=True
         files, h = gitgh.changed_files(cwd), gitgh.diff_hash(cwd)
         d = checks.drift(passed=passed, total=total, best_passed=s["best"], baseline_total=s["baseline_total"],
                          files=files, allowed=s["plan"]["allowed_files"], diff_hash=h, seen_hashes=set(s["seen"]),
-                         cost_total=s["cost"], budget=budget, guard=guard)
+                         cost_total=s["cost"], budget=budget, guard=guard, base_total=s.get("base_total", -1))
         if ok and not d and guard:  # verification: a green result must reproduce
             ok2, _, total2 = gitgh.run_tests(cwd, test_cmd)
-            if not ok2 or (total2 >= 0 and total2 < s["baseline_total"]):
+            if not ok2 or (total2 >= 0 and total2 < max(s["baseline_total"], s.get("base_total", -1))):
                 d = "verify_failed"
         rec = _rec(run_id, s["step"], "worker_error" if r["error"] else "worker", s, files_changed=files,
                    tests_passed=passed, tests_total=total, cost_usd=r["cost_usd"], tokens=r.get("tokens", 0),

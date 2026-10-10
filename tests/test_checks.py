@@ -72,3 +72,10 @@ def test_negated_or_absent_claims_ignored():
 
 def test_no_tests_ran_counts_as_zero():
     assert parse_summary("no tests ran in 0.01s") == (0, 0)
+
+
+def test_base_total_only_once_tests_run():
+    b = {**BASE, "baseline_total": 2, "best_passed": 0, "base_total": 5}
+    assert drift(**{**b, "passed": 0, "total": 2}) is None             # import still broken: errors per file
+    assert drift(**{**b, "passed": 2, "total": 2}) == "tests_regressed"  # runs, but 3 tests gone
+    assert drift(**{**b, "passed": 5, "total": 5}) is None
