@@ -7,7 +7,7 @@ import tempfile
 import time
 import uuid
 
-from kedge import gitgh, report, shiplog, supervisor, trace, worker
+from kedge import gitgh, report, shiplog, supervisor, trace, trails, worker
 
 PROMPT = ("You are fixing a failing dependency-bump PR.\nPR: {title}\nPlan: {hyp}\n"
           "Only edit files matching: {allowed}\nFailure output:\n{log}\n"
@@ -86,8 +86,17 @@ def _drive(run_id, run_dir, cwd, pr, plan, pr_url, test_cmd, fork, log_tail, sta
     _, md = report.render(run_dir, meta)
     res.update(run_id=run_id, pr_url=pr_url, draft_pr=None)
     if res["status"] == "green":
-        res["draft_pr"] = gitgh.open_draft_pr(cwd, fork, f"kedge/{run_id}", pr["title"], md)
-        meta["ci_status"] = gitgh.wait_ci(res["draft_pr"])
+        branch = f"kedge/{run_id}"
+        base = gitgh.push_branch(cwd, fork, branch)
+        trail = trails.open_trail(cwd, fork, branch, base, pr["title"], open(md).read())
+        if trail:  # Entire Trail opens the draft PR itself; drifts become findings on it
+            res["trail"] = trail
+            res["findings"] = trails.post_findings(cwd, fork, branch, res["steps"])
+            res["draft_pr"] = trail
+        else:  # Trails not enabled for this repo (early access): plain draft PR
+            res["draft_pr"] = gitgh.open_draft_pr(cwd, fork, branch, pr["title"], md)
+        if res["draft_pr"].startswith("https://github.com/"):  # a trail selector is not a PR URL
+            meta["ci_status"] = gitgh.wait_ci(res["draft_pr"])
         report.render(run_dir, meta)  # re-render with real CI verdict
     res["ci_status"] = meta.get("ci_status", "not run")
     print(shiplog.footer(res, meta["trace_url"]), file=sys.stderr, flush=True)

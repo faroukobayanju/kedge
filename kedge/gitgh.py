@@ -78,10 +78,15 @@ def ci_log(pr_url, head_branch, repo) -> str:
     return trim_log(log)
 
 
-def open_draft_pr(cwd, fork, branch, title, body_path) -> str:
+def push_branch(cwd, fork, branch) -> str:
+    """Push HEAD to the fork; returns the fork's default branch (the PR/trail base)."""
     sh(["git", "remote", "add", "fork", f"https://github.com/{fork}.git"], cwd, check=False)
     sh(["git", "push", "-qf", "fork", f"HEAD:{branch}"], cwd)
-    base = json.loads(sh(["gh", "repo", "view", fork, "--json", "defaultBranchRef"]))["defaultBranchRef"]["name"]
+    return json.loads(sh(["gh", "repo", "view", fork, "--json", "defaultBranchRef"]))["defaultBranchRef"]["name"]
+
+
+def open_draft_pr(cwd, fork, branch, title, body_path) -> str:
+    base = push_branch(cwd, fork, branch)
     return sh(["gh", "pr", "create", "-R", fork, "--head", branch, "--base", base,
                "--draft", "--title", f"[kedge] {title}", "--body-file", body_path]).strip()
 
