@@ -138,5 +138,10 @@
   "viewport": "Sidebar, run header, animated vertical timeline.",
   "risk": "Looks like every other hackathon dashboard."
  },
- "steer": true
+ "steer": true,
+ "seed": {
+  "key": "7e425942",
+  "mode": "experience",
+  "assigned_index": 7
+ }
 }

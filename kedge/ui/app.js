@@ -1,9 +1,11 @@
 const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const inline = (t) => esc(t).replace(/`([^`]+)`/g, "<code>$1</code>");
 const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms / speed));
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let speed = 1;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms / speed));
 
 const DRIFT = {
   tests_regressed: ["tests lost", "The agent's change dropped passing or total tests."],
@@ -17,17 +19,13 @@ let runs = [];
 let current = null;
 let race = false;
 let picks = [];
-let speed = 1;
 let playToken = 0;
 let fingerprint = "";
 
-/* ---------- facts from a run ---------- */
+/* ---------- facts ---------- */
 const lastGood = (r) => [...(r.steps || [])].reverse().find((s) => s.tests_total >= 0 && !s.rolled_back);
 const denom = (r, total) => Math.max(total, r.base_total || 0);
-const lost = (r) => {
-  const l = lastGood(r);
-  return l && r.base_total > l.tests_total ? r.base_total - l.tests_total : 0;
-};
+const lost = (r) => { const l = lastGood(r); return l && r.base_total > l.tests_total ? r.base_total - l.tests_total : 0; };
 const verdict = (r) => {
   if (r.status === "green" && lost(r)) return { key: "short", word: "Shipped short", cls: "v-short" };
   if (r.status === "green") return { key: "keep", word: "Kept", cls: "v-keep" };
@@ -35,10 +33,7 @@ const verdict = (r) => {
   if (r.status === "running") return { key: "live", word: "Developing", cls: "v-live" };
   return { key: "out", word: "Gave up", cls: "v-out" };
 };
-const score = (r) => {
-  const l = lastGood(r);
-  return l ? `${l.tests_passed}/${denom(r, l.tests_total)}` : "–";
-};
+const score = (r) => { const l = lastGood(r); return l ? `${l.tests_passed}/${denom(r, l.tests_total)}` : "–"; };
 const prRef = (u) => { const m = /github\.com\/([^/]+\/[^/]+)\/pull\/(\d+)/.exec(u || ""); return m ? `${m[1]}#${m[2]}` : u || ""; };
 const checkpointId = (r) => [...(r.steps || [])].reverse().map((s) => s.entire_checkpoint).find(Boolean) || null;
 const traceId = (r) => (r.trace && r.trace !== "unavailable" ? r.trace : null);
@@ -52,126 +47,112 @@ function framesOf(r) {
   return f;
 }
 
-/* ---------- frame + mark drawing ---------- */
-function frameHTML(r, f, i) {
+/* ---------- frames ---------- */
+function frameInner(r, f) {
   if (f.kind === "plan") {
     const p = r.plan || {};
-    return `<button class="frame plan" data-i="${i}" type="button"><span class="fk">Kick-off · plan</span>
-      <span class="fs">Plan</span><span class="fa">${esc((p.steps || [])[0] || p.hypothesis || "Read the failing tests")}</span></button>`;
+    return { cls: "plan", fs: "Plan", fa: (p.steps || [])[0] || p.hypothesis || "Read the failing tests" };
   }
-  if (f.kind === "replan") {
-    return `<button class="frame plan" data-i="${i}" type="button"><span class="fk">Step ${f.s.step} · replan</span>
-      <span class="fs">Replan</span><span class="fa">Two strikes, so Kedge asked for a new approach.</span></button>`;
-  }
+  if (f.kind === "replan") return { cls: "plan", fs: "Replan", fa: "Two strikes, so Kedge asked for a new approach." };
   if (f.kind === "final") {
     const L = lost(r);
-    const [fs, fa, cls] = {
-      keep: ["Green", r.draft_pr ? "All tests pass. Draft PR opened." : "All tests pass.", ""],
-      short: ["Shipped", `PR opened without ${plural(L, "test")}. Nobody checked.`, " lost"],
-      flat: ["Green", "Tests already passed on arrival.", ""],
-      out: ["Gave up", "No safe fix found inside the budget.", " lost"],
+    return {
+      keep: { cls: "won", fs: "Green", fa: r.draft_pr ? "All tests pass. Draft PR opened." : "All tests pass." },
+      short: { cls: "lost", fs: "Shipped", fa: `PR opened without ${plural(L, "test")}. Nobody checked.` },
+      flat: { cls: "won", fs: "Green", fa: "Tests already passed on arrival." },
+      out: { cls: "lost", fs: "Gave up", fa: "No safe fix inside the budget." },
     }[f.v.key];
-    return `<button class="frame final${cls}" data-i="${i}" type="button"><span class="fk">Full time</span>
-      <span class="fs">${fs}</span><span class="fa">${esc(fa)}</span></button>`;
   }
-  const s = f.s;
-  const d = denom(r, s.tests_total);
-  const files = s.files_changed || [];
-  const pct = d > 0 && s.tests_total >= 0 ? Math.round((100 * s.tests_passed) / d) : 0;
-  const act = s.action === "worker_error" ? "The agent didn't answer in time."
+  const s = f.s, d = denom(r, s.tests_total), files = s.files_changed || [];
+  const fa = s.action === "worker_error" ? "The agent didn't answer in time."
     : files.length ? `Edited ${files.slice(0, 2).join(", ")}${files.length > 2 ? ` +${files.length - 2}` : ""}` : "Changed nothing.";
   const isLost = s.tests_total >= 0 && d > s.tests_total && s.tests_passed > 0;
-  return `<button class="frame${isLost ? " lost" : ""}" data-i="${i}" type="button"><span class="fk">Step ${s.step}</span>
-    <span class="fs">${s.tests_total >= 0 ? `${s.tests_passed}/${d}` : "?"}</span><span class="fa">${esc(act)}</span>
-    <span class="fb"><i style="width:${pct}%"></i></span></button>`;
+  return { cls: isLost ? "lost" : "", fs: s.tests_total >= 0 ? `${s.tests_passed}/${d}` : "?", fa };
+}
+const holes = (n = 4) => `<i></i>`.repeat(n);
+function cellHTML(r, f, i, last) {
+  const x = frameInner(r, f);
+  const label = f.kind === "step" ? `step ${f.s.step}` : f.kind === "replan" ? `step ${f.s.step}` : f.kind === "final" ? "final" : "plan";
+  return `<div class="cell"><span class="holes top">${holes()}</span>
+    <button class="frame ${x.cls}" data-i="${i}" type="button" aria-expanded="false" aria-label="Frame ${i + 1}: ${esc(x.fs)}. Open evidence">
+      <span class="fs">${esc(x.fs)}</span><span class="fa">${esc(x.fa)}</span></button>
+    <span class="holes bot">${holes()}</span>
+    <span class="edge">KEDGE ${no(r)} ▸ ${i + 1}${last ? "A" : ""} · ${label}</span></div>`;
 }
 
+/* ---------- china-marker strokes ---------- */
 const W = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--fw")) || 236;
 const H = 178;
-
-function svgFor(frameEl) {
-  let svg = frameEl.querySelector("svg.marks");
+function svgFor(el) {
+  let svg = el.querySelector("svg.marks");
   if (!svg) {
     svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("class", "marks");
     svg.setAttribute("viewBox", `0 0 ${W() + 36} ${H + 36}`);
+    svg.setAttribute("preserveAspectRatio", "none");
     svg.setAttribute("aria-hidden", "true");
-    frameEl.append(svg);
+    el.append(svg);
   }
   return svg;
 }
-function stroke(frameEl, d, cls, dur, instant) {
-  const svg = svgFor(frameEl);
+function stroke(el, d, cls, dur, instant) {
   const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
   p.setAttribute("d", d);
   p.setAttribute("class", `${cls} draw`);
-  svg.append(p);
-  const len = p.getTotalLength();
-  p.style.setProperty("--len", len);
+  svgFor(el).append(p);
+  p.style.setProperty("--len", p.getTotalLength());
   p.style.setProperty("--dur", `${instant ? 1 : dur / speed}ms`);
   requestAnimationFrame(() => p.classList.add("on"));
 }
-// hand-drawn marks: a little wobble so they read as a person's stroke, not a vector
+// a person's stroke, not a vector: each mark leans and bows a little
 function xMark(el, instant) {
   const w = W() + 36, h = H + 36;
   stroke(el, `M ${w * .14} ${h * .16} Q ${w * .48} ${h * .52} ${w * .88} ${h * .86}`, "red", 420, instant);
   setTimeout(() => stroke(el, `M ${w * .86} ${h * .14} Q ${w * .55} ${h * .45} ${w * .12} ${h * .88}`, "red", 420, instant), instant ? 0 : 380 / speed);
 }
-function ring(el, cls = "red", instant) {
+function ring(el, instant) {
   const w = W() + 36, h = H + 36, cx = w / 2, cy = h / 2, rx = w * .5, ry = h * .5;
-  stroke(el, `M ${cx - rx * .2} ${cy - ry * .98}
-    C ${cx + rx * .7} ${cy - ry * 1.08}, ${cx + rx * 1.05} ${cy - ry * .2}, ${cx + rx * .96} ${cy + ry * .3}
+  stroke(el, `M ${cx - rx * .2} ${cy - ry * .98} C ${cx + rx * .7} ${cy - ry * 1.08}, ${cx + rx * 1.05} ${cy - ry * .2}, ${cx + rx * .96} ${cy + ry * .3}
     C ${cx + rx * .86} ${cy + ry * .98}, ${cx - rx * .5} ${cy + ry * 1.06}, ${cx - rx * .95} ${cy + ry * .4}
-    C ${cx - rx * 1.08} ${cy - ry * .3}, ${cx - rx * .6} ${cy - ry * 1.02}, ${cx + rx * .15} ${cy - ry * .9}`, cls, 700, instant);
+    C ${cx - rx * 1.08} ${cy - ry * .3}, ${cx - rx * .6} ${cy - ry * 1.02}, ${cx + rx * .15} ${cy - ry * .9}`, "red", 700, instant);
 }
-function underline(el, cls = "yel", instant) {
+function underline(el, instant) {
   const w = W() + 36, h = H + 36;
-  stroke(el, `M ${w * .12} ${h * .48} Q ${w * .45} ${h * .44} ${w * .78} ${h * .5}`, cls, 380, instant);
+  stroke(el, `M ${w * .12} ${h * .5} Q ${w * .45} ${h * .45} ${w * .8} ${h * .52}`, "yel", 380, instant);
 }
-function note(el, text, where, cls = "", instant) {
+function note(el, html, where, cls, instant) {
   const n = document.createElement("span");
-  n.className = `note ${where} ${cls}`;
-  n.innerHTML = text;
+  n.className = `note ${where} ${cls || ""}`;
+  n.innerHTML = html;
   el.append(n);
-  if (instant) n.classList.add("on");
-  else requestAnimationFrame(() => n.classList.add("on"));
+  if (instant) n.classList.add("on"); else requestAnimationFrame(() => n.classList.add("on"));
 }
 
-/* ---------- the reel: one strip moving with spring physics ---------- */
+/* ---------- the reel: one strip on a spring ---------- */
 class Reel {
   constructor(lane) {
-    this.lane = lane;
-    this.vp = $(".viewport", lane);
-    this.strip = $(".strip", lane);
-    this.x = 0; this.v = 0; this.target = 0; this.raf = 0; this.done = null;
+    this.lane = lane; this.vp = $(".viewport", lane); this.strip = $(".strip", lane);
+    this.x = 0; this.v = 0; this.target = 0; this.raf = 0;
   }
-  // lay the whole sheet down: centered when it fits, otherwise ending on the last frame
-  whole(n) {
-    const sw = this.strip.scrollWidth, vw = this.vp.clientWidth;
-    return sw <= vw - 40 ? (vw - sw) / 2 : this.center(n - 1);
-  }
-  toX(x, opts) { const i = this; i.target = x; return this._run(opts); }
-  center(i) {
-    const fw = W(), gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--fgap")) || 22;
-    return this.vp.clientWidth / 2 - (gap + i * (fw + gap) + fw / 2);
-  }
+  cw() { return W() + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--fgap")) || 22); }
+  center(i) { return this.vp.clientWidth / 2 - (i * this.cw() + this.cw() / 2); }
   set(x) { this.x = x; this.v = 0; this.paint(); }
   paint() {
-    const blur = Math.min(Math.abs(this.v) / 700, 5);
+    const blur = Math.min(Math.abs(this.v) / 300, 7);
     this.strip.style.transform = `translate3d(${this.x}px,0,0)`;
     this.strip.style.filter = blur > .3 ? `blur(${blur.toFixed(2)}px)` : "";
   }
-  // a reel has mass: stiff spring, light damping, so a rewind overshoots and settles
-  to(i, opts) { this.target = this.center(i); return this._run(opts); }
-  _run({ stiff = 70, damp = 11 } = {}) {
+  // feed: critically damped, a crisp pull-down. rewind: loose and heavy, it overshoots and smears.
+  to(i, { stiff = 70, damp = 17 } = {}) {
+    this.target = this.center(i);
     if (reduce) { this.set(this.target); return Promise.resolve(); }
     cancelAnimationFrame(this.raf);
     return new Promise((res) => {
       let last = performance.now();
       const tick = (now) => {
-        const dt = Math.min((now - last) / 1000, 0.032) * speed; last = now;
-        const a = stiff * (this.target - this.x) - damp * this.v;
-        this.v += a * dt; this.x += this.v * dt;
+        const dt = Math.min((now - last) / 1000, .032) * speed; last = now;
+        this.v += (stiff * (this.target - this.x) - damp * this.v) * dt;
+        this.x += this.v * dt;
         this.paint();
         if (Math.abs(this.v) < 4 && Math.abs(this.target - this.x) < .5) { this.set(this.target); res(); return; }
         this.raf = requestAnimationFrame(tick);
@@ -179,24 +160,31 @@ class Reel {
       this.raf = requestAnimationFrame(tick);
     });
   }
+  // cut the strip into contact-sheet rows so every frame, and every mark, stays on the box
+  layDown(instant) {
+    const cells = $$(".cell", this.strip);
+    const before = cells.map((c) => c.getBoundingClientRect());
+    this.lane.classList.add("laid");
+    this.strip.style.transform = ""; this.strip.style.filter = "";
+    if (instant || reduce) return;
+    cells.forEach((c, k) => {
+      const a = c.getBoundingClientRect(), b = before[k];
+      c.animate([{ transform: `translate(${b.left - a.left}px, ${b.top - a.top}px)` }, { transform: "none" }],
+        { duration: 900 / speed, delay: (k * 40) / speed, easing: "cubic-bezier(.16, 1, .3, 1)", fill: "backwards" });
+    });
+  }
 }
 
 function laneHTML(r, label) {
   const fr = framesOf(r);
-  const fw = W(), gap = 22;
-  const edges = fr.map((_, i) => `<span class="edge" style="left:${gap + i * (fw + gap)}px">KEDGE ${no(r)} ▸ ${i + 1}${i === fr.length - 1 ? "A" : ""}</span>`).join("");
   return `<div class="lane" data-run="${esc(r.run_id)}">
-    ${label ? `<div class="lane-tag"><b>${label}</b> · No. ${no(r)}</div>` : ""}
+    ${label ? `<h2 class="lane-name ${r.guard === false ? "unguarded" : "guarded"}">${label}</h2>` : ""}
     <div class="viewport"><div class="gate"></div>
-      <div class="strip">${fr.map((f, i) => frameHTML(r, f, i)).join("")}${edges}</div>
-    </div></div>`;
+      <div class="strip">${fr.map((f, i) => cellHTML(r, f, i, i === fr.length - 1)).join("")}</div></div></div>`;
 }
 
 function printHTML(r, label) {
-  const v = verdict(r);
-  const l = lastGood(r);
-  const big = l ? `${l.tests_passed}/${denom(r, l.tests_total)}` : "–";
-  const L = lost(r);
+  const v = verdict(r), l = lastGood(r), L = lost(r);
   const why = {
     keep: `${plural(r.drifts, "cheat")} caught, ${plural(r.rollbacks, "rewind")}, every test kept.`,
     short: `${plural(L, "test")} vanished and the PR shipped anyway. No one was checking.`,
@@ -204,111 +192,161 @@ function printHTML(r, label) {
     out: `Kedge refused every unsafe change: ${plural(r.drifts, "cheat")} caught.`,
     live: "Still developing.",
   }[v.key];
-  const sign = { keep: "Kedge ✓", short: "unchecked", out: "Kedge: no safe fix", flat: "", live: "" }[v.key];
+  const sign = { keep: "checked by Kedge", short: "unchecked", out: "no safe fix", flat: "", live: "" }[v.key];
   return `<article class="print ${v.key}" data-run="${esc(r.run_id)}">
-    <div class="img"><span class="big" data-to="${l ? l.tests_passed : 0}" data-of="${l ? denom(r, l.tests_total) : 0}">${big}</span>
+    <div class="img"><span class="big" data-to="${l ? l.tests_passed : 0}" data-of="${l ? denom(r, l.tests_total) : 0}">${score(r)}</span>
       <span class="word">${esc(v.word)}</span><span class="why">${esc(why)}</span></div>
     <div class="cap"><span class="who">${label ? esc(label) + " · " : ""}No. ${no(r)} · ${esc(prRef(r.pr_url))}</span>
       ${r.draft_pr ? `<a class="open" href="${esc(r.draft_pr)}" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-pr"/></svg>Open PR</a>` : ""}
-      ${sign ? `<span class="sign${v.key === "keep" ? " ok" : ""}">${esc(sign)}</span>` : ""}</div>
-  </article>`;
+      ${sign ? `<span class="sign${v.key === "keep" ? " ok" : ""}">${esc(sign)}</span>` : ""}</div></article>`;
 }
 
 /* ---------- the performance ---------- */
 async function perform(reel, r, token, instant) {
   const fr = framesOf(r);
-  const els = [...reel.strip.querySelectorAll(".frame")];
+  const els = $$(".frame", reel.strip);
   const alive = () => token === playToken;
-  const dev = (i) => els[i].classList.add("dev");
-  if (instant) {
-    els.forEach((e) => e.classList.add("dev"));
-  } else {
+  if (instant) els.forEach((e) => e.classList.add("dev"));
+  else {
     reel.set(reel.vp.clientWidth + 60);
-    await reel.to(0, { stiff: 40, damp: 10 }); if (!alive()) return;
-    dev(0); await sleep(650);
+    await reel.to(0, { stiff: 40, damp: 13 }); if (!alive()) return;
+    els[0].classList.add("dev"); await sleep(600);
   }
   for (let i = 1; i < fr.length; i++) {
     const f = fr[i];
-    if (!instant) { await reel.to(i); if (!alive()) return; dev(i); await sleep(420); }
+    if (!instant) { await reel.to(i); if (!alive()) return; els[i].classList.add("dev"); await sleep(420); }
     if (f.kind === "step") {
       const s = f.s;
       if (s.false_claim) {
-        underline(els[i], "yel", instant);
+        underline(els[i], instant);
         note(els[i], `agent: “${esc(s.claim)}”<br>tests: ${s.tests_passed}/${denom(r, s.tests_total)}`, "up", "yel", instant);
         if (!instant) await sleep(1100);
       }
       if (s.drift && s.drift !== "over_budget") {
         xMark(els[i], instant);
-        const [what] = DRIFT[s.drift] || [s.drift];
-        note(els[i], `✗ ${what}<br><small>${esc((s.files_changed || []).slice(0, 2).join(", "))}</small>`, "down", "", instant);
+        note(els[i], `${(DRIFT[s.drift] || [s.drift])[0]}<br><small>${esc((s.files_changed || []).slice(0, 2).join(", "))}</small>`, "down", "", instant);
         if (!instant) await sleep(1300);
         if (s.rolled_back) {
           let cp = 0;
           for (let j = i - 1; j > 0; j--) if (fr[j].kind === "step" && !fr[j].s.drift) { cp = j; break; }
-          if (!instant) {
-            await reel.to(cp, { stiff: 34, damp: 7 }); if (!alive()) return;   // the rewind
-          }
+          if (!instant) { await reel.to(cp, { stiff: 34, damp: 4 }); if (!alive()) return; }   // the rewind
           if (!els[cp].querySelector(".note.up")) {
-            ring(els[cp], "red", instant);
-            note(els[cp], `↺ hauled back to <span class="sha">${esc((s.checkpoint_sha || "").slice(0, 7))}</span>`, "up", "", instant);
+            ring(els[cp], instant);
+            note(els[cp], `hauled back to <span class="sha">${esc((s.checkpoint_sha || "").slice(0, 7))}</span>`, "up", "", instant);
           }
           if (!instant) await sleep(1200);
         }
       }
     }
     if (f.kind === "final") {
-      if (f.v.key === "keep" || f.v.key === "flat") { ring(els[i], "red", instant); note(els[i], "keeper", "up", "", instant); }
-      if (f.v.key === "short") { xMark(els[i], instant); note(els[i], `✗ ${plural(lost(r), "test")} missing, shipped anyway`, "down", "", instant); }
+      if (f.v.key === "keep" || f.v.key === "flat") { ring(els[i], instant); note(els[i], "keeper", "up", "", instant); }
+      if (f.v.key === "short") { xMark(els[i], instant); note(els[i], `${plural(lost(r), "test")} missing, shipped anyway`, "down", "", instant); }
       if (!instant) await sleep(900);
     }
   }
-  if (instant) reel.set(reel.whole(fr.length));
-  else if (alive()) await reel.toX(reel.whole(fr.length), { stiff: 26, damp: 9 });
+  reel.layDown(instant);
+  if (!instant) await sleep(1000);
 }
 
-function countUp(el) {
+// the count settles like a needle: an underdamped spring on the number itself
+function settle(el, instant) {
   const to = +el.dataset.to, of = +el.dataset.of;
-  if (reduce || !of) return;
-  const t0 = performance.now(), dur = 900 / speed;
+  if (instant || reduce || !of) return;
+  let x = 0, v = 0, last = performance.now();
   const tick = (now) => {
-    const k = Math.min((now - t0) / dur, 1), e = 1 - Math.pow(1 - k, 3);
-    el.textContent = `${Math.round(to * e)}/${of}`;
-    if (k < 1) requestAnimationFrame(tick);
+    const dt = Math.min((now - last) / 1000, .032) * speed; last = now;
+    v += (90 * (to - x) - 7 * v) * dt; x += v * dt;
+    el.textContent = `${Math.max(0, Math.round(x))}/${of}`;
+    if (Math.abs(v) > .05 || Math.abs(to - x) > .05) requestAnimationFrame(tick); else el.textContent = `${to}/${of}`;
   };
   requestAnimationFrame(tick);
 }
 
+// the keeper lifts off the sheet: the print grows out of the final frame's own rectangle
+function lift(print, keeperEl, instant) {
+  print.classList.add("on");
+  if (instant || reduce || !keeperEl) return;
+  const a = keeperEl.getBoundingClientRect(), b = print.getBoundingClientRect();
+  print.animate([
+    { transform: `translate(${a.left - b.left}px, ${a.top - b.top}px) scale(${a.width / b.width}, ${a.height / b.height})`, opacity: .4 },
+    { transform: `translate(${(a.left - b.left) * .3}px, ${(a.top - b.top) * .3 - 30}px) scale(.8) rotate(-4deg)`, opacity: 1, offset: .45 },
+    { transform: "rotate(-1.4deg)", opacity: 1 },
+  ], { duration: 1100 / speed, easing: "cubic-bezier(.16, 1, .3, 1)", fill: "forwards" });
+}
+
 async function play(instant = false) {
   const token = ++playToken;
+  closeSlip();
   const chosen = race ? picks.map((id) => runs.find((r) => r.run_id === id)).filter(Boolean) : [current].filter(Boolean);
   if (!chosen.length) return;
-  $$(".print").forEach((p) => p.classList.remove("on"));
-  const reels = [...document.querySelectorAll(".lane")].map((l) => new Reel(l));
+  const reels = $$(".lane").map((l) => new Reel(l));
   await Promise.all(reels.map((reel, k) => perform(reel, chosen[k], token, instant || reduce)));
   if (token !== playToken) return;
-  document.querySelectorAll(".print").forEach((p, k) => setTimeout(() => {
-    p.classList.add("on"); countUp($(".big", p));
-  }, instant ? 0 : k * 450));
+  $$(".print").forEach((p, k) => setTimeout(() => {
+    const keeper = $$(".lane")[k] && $$(".frame", $$(".lane")[k]).pop();
+    lift(p, keeper, instant || reduce);
+    settle($(".big", p), instant || reduce);
+  }, instant ? 0 : k * 500 / speed));
 }
-const $$ = (s) => [...document.querySelectorAll(s)];
+
+/* ---------- the frame slip ---------- */
+function closeSlip() {
+  $("#slip")?.remove();
+  $$(".frame[aria-expanded='true']").forEach((f) => f.setAttribute("aria-expanded", "false"));
+}
+function openSlip(btn) {
+  const lane = btn.closest(".lane");
+  const r = runs.find((x) => x.run_id === lane.dataset.run);
+  const f = framesOf(r)[+btn.dataset.i];
+  closeSlip();
+  btn.setAttribute("aria-expanded", "true");
+  const rows = [];
+  let title = "Plan", hand = "";
+  if (f.kind === "plan") {
+    rows.push(["Hypothesis", inline(r.plan?.hypothesis || "none")], ["Allowed", (r.plan?.allowed_files || []).map((x) => `<code>${esc(x)}</code>`).join(" ")]);
+  } else if (f.kind === "final") {
+    title = "Final"; hand = f.v.word;
+    rows.push(["Score", score(r)], ["Draft PR", r.draft_pr ? `<a href="${esc(r.draft_pr)}" target="_blank" rel="noopener">${esc(prRef(r.draft_pr))}</a>` : "none"]);
+    rows.push(["Entire", checkpointId(r) ? `<code>${esc(checkpointId(r))}</code>` : "no checkpoint"], ["neatlogs", traceId(r) ? `<code>${esc(traceId(r))}</code>` : "trace not recorded"]);
+  } else {
+    const s = f.s;
+    title = `Step ${s.step}`;
+    hand = s.drift ? (DRIFT[s.drift] || [s.drift])[0] : f.kind === "replan" ? "replan" : "";
+    rows.push(["Action", s.action === "worker_error" ? "agent timed out" : s.action]);
+    rows.push(["Files", (s.files_changed || []).map((x) => `<code>${esc(x)}</code>`).join(" ") || "none"]);
+    if (s.tests_total >= 0) rows.push(["Tests", `${s.tests_passed}/${denom(r, s.tests_total)}`]);
+    if (s.drift) rows.push(["Kedge", `${esc((DRIFT[s.drift] || ["", ""])[1])}${s.rolled_back ? " Rolled back." : ""}`]);
+    if (s.claim) rows.push(["Agent said", `“${esc(s.claim)}”${s.false_claim ? " (overruled)" : ""}`]);
+    rows.push(["Commit", `<code>${esc((s.checkpoint_sha || "").slice(0, 10))}</code>`]);
+    if (s.entire_checkpoint) rows.push(["Entire", `<code>${esc(s.entire_checkpoint)}</code>`]);
+    rows.push(["Tokens", (s.tokens || 0).toLocaleString()]);
+  }
+  const slip = document.createElement("aside");
+  slip.id = "slip"; slip.className = "slip"; slip.setAttribute("aria-label", `${title} evidence`);
+  slip.innerHTML = `<button class="close" type="button">Close</button>
+    <h3>${esc(title)}${hand ? `<span class="hand">${esc(hand)}</span>` : ""}</h3>
+    <dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>`;
+  document.body.append(slip);
+  $(".close", slip).focus();
+}
 
 /* ---------- layout ---------- */
 function renderBench() {
   const bench = $("#bench");
+  closeSlip();
   if (!runs.length) { bench.replaceChildren($("#emptyTpl").content.cloneNode(true)); $("#envelope").innerHTML = ""; return; }
   if (race) {
     const [a, b] = picks.map((id) => runs.find((r) => r.run_id === id));
+    $("#envelope").innerHTML = "";
     if (!a || !b) {
       bench.innerHTML = `<div class="empty"><p class="mark-note big">Pick two sheets to race.</p>
         <p>The same PR with <code>--no-guard</code> and with Kedge makes the point.</p></div>`;
-      $("#envelope").innerHTML = "";
       return;
     }
     const lbl = (r) => (r.guard === false ? "No guard" : "Kedge");
     bench.innerHTML = `<div class="reel-title"><span class="no">vs</span><h1>${esc(a.title || prRef(a.pr_url))}</h1>
       <span class="src">${esc(prRef(a.pr_url))}${a.storm ? `<span class="storm">sabotage: ${esc(a.storm)}</span>` : ""}</span></div>
       ${laneHTML(a, lbl(a))}${laneHTML(b, lbl(b))}<div class="prints">${printHTML(a, lbl(a))}${printHTML(b, lbl(b))}</div>`;
-    $("#envelope").innerHTML = "";
     return;
   }
   const r = current;
@@ -330,8 +368,7 @@ function renderEnvelope(r) {
     if (s.false_claim) items.push(`<li><h3 class="yel">Step ${s.step}: claim overruled</h3><p>The agent said “${esc(s.claim)}”. The tests said ${s.tests_passed}/${denom(r, s.tests_total)}.</p></li>`);
   });
   if (!items.length) items.push(`<li><h3 class="ok">No cheats on this sheet</h3><p>Every step kept the tests and stayed on the plan.</p></li>`);
-  const p = r.plan || {};
-  const t = traceId(r), cp = checkpointId(r);
+  const p = r.plan || {}, t = traceId(r), cp = checkpointId(r);
   const ci = r.ci_status && r.ci_status !== "not run" ? r.ci_status : null;
   $("#envelope").innerHTML = `<section><h2>Editor's notes</h2><ul class="log">${items.join("")}</ul>
       <div class="stamps">
@@ -342,18 +379,19 @@ function renderEnvelope(r) {
       </div>
       ${cp && r.entire_explain && !r.entire_explain.startsWith("(no") ? `<details class="cp"><summary>Read the agent's session behind the final commit</summary><pre>${esc(r.entire_explain)}</pre></details>` : ""}
     </section>
-    <section><h2>The plan</h2><div class="plan-note"><p>${p.hypothesis ? inline(p.hypothesis) : "No plan recorded."}</p>
+    <section><h2>The plan</h2><div class="plan-slip"><p>${p.hypothesis ? inline(p.hypothesis) : "No plan recorded."}</p>
       ${(p.steps || []).length ? `<ol>${p.steps.map((x) => `<li>${inline(x)}</li>`).join("")}</ol>` : ""}
-      <p style="margin-top:12px">Allowed: ${(p.allowed_files || []).map((f) => `<code>${esc(f)}</code>`).join(" ")}</p></div></section>`;
+      <p>Allowed: ${(p.allowed_files || []).map((f) => `<code>${esc(f)}</code>`).join(" ")}</p></div></section>`;
 }
 
 function renderSheets() {
   $("#sheetList").innerHTML = runs.map((r) => {
-    const v = verdict(r);
-    const pick = picks.indexOf(r.run_id);
+    const v = verdict(r), pick = picks.indexOf(r.run_id);
+    const film = framesOf(r).map((f) => `<i class="${f.kind === "step" && f.s.drift ? "x" : f.kind === "step" && f.s.false_claim ? "y" : f.kind === "final" && (f.v.key === "keep") ? "k" : f.kind === "final" && f.v.key === "short" ? "x" : ""}"></i>`).join("");
     return `<li><button class="sheet" type="button" data-id="${esc(r.run_id)}"
       aria-current="${!race && current && r.run_id === current.run_id}" ${race && pick >= 0 ? `data-pick="${pick}"` : ""}>
       <span class="sheet-no">${no(r)}</span><span class="sheet-title">${esc(r.title || prRef(r.pr_url))}</span>
+      <span class="sheet-film" aria-hidden="true">${film}</span>
       <span class="sheet-sub">${esc(prRef(r.pr_url))} · ${score(r)}${r.guard === false ? " · no guard" : ""}${r.storm ? ` · ${esc(r.storm)}` : ""}</span>
       <span class="sheet-verdict ${v.cls}">${esc(v.word)}</span></button></li>`;
   }).join("");
@@ -362,17 +400,12 @@ function renderSheets() {
 function renderTally() {
   const done = runs.filter((r) => r.status !== "running");
   const kept = runs.filter((r) => verdict(r).key === "keep").length;
-  const cheats = runs.reduce((n, r) => n + r.drifts, 0);
-  const lies = runs.reduce((n, r) => n + r.false_claims, 0);
+  const cheats = runs.reduce((n, r) => n + r.drifts, 0), lies = runs.reduce((n, r) => n + r.false_claims, 0);
   $("#tally").innerHTML = `<b>${kept}/${done.length}</b> kept · <b>${cheats}</b> cheats caught · <b>${lies}</b> lies overruled`;
-  if (current && !race) $("#labelSub").textContent = `sheet No. ${no(current)}`;
-  else $("#labelSub").textContent = race ? "race" : "contact sheet";
+  $("#labelSub").textContent = race ? "race" : current ? `sheet No. ${no(current)}` : "contact sheet";
 }
 
-function show(autoplay) {
-  renderTally(); renderSheets(); renderBench();
-  if (runs.length) play(!autoplay);
-}
+function show(autoplay) { renderTally(); renderSheets(); renderBench(); if (runs.length) play(!autoplay); }
 
 async function load(first) {
   try {
@@ -380,8 +413,7 @@ async function load(first) {
     [...data].sort((a, b) => a.run_id.localeCompare(b.run_id)).forEach((r, i) => (r.no = i + 1));
     const fp = JSON.stringify(data.map((r) => [r.run_id, r.status, r.steps.length]));
     if (fp === fingerprint) return;
-    fingerprint = fp;
-    runs = data;
+    fingerprint = fp; runs = data;
     const want = current?.run_id || location.hash.slice(1);
     current = runs.find((r) => r.run_id === want) || runs[0] || null;
     if (first) show(true); else { renderTally(); renderSheets(); }
@@ -391,17 +423,14 @@ async function load(first) {
 }
 
 /* ---------- interaction ---------- */
+const sheetsOpen = (open) => { $("#sheets").hidden = !open; $("#sheetsBtn").setAttribute("aria-expanded", String(open)); };
 $("#playBtn").addEventListener("click", () => { renderBench(); play(false); });
-$("#sheetsBtn").addEventListener("click", () => {
-  const open = $("#sheets").hidden;
-  $("#sheets").hidden = !open;
-  $("#sheetsBtn").setAttribute("aria-expanded", String(open));
-});
+$("#sheetsBtn").addEventListener("click", () => sheetsOpen($("#sheets").hidden));
 $("#raceBtn").addEventListener("click", (e) => {
   race = !race;
   e.currentTarget.setAttribute("aria-pressed", String(race));
   $("#raceHint").hidden = !race;
-  if (race && picks.length < 2) { $("#sheets").hidden = false; $("#sheetsBtn").setAttribute("aria-expanded", "true"); }
+  if (race && picks.length < 2) sheetsOpen(true);
   show(true);
 });
 $("#sheetList").addEventListener("click", (e) => {
@@ -410,24 +439,26 @@ $("#sheetList").addEventListener("click", (e) => {
   const id = b.dataset.id;
   if (race) {
     picks = picks.includes(id) ? picks.filter((x) => x !== id) : [...picks, id].slice(-2);
-    if (picks.length === 2) { $("#sheets").hidden = true; $("#sheetsBtn").setAttribute("aria-expanded", "false"); }
+    if (picks.length === 2) sheetsOpen(false); else { renderSheets(); return; }
   } else {
     current = runs.find((r) => r.run_id === id);
     history.replaceState(null, "", `#${id}`);
-    $("#sheets").hidden = true; $("#sheetsBtn").setAttribute("aria-expanded", "false");
+    sheetsOpen(false);
   }
   show(true);
 });
 document.addEventListener("click", async (e) => {
+  const frame = e.target.closest(".frame");
+  if (frame && !e.target.closest(".loupe")) { frame.getAttribute("aria-expanded") === "true" ? closeSlip() : openSlip(frame); return; }
+  if (e.target.closest(".slip .close")) { closeSlip(); return; }
   const b = e.target.closest("[data-copy]");
-  if (!b) return;
-  try { await navigator.clipboard.writeText(b.dataset.copy); $("b", b).textContent = "copied"; } catch { /* clipboard blocked */ }
+  if (b) { try { await navigator.clipboard.writeText(b.dataset.copy); $("b", b).textContent = "copied"; } catch { /* clipboard blocked */ } }
 });
 document.addEventListener("keydown", (e) => {
-  if (e.target.closest("input, select, textarea")) return;
-  if (e.key === " " || e.key === "Enter" && e.target === document.body) { e.preventDefault(); renderBench(); play(false); }
-  if (e.key === "Escape") { $("#sheets").hidden = true; $("#sheetsBtn").setAttribute("aria-expanded", "false"); }
-  if (e.key === "s") speed = speed === 1 ? 0.55 : 1;  // slow-motion for the video
+  if (e.key === "Escape") { closeSlip(); sheetsOpen(false); return; }
+  if (e.target !== document.body) return;               // buttons keep Space and Enter for themselves
+  if (e.key === " ") { e.preventDefault(); renderBench(); play(false); }
+  if (e.key === "s") speed = speed === 1 ? .55 : 1;   // slow motion for the video
 });
 
 /* the loupe: a magnified copy of the frame under the cursor */
