@@ -92,7 +92,7 @@ function frames(r) {
       <div class="f-no">Step ${s.step}</div>
       <div class="f-score">${s.tests_total >= 0 ? `${s.tests_passed}/${Math.max(s.tests_total, r.base_total || 0)}` : "?"}</div>
       <div class="f-act">${act}</div>
-      <div class="f-bar"><i style="width:${drift ? 100 : pct}%"></i></div>
+      <div class="f-bar${r.status === "green" && lost(r) ? " short" : ""}"><i style="width:${drift ? 100 : pct}%"></i></div>
       ${back}</li>`);
     if (!drift) lastGood = s.step;
   });
@@ -172,7 +172,7 @@ function stageRun(r) {
       </div>
       <div class="scoreline ${lost(r) ? "short" : r.status === "green" ? "won" : ""}"><span class="num">${score(r)}</span><span class="lbl">Tests passing</span>${lostNote(r)}</div>
     </header>
-    <div class="ruling-bar"><span class="verdict ${s.cls}">${s.text}</span><span class="facts">${facts}</span>${ci}${actions(r)}</div>
+    <div class="ruling-bar"><span class="verdict ${s.cls}">${s.text}</span><span class="facts"><span>${facts}</span>${ci}</span>${actions(r)}</div>
     ${checkpoint(r) && r.entire_explain && !r.entire_explain.startsWith("(no") ? `<details class="checkpoint"><summary>Entire checkpoint ${esc(checkpoint(r).slice(0, 8))}: the agent's session behind the final commit</summary><pre>${esc(r.entire_explain)}</pre></details>` : ""}
     <section class="replay-wrap" aria-label="Replay">
       <div class="section-h"><h2>Replay</h2><span>Every step Kedge checked, left to right</span></div>

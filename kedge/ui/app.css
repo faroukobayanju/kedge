@@ -130,7 +130,7 @@ select {
 .scoreline .lbl { display: block; margin-top: 6px; color: var(--ink-3); font: 600 13px/1 var(--ui); text-transform: uppercase; letter-spacing: .06em; }
 
 .ruling-bar {
-  margin: 24px 0 0; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  margin: 24px 0 0; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px 14px;
   padding: 14px 16px; border-radius: 4px; background: var(--panel); border: 1px solid var(--line);
 }
 .verdict {
@@ -141,7 +141,7 @@ select {
 .verdict.open { background: var(--red); color: #fff; }
 .verdict.running { background: var(--yellow); color: var(--yellow-ink); }
 .verdict.neutral { background: var(--panel-2); color: var(--ink); }
-.ruling-bar .facts { color: var(--ink-2); font-size: 15px; }
+.ruling-bar .facts { color: var(--ink-2); font-size: 15px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
 .ruling-bar .facts b { color: var(--ink); font-weight: 600; }
 b, strong { font-weight: 600; }
 .ci { display: inline-flex; align-items: center; font-size: 14px; color: var(--ink-2); text-decoration: none; padding: 4px 8px; border: 1px solid var(--line); border-radius: 3px; }
@@ -154,7 +154,8 @@ b, strong { font-weight: 600; }
 .frame.short .f-score { color: var(--red-soft); }
 details.checkpoint { margin-top: 14px; }
 details.checkpoint summary { font-size: 16px; color: var(--ink-2); }
-.ruling-bar .actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+.ruling-bar .actions { display: flex; gap: 8px; justify-content: flex-end; }
+.frame .f-bar.short i { background: var(--ink-3); }
 
 /* ---------- replay strip (signature) ---------- */
 .replay-wrap { margin-top: 28px; }
@@ -261,6 +262,10 @@ details.checkpoint pre { white-space: pre-wrap; color: var(--ink-2); background:
   .match-no { display: none; }
   .scoreline .num { font-size: 52px; }
   .two, .versus { grid-template-columns: 1fr; }
+  .ruling-bar { grid-template-columns: 1fr; }
+  .ruling-bar .actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .ruling-bar .actions .btn { justify-content: center; }
+  .ruling-bar .actions .btn.primary { grid-column: 1 / -1; }
   .vs { justify-self: center; }
 }
 
