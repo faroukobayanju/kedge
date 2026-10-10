@@ -26,6 +26,14 @@ Pending: the builders choose which names and handles to publish.
 - **Open finding:** with `entire enable --agent opencode`, a headless `opencode run` plus a manual commit produced **0 Entire checkpoints** (`entire session list` reports "No sessions."), even with `entire` on PATH and the OpenCode service restarted. `opencode run --standalone` hung with no output. Still under investigation.
 - **Done (after kickoff, 4:35 PM IST):** created the repo with a `uv` scaffold (flat `kedge/` package, `neatlogs` dependency, `pytest`), plus the design, spec and plan docs, this log, and the neatHack skill.
 
+- **Done (Sat evening):** Tasks 1, 2, 3, 4 and 6 are committed. `uv run pytest` gives **31 passed**.
+  - **Task 1:** drift checks and the test-summary parser. pytest output with only collection errors is now counted (`2 errors` → 0/2), which a broken import produces.
+  - **Task 2:** git and gh operations.
+  - **Task 3:** the worker adapter now defaults to **OpenCode**: `opencode run --format json --auto` for edits, `--agent plan` for read-only planning. Claude Code is available with `KEDGE_WORKER=claude`. Two real calls worked at $0: the edit created the file, and the plan narrowed `allowed_files` to `src/util.js` for a lodash `_.pluck` failure.
+  - **Task 4:** the supervisor loop. Rollback on drift and the recovery notes are verified on a fixture repo with a stub worker. The chaos run is caught as `tests_regressed` and recovers to green, and without the guard it ships with fewer tests.
+  - **Task 6:** the chaos injector, done early to unblock Task 4.
+- **Not yet done:** a real end-to-end run on a GitHub PR (needs `targets.json` and the CLI from Task 8). The Entire capture of headless OpenCode is still unresolved.
+
 ## Demo
 Pending.
 
