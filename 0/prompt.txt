@@ -20,3 +20,7 @@ Entire: installed on my machine and git hooks enabled in my clone. My next codin
 <status>completed</status>
 <summary>Background command "Rerun guarded after-run with all fixes" completed (exit code 0)</summary>
 </task-notification>
+
+---
+
+is entire working now?. also are we done with the ui
