@@ -106,15 +106,24 @@ def main(argv=None) -> int:
         return 0 if res["status"] in ("green", "already_green") else 1
     results = []
     for t in json.load(open(a.target)):
+        t0 = time.time()
         try:
             r = run_one(t["pr_url"], t["test_cmd"], t["fork"], setup_cmd=t.get("setup_cmd"), **kw)
         except Exception as e:  # one broken target must not stop the batch
             r = {"pr_url": t["pr_url"], "status": f"error: {e}", "cost_usd_total": 0.0, "rollbacks": 0, "steps": []}
+        r["minutes"] = round((time.time() - t0) / 60, 2)
         results.append(r)
-        print(json.dumps({k: r.get(k) for k in ("pr_url", "status", "cost_usd_total", "rollbacks", "draft_pr")}))
+        print(json.dumps({k: r.get(k) for k in ("pr_url", "status", "cost_usd_total", "rollbacks", "draft_pr", "minutes")}),
+              flush=True)
     green = [r for r in results if r["status"] == "green"]
     drifts = sum(1 for r in results for s in r["steps"] if s["drift"] and s["drift"] != "over_budget")
     cost = sum(r["cost_usd_total"] for r in results)
+    steps = [len(r["steps"]) for r in results]
+    tokens = sum(s.get("tokens", 0) for r in results for s in r["steps"])
+    mins = [r["minutes"] for r in results if "minutes" in r]
     print(json.dumps({"green": len(green), "total": len(results), "drifts_caught": drifts,
-                      "usd_per_green": round(cost / len(green), 3) if green else None}))
+                      "usd_total": round(cost, 4), "usd_per_green": round(cost / len(green), 3) if green else None,
+                      "tokens_total": tokens, "tokens_per_green": tokens // len(green) if green else None,
+                      "mean_steps": round(sum(steps) / len(steps), 2) if steps else None,
+                      "mean_minutes": round(sum(mins) / len(mins), 2) if mins else None}))
     return 0

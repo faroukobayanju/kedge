@@ -22,7 +22,7 @@ def loop(cwd, test_cmd, plan, prompt_base, *, worker, guard=True, chaos=False, b
                          cost_total=cost, budget=budget, guard=guard)
         rec = {"run_id": run_id, "step": step, "action": "worker_error" if r["error"] else "worker",
                "files_changed": files, "tests_passed": passed, "tests_total": total,
-               "cost_usd": r["cost_usd"], "cost_usd_total": round(cost, 4), "drift": d,
+               "cost_usd": r["cost_usd"], "cost_usd_total": round(cost, 4), "tokens": r.get("tokens", 0), "drift": d,
                "rolled_back": False, "checkpoint_sha": good, "entire_checkpoint": ""}
         if d:
             gitgh.reset(cwd, good)

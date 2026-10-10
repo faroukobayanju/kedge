@@ -23,17 +23,20 @@ def use_pinned_opencode(root) -> bool:
 
 def parse_opencode(jsonl: str) -> dict:
     """Sum step costs and keep the last text event from `opencode run --format json`."""
-    cost, text = 0.0, ""
+    cost, text, tokens = 0.0, "", 0
     for line in jsonl.splitlines():
         try:
             e = json.loads(line)
         except json.JSONDecodeError:
             continue
         if e.get("type") == "step_finish":
-            cost += float(e.get("part", {}).get("cost") or 0.0)
+            part = e.get("part", {})
+            cost += float(part.get("cost") or 0.0)
+            t = part.get("tokens") or {}
+            tokens += int(t.get("input") or 0) + int(t.get("output") or 0) + int(t.get("reasoning") or 0)
         elif e.get("type") == "text":
             text = e.get("part", {}).get("text", text)
-    return {"result": text, "total_cost_usd": round(cost, 6)}
+    return {"result": text, "total_cost_usd": round(cost, 6), "tokens": tokens}
 
 
 def _agent(prompt, cwd, edit) -> dict:
@@ -53,9 +56,10 @@ def _agent(prompt, cwd, edit) -> dict:
 def run_edit_step(prompt, cwd) -> dict:
     try:
         d = _agent(prompt, cwd, edit=True)
-        return {"cost_usd": float(d.get("total_cost_usd", 0.0)), "text": d.get("result", ""), "error": None}
+        return {"cost_usd": float(d.get("total_cost_usd", 0.0)), "text": d.get("result", ""),
+                "tokens": int(d.get("tokens", 0)), "error": None}
     except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError) as e:
-        return {"cost_usd": 0.0, "text": "", "error": type(e).__name__}
+        return {"cost_usd": 0.0, "text": "", "tokens": 0, "error": type(e).__name__}
 
 
 def make_plan(title, ci_log, files, cwd) -> dict:

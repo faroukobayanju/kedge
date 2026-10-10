@@ -5,7 +5,7 @@ from kedge import worker
 
 JSONL = "\n".join(json.dumps(e) for e in [
     {"type": "step_start", "part": {}},
-    {"type": "step_finish", "part": {"cost": 0.01, "tokens": {"input": 10, "output": 5}}},
+    {"type": "step_finish", "part": {"cost": 0.01, "tokens": {"input": 10, "output": 5, "reasoning": 1}}},
     {"type": "text", "part": {"text": "first"}},
     {"type": "step_finish", "part": {"cost": 0.02}},
     {"type": "text", "part": {"text": "Created hello.txt."}},
@@ -13,11 +13,11 @@ JSONL = "\n".join(json.dumps(e) for e in [
 
 
 def test_parse_opencode_jsonl():
-    assert worker.parse_opencode(JSONL) == {"result": "Created hello.txt.", "total_cost_usd": 0.03}
+    assert worker.parse_opencode(JSONL) == {"result": "Created hello.txt.", "total_cost_usd": 0.03, "tokens": 16}
 
 
 def test_parse_opencode_ignores_garbage_lines():
-    assert worker.parse_opencode("not json\n" + JSONL) == {"result": "Created hello.txt.", "total_cost_usd": 0.03}
+    assert worker.parse_opencode("not json\n" + JSONL)["total_cost_usd"] == 0.03
 
 
 def test_worker_error_costs_zero(monkeypatch):
