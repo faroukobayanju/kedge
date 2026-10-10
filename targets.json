@@ -10,11 +10,6 @@
     "fork": "Haikeysgit/cimd"
   },
   {
-    "pr_url": "https://github.com/ashlrai/lexicon/pull/28",
-    "test_cmd": "npm ci && npx vitest run",
-    "fork": "Haikeysgit/lexicon"
-  },
-  {
     "pr_url": "https://github.com/terngg/prompt-optimizer/pull/4",
     "test_cmd": "npm ci && npx vitest run",
     "fork": "Haikeysgit/prompt-optimizer"
@@ -23,11 +18,6 @@
     "pr_url": "https://github.com/nrenre62/crypto-idea/pull/125",
     "test_cmd": "npm ci && npm run test:unit",
     "fork": "Haikeysgit/crypto-idea"
-  },
-  {
-    "pr_url": "https://github.com/coupergateway/couper-vscode/pull/168",
-    "test_cmd": "npm ci && npx jest",
-    "fork": "Haikeysgit/couper-vscode"
   },
   {
     "pr_url": "https://github.com/canonical/create-pull-request/pull/402",
@@ -45,8 +35,18 @@
     "fork": "Haikeysgit/numpy-flint-arb"
   },
   {
-    "pr_url": "https://github.com/ultrasphere-dev/ultrasphere-harmonics/pull/102",
-    "test_cmd": "uv run pytest -q",
-    "fork": "Haikeysgit/ultrasphere-harmonics"
+    "pr_url": "https://github.com/luisfagottani/periplus/pull/18",
+    "test_cmd": "pnpm install && pnpm vitest run",
+    "fork": "Haikeysgit/periplus"
+  },
+  {
+    "pr_url": "https://github.com/civitaspo/dbt-snowflake-iceberg-sync/pull/83",
+    "test_cmd": "uv sync -q && uv run pytest -q tests/unit",
+    "fork": "Haikeysgit/dbt-snowflake-iceberg-sync"
+  },
+  {
+    "pr_url": "https://github.com/Fooftilly/kokoro-extension/pull/31",
+    "test_cmd": "npm ci && npx jest",
+    "fork": "Haikeysgit/kokoro-extension"
   }
 ]
