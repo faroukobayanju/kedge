@@ -61,6 +61,9 @@ def run_one(pr_url, test_cmd, fork, *, setup_cmd=None, guard, chaos, budget, max
     res.update(run_id=run_id, pr_url=pr_url, draft_pr=None)
     if res["status"] == "green":
         res["draft_pr"] = gitgh.open_draft_pr(cwd, fork, f"kedge/{run_id}", pr["title"], md)
+        meta["ci_status"] = gitgh.wait_ci(res["draft_pr"])
+        report.render(run_dir, meta)  # re-render with real CI verdict
+    res["ci_status"] = meta.get("ci_status", "not run")
     return res
 
 
