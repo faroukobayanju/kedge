@@ -1,0 +1,142 @@
+{
+ "title": "Choose Kedge's new world: the rewind as spectacle",
+ "question": "Cinematic replay, the rewind is the moment. The roll assigned Contact Sheet. Keep it, take an alternate, or re-roll.",
+ "options": [
+  {
+   "id": "assigned",
+   "label": "Contact Sheet on the Lightbox",
+   "kicker": "THE ROLL",
+   "lineage": "photographers' contact sheets: strips of film on a lightbox, marked in red china marker",
+   "thesis": "Every agent step is a frame on a strip of film. Kedge is the editor with the china marker: it strikes a red X through the frame where the agent cheated, the strip physically rewinds through the gate to the last circled frame, and the keeper is enlarged to a full print: 5/5.",
+   "palette": [
+    "#f4f6f8",
+    "#0b0b0c",
+    "#e3241b",
+    "#f2b705",
+    "#d26a1b"
+   ],
+   "materials": [
+    "film rebate with sprocket holes and edge numbers",
+    "backlit lightbox glass",
+    "red china-marker strokes",
+    "a loupe"
+   ],
+   "viewport": "Full-bleed lightbox. One horizontal film strip runs across it: each frame is a step (files touched, tests 2/5), sprockets counting steps, orange edge print 'KEDGE \u25b6 STEP 1'. On play, frames feed left to right; on the drift frame the strip halts, a red china-marker X is drawn over it, the strip rewinds through the gate with reel inertia to the circled checkpoint, then runs forward to the keeper, which lifts off the sheet as an enlarged print with the score. A loupe follows the cursor; run picker as a stack of numbered sheets.",
+   "risk": "Darkroom nostalgia if the marks are timid; the X, the rewind and the enlargement must be performed at full scale.",
+   "raised": [
+    {
+     "from": "medium-native-fluid-ink-basin",
+     "raise": "Motion obeys real physics: the rewind has reel inertia and overshoot, never a tween."
+    },
+    {
+     "from": "signals-instruments-vu-meter-bridge",
+     "raise": "Test counts move with mass: the score needle-settles instead of snapping."
+    },
+    {
+     "from": "craft-making-coptic-exposed-binding",
+     "raise": "Structure is the ornament: sprocket and frame count are the step count, nothing decorative."
+    },
+    {
+     "from": "fly-posted-festival-hoarding-built",
+     "raise": "One calm panel, one huge word: the final print carries the verdict alone."
+    },
+    {
+     "from": "textiles-weave-drape-fashion-memory-quilt-atlas",
+     "raise": "Every frame keeps its provenance seam: click any frame to see its files, trace and Entire checkpoint."
+    }
+   ]
+  },
+  {
+   "id": "model-pick",
+   "label": "Flatbed Film Editor",
+   "kicker": "IMPECCABLE\u2019S PICK",
+   "lineage": "Steenbeck flatbed editing tables",
+   "thesis": "The run is reels on a flatbed: the take plays through the viewing prism, Kedge hits the splice at the drift, the plates spin back to the last good cut.",
+   "palette": [
+    "#1b1d1f",
+    "#3b4a3f",
+    "#e8e2d0",
+    "#d33a2c"
+   ],
+   "materials": [
+    "spinning reel plates",
+    "viewing prism screen",
+    "splice tape"
+   ],
+   "viewport": "Top-down flatbed: two reel plates, the strip threading through a lit prism showing the current step.",
+   "risk": "Machine-as-costume risk; the reels can upstage the data."
+  },
+  {
+   "id": "challenger-fluid",
+   "label": "Suminagashi Ink Basin",
+   "verdict": "declined",
+   "lineage": "medium-native-fluid-ink-basin",
+   "case": "Fuses poorly: beautiful, but judges can't read a run in ink currents.",
+   "kept": "Motion obeys real physics."
+  },
+  {
+   "id": "challenger-vu",
+   "label": "VU Meter Bridge",
+   "verdict": "declined",
+   "lineage": "signals-instruments-vu-meter-bridge",
+   "case": "Needles show levels, not a rewind story.",
+   "kept": "Counts move with mass and damping."
+  },
+  {
+   "id": "challenger-coptic",
+   "label": "Coptic Exposed Binding",
+   "verdict": "declined",
+   "lineage": "craft-making-coptic-exposed-binding",
+   "case": "Book form fights a left-to-right replay.",
+   "kept": "Structure is the ornament."
+  },
+  {
+   "id": "challenger-flyposter",
+   "label": "Fly-posted Hoarding",
+   "verdict": "declined",
+   "lineage": "fly-posted-festival-hoarding-built",
+   "case": "Collage noise buries the one moment.",
+   "kept": "One calm panel, one huge word."
+  },
+  {
+   "id": "challenger-movida",
+   "label": "Movida Magazine Cover",
+   "verdict": "declined",
+   "lineage": "posters-covers-sleeves-movida-scene-magazine",
+   "case": "Scatter layout hides sequence.",
+   "kept": "Total ink commitment."
+  },
+  {
+   "id": "challenger-quilt",
+   "label": "Memory Quilt Atlas",
+   "verdict": "declined",
+   "lineage": "textiles-weave-drape-fashion-memory-quilt-atlas",
+   "case": "Patchwork has no time axis.",
+   "kept": "Provenance seam on every block."
+  }
+ ],
+ "reroll": {
+  "registers": [
+   "safer",
+   "bolder"
+  ]
+ },
+ "canon": true,
+ "canonCard": {
+  "label": "The category standard",
+  "thesis": "A polished dark dev-tool dashboard with an animated step timeline.",
+  "palette": [
+   "#0b0f19",
+   "#e5e7eb",
+   "#22c55e",
+   "#ef4444"
+  ],
+  "materials": [
+   "glass panels",
+   "timeline"
+  ],
+  "viewport": "Sidebar, run header, animated vertical timeline.",
+  "risk": "Looks like every other hackathon dashboard."
+ },
+ "steer": true
+}

@@ -1,295 +1,454 @@
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 const inline = (t) => esc(t).replace(/`([^`]+)`/g, "<code>$1</code>");
-const checkpoint = (r) => [...(r.steps || [])].reverse().map((s) => s.entire_checkpoint).find(Boolean) || null;
-const icon = (id) => `<svg aria-hidden="true"><use href="#i-${id}"/></svg>`;
+const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms / speed));
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const DRIFT = {
-  tests_regressed: { call: "Disallowed: tests lost", why: "The agent's change reduced the passing or total test count. Usually a deleted or skipped test." },
-  out_of_plan: { call: "Disallowed: off plan", why: "The agent edited files outside the plan's allowed list." },
-  loop: { call: "Disallowed: repeat attempt", why: "The agent produced the same change Kedge had already rolled back." },
-  verify_failed: { call: "Disallowed: not stable", why: "Tests passed once but failed or lost tests when Kedge ran them again." },
-  over_budget: { call: "Stopped: out of budget", why: "The run hit its spend cap, so Kedge stopped calling the agent." },
-};
-const STATUS = {
-  green: { cls: "green", text: "Green", cell: "green" },
-  already_green: { cls: "neutral", text: "Already green", cell: "green" },
-  gave_up: { cls: "open", text: "Gave up", cell: "struck" },
-  running: { cls: "running", text: "Under review", cell: "live" },
+  tests_regressed: ["tests lost", "The agent's change dropped passing or total tests."],
+  out_of_plan: ["off the plan", "The agent touched files outside the plan."],
+  loop: ["same mistake again", "The agent repeated a change Kedge already threw out."],
+  verify_failed: ["didn't hold", "Tests passed once, then failed on the re-run."],
+  over_budget: ["out of budget", "The run hit its spend cap."],
 };
 
 let runs = [];
-let selected = null;
-let compare = false;
+let current = null;
+let race = false;
 let picks = [];
-let lastFingerprint = "";
+let speed = 1;
+let playToken = 0;
+let fingerprint = "";
 
+/* ---------- facts from a run ---------- */
 const lastGood = (r) => [...(r.steps || [])].reverse().find((s) => s.tests_total >= 0 && !s.rolled_back);
-// the denominator is the base branch's test count when tests went missing: 2/5, never a flattering 2/2
-const score = (r) => {
-  const last = lastGood(r);
-  if (!last) return "–";
-  const denom = r.base_total > last.tests_total ? r.base_total : last.tests_total;
-  return `${last.tests_passed}/${denom}`;
-};
-const prRef = (url) => {
-  const m = /github\.com\/([^/]+\/[^/]+)\/pull\/(\d+)/.exec(url || "");
-  return m ? `${m[1]}#${m[2]}` : url || "";
-};
+const denom = (r, total) => Math.max(total, r.base_total || 0);
 const lost = (r) => {
-  const last = lastGood(r);
-  return last && r.base_total > 0 && last.tests_total < r.base_total ? r.base_total - last.tests_total : 0;
+  const l = lastGood(r);
+  return l && r.base_total > l.tests_total ? r.base_total - l.tests_total : 0;
 };
-const lostNote = (r) => (lost(r) ? `<span class="lost">${lost(r)} of ${r.base_total} tests missing vs base branch</span>` : "");
-const st = (r) => (r.status === "green" && lost(r) ? { cls: "open", text: "Shipped short", cell: "struck" }
-  : STATUS[r.status] || { cls: "open", text: r.status, cell: "open" });
-const traceId = (t) => (t && t !== "unavailable" ? t : null);
+const verdict = (r) => {
+  if (r.status === "green" && lost(r)) return { key: "short", word: "Shipped short", cls: "v-short" };
+  if (r.status === "green") return { key: "keep", word: "Kept", cls: "v-keep" };
+  if (r.status === "already_green") return { key: "flat", word: "Already green", cls: "v-flat" };
+  if (r.status === "running") return { key: "live", word: "Developing", cls: "v-live" };
+  return { key: "out", word: "Gave up", cls: "v-out" };
+};
+const score = (r) => {
+  const l = lastGood(r);
+  return l ? `${l.tests_passed}/${denom(r, l.tests_total)}` : "–";
+};
+const prRef = (u) => { const m = /github\.com\/([^/]+\/[^/]+)\/pull\/(\d+)/.exec(u || ""); return m ? `${m[1]}#${m[2]}` : u || ""; };
+const checkpointId = (r) => [...(r.steps || [])].reverse().map((s) => s.entire_checkpoint).find(Boolean) || null;
+const traceId = (r) => (r.trace && r.trace !== "unavailable" ? r.trace : null);
+const no = (r) => String(r.no).padStart(2, "0");
 
-/* ---------- replay strip: one drawing, three scales ---------- */
-function miniStrip(r) {
-  const steps = (r.steps || []).filter((s) => s.action !== "replan");
-  const w = 260, h = 14, n = Math.max(steps.length, 1), gap = 3, cw = (w - gap * (n - 1)) / n;
-  const cells = steps.map((s, i) => {
-    const x = i * (cw + gap);
-    const ok = r.status === "green" && !lost(r);
-    const fill = s.drift && s.drift !== "over_budget" ? "url(#hatch)" : s.false_claim ? "var(--yellow)"
-      : ok ? "var(--green)" : "var(--ink-3)";
-    const op = s.drift ? 1 : s.tests_total > 0 ? 0.35 + 0.65 * (s.tests_passed / s.tests_total) : 0.35;
-    return `<rect x="${x}" y="2" width="${cw}" height="${h - 4}" rx="2" fill="${fill}" opacity="${op}"/>`;
-  });
-  if (!steps.length) cells.push(`<rect x="0" y="6" width="${w}" height="2" fill="var(--line)"/>`);
-  return `<svg class="run-strip" viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none" aria-hidden="true">${cells.join("")}</svg>`;
+function framesOf(r) {
+  const f = [{ kind: "plan" }];
+  (r.steps || []).forEach((s) => f.push({ kind: s.action === "replan" ? "replan" : "step", s }));
+  const v = verdict(r);
+  if (v.key !== "live") f.push({ kind: "final", v });
+  return f;
 }
 
-function frames(r) {
-  const out = [];
-  const plan = r.plan || {};
-  out.push(`<li class="frame plan"><div class="f-no">Kick-off</div><div class="f-score">Plan</div>
-    <div class="f-act">${esc((plan.steps || [])[0] || plan.hypothesis || "Read the failing tests")}</div></li>`);
-  let lastGood = 0;
-  (r.steps || []).forEach((s, i) => {
-    if (s.action === "replan") {
-      out.push(`<li class="frame plan"><div class="f-no">Step ${s.step}</div><div class="f-score">Replan</div>
-        <div class="f-act">Two drifts in a row, so Kedge asked for a different approach.</div></li>`);
-      return;
-    }
-    const drift = s.drift && s.drift !== "over_budget";
-    const denom = Math.max(s.tests_total, r.base_total || 0);
-    const pct = denom > 0 ? Math.round((100 * s.tests_passed) / denom) : 0;
-    const files = (s.files_changed || []).length;
-    const act = s.action === "worker_error" ? "Agent call failed or timed out" :
-      files ? `Edited ${files} file${files > 1 ? "s" : ""}: ${esc(s.files_changed.slice(0, 2).join(", "))}` : "No files changed";
-    const back = drift && s.rolled_back
-      ? `<svg class="haul" viewBox="0 0 200 30" preserveAspectRatio="none" aria-hidden="true">
-           <path d="M196 2 C 196 26, 6 26, 6 4" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="5 4"/>
-           <path d="M1 10 6 2l5 8" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-         <div class="haul-label">Hauled back to <span class="sha">${esc((s.checkpoint_sha || "").slice(0, 7))}</span></div>`
-      : "";
-    out.push(`<li class="frame${drift ? " drift" : ""}" style="--i:${i}">
-      ${drift ? `<div class="check">${icon("monitor")}Check: ${esc(DRIFT[s.drift]?.call.split(": ")[1] || s.drift)}</div>` : ""}
-      ${s.false_claim ? `<div class="check lie">${icon("monitor")}Claim rejected</div>` : ""}
-      <div class="f-no">Step ${s.step}</div>
-      <div class="f-score">${s.tests_total >= 0 ? `${s.tests_passed}/${Math.max(s.tests_total, r.base_total || 0)}` : "?"}</div>
-      <div class="f-act">${act}</div>
-      <div class="f-bar${r.status === "green" && lost(r) ? " short" : ""}"><i style="width:${drift ? 100 : pct}%"></i></div>
-      ${back}</li>`);
-    if (!drift) lastGood = s.step;
-  });
-  if (r.status === "green" && lost(r)) {
-    out.push(`<li class="frame drift short"><div class="check">${icon("monitor")}${lost(r)} tests gone</div>
-      <div class="f-no">Full time</div><div class="f-score">Shipped</div>
-      <div class="f-act">PR opened without ${plural(lost(r), "test")}. Nobody checked.</div></li>`);
-  } else if (r.status === "green") {
-    out.push(`<li class="frame whistle"><div class="f-no">Full time</div><div class="f-score">Green</div>
-      <div class="f-act">${r.draft_pr ? "Draft PR opened" : "All tests pass"}</div></li>`);
-  } else if (r.status === "running") {
-    out.push(`<li class="frame plan"><div class="f-no">Live</div><div class="f-score">…</div><div class="f-act">Kedge is reviewing the next step</div></li>`);
+/* ---------- frame + mark drawing ---------- */
+function frameHTML(r, f, i) {
+  if (f.kind === "plan") {
+    const p = r.plan || {};
+    return `<button class="frame plan" data-i="${i}" type="button"><span class="fk">Kick-off · plan</span>
+      <span class="fs">Plan</span><span class="fa">${esc((p.steps || [])[0] || p.hypothesis || "Read the failing tests")}</span></button>`;
   }
-  return `<ol class="replay" aria-label="Run replay">${out.join("")}</ol>`;
+  if (f.kind === "replan") {
+    return `<button class="frame plan" data-i="${i}" type="button"><span class="fk">Step ${f.s.step} · replan</span>
+      <span class="fs">Replan</span><span class="fa">Two strikes, so Kedge asked for a new approach.</span></button>`;
+  }
+  if (f.kind === "final") {
+    const L = lost(r);
+    const [fs, fa, cls] = {
+      keep: ["Green", r.draft_pr ? "All tests pass. Draft PR opened." : "All tests pass.", ""],
+      short: ["Shipped", `PR opened without ${plural(L, "test")}. Nobody checked.`, " lost"],
+      flat: ["Green", "Tests already passed on arrival.", ""],
+      out: ["Gave up", "No safe fix found inside the budget.", " lost"],
+    }[f.v.key];
+    return `<button class="frame final${cls}" data-i="${i}" type="button"><span class="fk">Full time</span>
+      <span class="fs">${fs}</span><span class="fa">${esc(fa)}</span></button>`;
+  }
+  const s = f.s;
+  const d = denom(r, s.tests_total);
+  const files = s.files_changed || [];
+  const pct = d > 0 && s.tests_total >= 0 ? Math.round((100 * s.tests_passed) / d) : 0;
+  const act = s.action === "worker_error" ? "The agent didn't answer in time."
+    : files.length ? `Edited ${files.slice(0, 2).join(", ")}${files.length > 2 ? ` +${files.length - 2}` : ""}` : "Changed nothing.";
+  const isLost = s.tests_total >= 0 && d > s.tests_total && s.tests_passed > 0;
+  return `<button class="frame${isLost ? " lost" : ""}" data-i="${i}" type="button"><span class="fk">Step ${s.step}</span>
+    <span class="fs">${s.tests_total >= 0 ? `${s.tests_passed}/${d}` : "?"}</span><span class="fa">${esc(act)}</span>
+    <span class="fb"><i style="width:${pct}%"></i></span></button>`;
 }
 
-function rulings(r) {
-  const items = [];
-  (r.steps || []).forEach((s) => {
-    if (s.drift) {
-      const d = DRIFT[s.drift] || { call: s.drift, why: "" };
-      items.push(`<li class="ruling"><h3><span class="cell struck"></span>Step ${s.step} · ${esc(d.call)}</h3>
-        <p>${esc(d.why)} Files: ${(s.files_changed || []).map((f) => `<code>${esc(f)}</code>`).join(" ") || "none"} · tests ${s.tests_passed}/${s.tests_total}.
-        ${s.rolled_back ? `Kedge rolled back to <code>${esc((s.checkpoint_sha || "").slice(0, 7))}</code> and retried with a recovery note.` : ""}</p></li>`);
-    }
-    if (s.false_claim) {
-      items.push(`<li class="ruling"><h3><span class="cell live"></span>Step ${s.step} · Claim rejected</h3>
-        <p>The agent said “${esc(s.claim)}”. Tests said ${s.tests_passed}/${s.tests_total}. Kedge believed the tests.</p></li>`);
-    }
-  });
-  return items.length ? `<ul class="rulings">${items.join("")}</ul>`
-    : `<p class="clean">No checks in this run. Every step kept the tests and stayed on the plan.</p>`;
+const W = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--fw")) || 236;
+const H = 178;
+
+function svgFor(frameEl) {
+  let svg = frameEl.querySelector("svg.marks");
+  if (!svg) {
+    svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "marks");
+    svg.setAttribute("viewBox", `0 0 ${W() + 36} ${H + 36}`);
+    svg.setAttribute("aria-hidden", "true");
+    frameEl.append(svg);
+  }
+  return svg;
+}
+function stroke(frameEl, d, cls, dur, instant) {
+  const svg = svgFor(frameEl);
+  const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  p.setAttribute("d", d);
+  p.setAttribute("class", `${cls} draw`);
+  svg.append(p);
+  const len = p.getTotalLength();
+  p.style.setProperty("--len", len);
+  p.style.setProperty("--dur", `${instant ? 1 : dur / speed}ms`);
+  requestAnimationFrame(() => p.classList.add("on"));
+}
+// hand-drawn marks: a little wobble so they read as a person's stroke, not a vector
+function xMark(el, instant) {
+  const w = W() + 36, h = H + 36;
+  stroke(el, `M ${w * .14} ${h * .16} Q ${w * .48} ${h * .52} ${w * .88} ${h * .86}`, "red", 420, instant);
+  setTimeout(() => stroke(el, `M ${w * .86} ${h * .14} Q ${w * .55} ${h * .45} ${w * .12} ${h * .88}`, "red", 420, instant), instant ? 0 : 380 / speed);
+}
+function ring(el, cls = "red", instant) {
+  const w = W() + 36, h = H + 36, cx = w / 2, cy = h / 2, rx = w * .5, ry = h * .5;
+  stroke(el, `M ${cx - rx * .2} ${cy - ry * .98}
+    C ${cx + rx * .7} ${cy - ry * 1.08}, ${cx + rx * 1.05} ${cy - ry * .2}, ${cx + rx * .96} ${cy + ry * .3}
+    C ${cx + rx * .86} ${cy + ry * .98}, ${cx - rx * .5} ${cy + ry * 1.06}, ${cx - rx * .95} ${cy + ry * .4}
+    C ${cx - rx * 1.08} ${cy - ry * .3}, ${cx - rx * .6} ${cy - ry * 1.02}, ${cx + rx * .15} ${cy - ry * .9}`, cls, 700, instant);
+}
+function underline(el, cls = "yel", instant) {
+  const w = W() + 36, h = H + 36;
+  stroke(el, `M ${w * .12} ${h * .48} Q ${w * .45} ${h * .44} ${w * .78} ${h * .5}`, cls, 380, instant);
+}
+function note(el, text, where, cls = "", instant) {
+  const n = document.createElement("span");
+  n.className = `note ${where} ${cls}`;
+  n.innerHTML = text;
+  el.append(n);
+  if (instant) n.classList.add("on");
+  else requestAnimationFrame(() => n.classList.add("on"));
 }
 
-function planPanel(r) {
-  const p = r.plan || {};
-  return `<section class="plan" aria-label="Plan">
-    <p>${p.hypothesis ? inline(p.hypothesis) : "No plan recorded."}</p>
-    <h3>Allowed files</h3><div class="files">${(p.allowed_files || []).map((f) => `<code>${esc(f)}</code>`).join("")}</div>
-    ${(p.steps || []).length ? `<h3>Steps</h3><ol>${p.steps.map((x) => `<li>${inline(x)}</li>`).join("")}</ol>` : ""}
-  </section>`;
+/* ---------- the reel: one strip moving with spring physics ---------- */
+class Reel {
+  constructor(lane) {
+    this.lane = lane;
+    this.vp = $(".viewport", lane);
+    this.strip = $(".strip", lane);
+    this.x = 0; this.v = 0; this.target = 0; this.raf = 0; this.done = null;
+  }
+  // lay the whole sheet down: centered when it fits, otherwise ending on the last frame
+  whole(n) {
+    const sw = this.strip.scrollWidth, vw = this.vp.clientWidth;
+    return sw <= vw - 40 ? (vw - sw) / 2 : this.center(n - 1);
+  }
+  toX(x, opts) { const i = this; i.target = x; return this._run(opts); }
+  center(i) {
+    const fw = W(), gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--fgap")) || 22;
+    return this.vp.clientWidth / 2 - (gap + i * (fw + gap) + fw / 2);
+  }
+  set(x) { this.x = x; this.v = 0; this.paint(); }
+  paint() {
+    const blur = Math.min(Math.abs(this.v) / 700, 5);
+    this.strip.style.transform = `translate3d(${this.x}px,0,0)`;
+    this.strip.style.filter = blur > .3 ? `blur(${blur.toFixed(2)}px)` : "";
+  }
+  // a reel has mass: stiff spring, light damping, so a rewind overshoots and settles
+  to(i, opts) { this.target = this.center(i); return this._run(opts); }
+  _run({ stiff = 70, damp = 11 } = {}) {
+    if (reduce) { this.set(this.target); return Promise.resolve(); }
+    cancelAnimationFrame(this.raf);
+    return new Promise((res) => {
+      let last = performance.now();
+      const tick = (now) => {
+        const dt = Math.min((now - last) / 1000, 0.032) * speed; last = now;
+        const a = stiff * (this.target - this.x) - damp * this.v;
+        this.v += a * dt; this.x += this.v * dt;
+        this.paint();
+        if (Math.abs(this.v) < 4 && Math.abs(this.target - this.x) < .5) { this.set(this.target); res(); return; }
+        this.raf = requestAnimationFrame(tick);
+      };
+      this.raf = requestAnimationFrame(tick);
+    });
+  }
 }
 
-function actions(r) {
-  const t = traceId(r.trace);
-  const cp = checkpoint(r);
-  const off = (ic, label) => `<span class="btn ghost" aria-disabled="true">${icon(ic)}${label}</span>`;
-  return `<div class="actions">
-    ${r.draft_pr ? `<a class="btn primary" href="${esc(r.draft_pr)}" target="_blank" rel="noopener">${icon("pr")}Open draft PR</a>` : ""}
-    ${t ? `<button class="btn ghost" type="button" data-copy="${esc(t)}" title="Copy neatlogs trace ID">${icon("trace")}neatlogs ${esc(t.slice(0, 8))}</button>` : off("trace", "Trace not recorded")}
-    ${cp ? `<button class="btn ghost" type="button" data-copy="${esc(cp)}" title="Copy Entire checkpoint ID">${icon("anchor")}Entire ${esc(cp.slice(0, 8))}</button>` : off("anchor", "No checkpoint")}
-  </div>`;
+function laneHTML(r, label) {
+  const fr = framesOf(r);
+  const fw = W(), gap = 22;
+  const edges = fr.map((_, i) => `<span class="edge" style="left:${gap + i * (fw + gap)}px">KEDGE ${no(r)} ▸ ${i + 1}${i === fr.length - 1 ? "A" : ""}</span>`).join("");
+  return `<div class="lane" data-run="${esc(r.run_id)}">
+    ${label ? `<div class="lane-tag"><b>${label}</b> · No. ${no(r)}</div>` : ""}
+    <div class="viewport"><div class="gate"></div>
+      <div class="strip">${fr.map((f, i) => frameHTML(r, f, i)).join("")}${edges}</div>
+    </div></div>`;
 }
 
-function stageRun(r) {
-  const s = st(r);
-  const n = (k, w) => `<b>${k}</b> ${w}${k === 1 ? "" : "s"}`;
-  const facts = [
-    n(r.steps.filter((x) => x.action !== "replan").length, "step"),
-    n(r.drifts, "check"),
-    n(r.rollbacks, "rollback"),
-    r.false_claims ? n(r.false_claims, "false claim") : "",
-    `<b>$${Number(r.cost_usd_total || 0).toFixed(2)}</b>`,
-  ].filter(Boolean).join(" · ");
-  const ci = r.ci_status && r.ci_status !== "not run"
-    ? `<a class="ci ${r.ci_status === "passed" ? "pass" : "fail"}" href="${esc((r.draft_pr || r.pr_url) + "/checks")}" target="_blank" rel="noopener"
-         title="${r.ci_status === "passed" ? "GitHub CI passed on the draft PR" : "GitHub CI did not pass on the draft PR. Kedge's verdict comes from running the tests itself."}">
-         <span class="cell ${r.ci_status === "passed" ? "green" : "struck"}"></span>GitHub CI ${esc(r.ci_status)}</a>` : "";
-  $("#stage").innerHTML = `<article class="match">
-    <header class="match-head">
-      <div class="match-no" aria-hidden="true">${String(r.no).padStart(2, "0")}</div>
-      <div class="match-title">
-        <h1>${esc(r.title || prRef(r.pr_url))}</h1>
-        <p><a href="${esc(r.pr_url)}" target="_blank" rel="noopener">${esc(prRef(r.pr_url))}</a>
-          ${r.guard === false ? '<span class="tag warn">No guard</span>' : ""}
-          ${r.storm ? `<span class="tag storm">Storm: ${esc(r.storm)}</span>` : ""}</p>
-      </div>
-      <div class="scoreline ${lost(r) ? "short" : r.status === "green" ? "won" : ""}"><span class="num">${score(r)}</span><span class="lbl">Tests passing</span>${lostNote(r)}</div>
-    </header>
-    <div class="ruling-bar"><span class="verdict ${s.cls}">${s.text}</span><span class="facts"><span>${facts}</span>${ci}</span>${actions(r)}</div>
-    ${checkpoint(r) && r.entire_explain && !r.entire_explain.startsWith("(no") ? `<details class="checkpoint"><summary>Entire checkpoint ${esc(checkpoint(r).slice(0, 8))}: the agent's session behind the final commit</summary><pre>${esc(r.entire_explain)}</pre></details>` : ""}
-    <section class="replay-wrap" aria-label="Replay">
-      <div class="section-h"><h2>Replay</h2><span>Every step Kedge checked, left to right</span></div>
-      ${frames(r)}
-    </section>
-    <div class="two">
-      <section><div class="section-h"><h2>Rulings</h2></div>${rulings(r)}</section>
-      <section><div class="section-h"><h2>Plan</h2></div>${planPanel(r)}</section>
-    </div>
+function printHTML(r, label) {
+  const v = verdict(r);
+  const l = lastGood(r);
+  const big = l ? `${l.tests_passed}/${denom(r, l.tests_total)}` : "–";
+  const L = lost(r);
+  const why = {
+    keep: `${plural(r.drifts, "cheat")} caught, ${plural(r.rollbacks, "rewind")}, every test kept.`,
+    short: `${plural(L, "test")} vanished and the PR shipped anyway. No one was checking.`,
+    flat: "Nothing to fix: the tests already passed.",
+    out: `Kedge refused every unsafe change: ${plural(r.drifts, "cheat")} caught.`,
+    live: "Still developing.",
+  }[v.key];
+  const sign = { keep: "Kedge ✓", short: "unchecked", out: "Kedge: no safe fix", flat: "", live: "" }[v.key];
+  return `<article class="print ${v.key}" data-run="${esc(r.run_id)}">
+    <div class="img"><span class="big" data-to="${l ? l.tests_passed : 0}" data-of="${l ? denom(r, l.tests_total) : 0}">${big}</span>
+      <span class="word">${esc(v.word)}</span><span class="why">${esc(why)}</span></div>
+    <div class="cap"><span class="who">${label ? esc(label) + " · " : ""}No. ${no(r)} · ${esc(prRef(r.pr_url))}</span>
+      ${r.draft_pr ? `<a class="open" href="${esc(r.draft_pr)}" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-pr"/></svg>Open PR</a>` : ""}
+      ${sign ? `<span class="sign${v.key === "keep" ? " ok" : ""}">${esc(sign)}</span>` : ""}</div>
   </article>`;
 }
 
-function stageCompare() {
-  if (picks.length < 2) {
-    $("#stage").innerHTML = `<p class="hint">Pick two runs from the fixtures to put them side by side, for example the same PR with <b>--no-guard</b> and with Kedge.</p>`;
+/* ---------- the performance ---------- */
+async function perform(reel, r, token, instant) {
+  const fr = framesOf(r);
+  const els = [...reel.strip.querySelectorAll(".frame")];
+  const alive = () => token === playToken;
+  const dev = (i) => els[i].classList.add("dev");
+  if (instant) {
+    els.forEach((e) => e.classList.add("dev"));
+  } else {
+    reel.set(reel.vp.clientWidth + 60);
+    await reel.to(0, { stiff: 40, damp: 10 }); if (!alive()) return;
+    dev(0); await sleep(650);
+  }
+  for (let i = 1; i < fr.length; i++) {
+    const f = fr[i];
+    if (!instant) { await reel.to(i); if (!alive()) return; dev(i); await sleep(420); }
+    if (f.kind === "step") {
+      const s = f.s;
+      if (s.false_claim) {
+        underline(els[i], "yel", instant);
+        note(els[i], `agent: “${esc(s.claim)}”<br>tests: ${s.tests_passed}/${denom(r, s.tests_total)}`, "up", "yel", instant);
+        if (!instant) await sleep(1100);
+      }
+      if (s.drift && s.drift !== "over_budget") {
+        xMark(els[i], instant);
+        const [what] = DRIFT[s.drift] || [s.drift];
+        note(els[i], `✗ ${what}<br><small>${esc((s.files_changed || []).slice(0, 2).join(", "))}</small>`, "down", "", instant);
+        if (!instant) await sleep(1300);
+        if (s.rolled_back) {
+          let cp = 0;
+          for (let j = i - 1; j > 0; j--) if (fr[j].kind === "step" && !fr[j].s.drift) { cp = j; break; }
+          if (!instant) {
+            await reel.to(cp, { stiff: 34, damp: 7 }); if (!alive()) return;   // the rewind
+          }
+          if (!els[cp].querySelector(".note.up")) {
+            ring(els[cp], "red", instant);
+            note(els[cp], `↺ hauled back to <span class="sha">${esc((s.checkpoint_sha || "").slice(0, 7))}</span>`, "up", "", instant);
+          }
+          if (!instant) await sleep(1200);
+        }
+      }
+    }
+    if (f.kind === "final") {
+      if (f.v.key === "keep" || f.v.key === "flat") { ring(els[i], "red", instant); note(els[i], "keeper", "up", "", instant); }
+      if (f.v.key === "short") { xMark(els[i], instant); note(els[i], `✗ ${plural(lost(r), "test")} missing, shipped anyway`, "down", "", instant); }
+      if (!instant) await sleep(900);
+    }
+  }
+  if (instant) reel.set(reel.whole(fr.length));
+  else if (alive()) await reel.toX(reel.whole(fr.length), { stiff: 26, damp: 9 });
+}
+
+function countUp(el) {
+  const to = +el.dataset.to, of = +el.dataset.of;
+  if (reduce || !of) return;
+  const t0 = performance.now(), dur = 900 / speed;
+  const tick = (now) => {
+    const k = Math.min((now - t0) / dur, 1), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = `${Math.round(to * e)}/${of}`;
+    if (k < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+async function play(instant = false) {
+  const token = ++playToken;
+  const chosen = race ? picks.map((id) => runs.find((r) => r.run_id === id)).filter(Boolean) : [current].filter(Boolean);
+  if (!chosen.length) return;
+  $$(".print").forEach((p) => p.classList.remove("on"));
+  const reels = [...document.querySelectorAll(".lane")].map((l) => new Reel(l));
+  await Promise.all(reels.map((reel, k) => perform(reel, chosen[k], token, instant || reduce)));
+  if (token !== playToken) return;
+  document.querySelectorAll(".print").forEach((p, k) => setTimeout(() => {
+    p.classList.add("on"); countUp($(".big", p));
+  }, instant ? 0 : k * 450));
+}
+const $$ = (s) => [...document.querySelectorAll(s)];
+
+/* ---------- layout ---------- */
+function renderBench() {
+  const bench = $("#bench");
+  if (!runs.length) { bench.replaceChildren($("#emptyTpl").content.cloneNode(true)); $("#envelope").innerHTML = ""; return; }
+  if (race) {
+    const [a, b] = picks.map((id) => runs.find((r) => r.run_id === id));
+    if (!a || !b) {
+      bench.innerHTML = `<div class="empty"><p class="mark-note big">Pick two sheets to race.</p>
+        <p>The same PR with <code>--no-guard</code> and with Kedge makes the point.</p></div>`;
+      $("#envelope").innerHTML = "";
+      return;
+    }
+    const lbl = (r) => (r.guard === false ? "No guard" : "Kedge");
+    bench.innerHTML = `<div class="reel-title"><span class="no">vs</span><h1>${esc(a.title || prRef(a.pr_url))}</h1>
+      <span class="src">${esc(prRef(a.pr_url))}${a.storm ? `<span class="storm">sabotage: ${esc(a.storm)}</span>` : ""}</span></div>
+      ${laneHTML(a, lbl(a))}${laneHTML(b, lbl(b))}<div class="prints">${printHTML(a, lbl(a))}${printHTML(b, lbl(b))}</div>`;
+    $("#envelope").innerHTML = "";
     return;
   }
-  const side = (r, label) => {
-    const s = st(r);
-    return `<section class="side ${r.guard === false ? "home" : "away"}"><h2>${label}</h2>
-      <div class="sub">No. ${String(r.no).padStart(2, "0")} · ${esc(prRef(r.pr_url))}${r.storm ? ` · storm ${esc(r.storm)}` : ""}</div>
-      <div class="big">${score(r)}</div>${lostNote(r)}<span class="verdict ${s.cls}">${s.text}</span>
-      <div class="stats"><span><b>${r.drifts}</b> ${r.drifts === 1 ? "check" : "checks"} caught · ${plural(r.rollbacks, "rollback")}</span>
-        <span>${plural(r.false_claims, "false claim")}</span><span><b>$${Number(r.cost_usd_total || 0).toFixed(2)}</b> spent</span></div>
-      ${miniStrip(r)}</section>`;
-  };
-  const [a, b] = picks.map((id) => runs.find((r) => r.run_id === id)).filter(Boolean);
-  if (!a || !b) return;
-  const label = (r) => (r.guard === false ? "No guard" : "Kedge");
-  $("#stage").innerHTML = `<div class="versus">${side(a, label(a))}<div class="vs">vs</div>${side(b, label(b))}</div>
-    <div class="replay-wrap"><div class="section-h"><h2>${label(a)}</h2></div>${frames(a)}</div>
-    <div class="replay-wrap"><div class="section-h"><h2>${label(b)}</h2></div>${frames(b)}</div>`;
+  const r = current;
+  bench.innerHTML = `<div class="reel-title"><span class="no">${no(r)}</span><h1>${esc(r.title || prRef(r.pr_url))}</h1>
+    <span class="src"><a href="${esc(r.pr_url)}" target="_blank" rel="noopener">${esc(prRef(r.pr_url))}</a>
+      ${r.guard === false ? '<span class="storm">no guard</span>' : ""}${r.storm ? `<span class="storm">sabotage: ${esc(r.storm)}</span>` : ""}</span></div>
+    ${laneHTML(r)}<div class="prints">${printHTML(r)}</div>`;
+  renderEnvelope(r);
+}
+
+function renderEnvelope(r) {
+  const items = [];
+  (r.steps || []).forEach((s) => {
+    if (s.drift) {
+      const [what, why] = DRIFT[s.drift] || [s.drift, ""];
+      items.push(`<li><h3>Step ${s.step}: ${esc(what)}</h3><p>${esc(why)} Files ${(s.files_changed || []).map((f) => `<code>${esc(f)}</code>`).join(" ") || "none"},
+        tests ${s.tests_passed}/${denom(r, s.tests_total)}.${s.rolled_back ? ` Rolled back to <code>${esc((s.checkpoint_sha || "").slice(0, 7))}</code> and retried with a recovery note.` : ""}</p></li>`);
+    }
+    if (s.false_claim) items.push(`<li><h3 class="yel">Step ${s.step}: claim overruled</h3><p>The agent said “${esc(s.claim)}”. The tests said ${s.tests_passed}/${denom(r, s.tests_total)}.</p></li>`);
+  });
+  if (!items.length) items.push(`<li><h3 class="ok">No cheats on this sheet</h3><p>Every step kept the tests and stayed on the plan.</p></li>`);
+  const p = r.plan || {};
+  const t = traceId(r), cp = checkpointId(r);
+  const ci = r.ci_status && r.ci_status !== "not run" ? r.ci_status : null;
+  $("#envelope").innerHTML = `<section><h2>Editor's notes</h2><ul class="log">${items.join("")}</ul>
+      <div class="stamps">
+        ${r.draft_pr ? `<a class="stamp pr" href="${esc(r.draft_pr)}" target="_blank" rel="noopener">Draft PR<b>${esc(prRef(r.draft_pr))}</b></a>` : ""}
+        ${t ? `<button class="stamp trace" type="button" data-copy="${esc(t)}">neatlogs trace<b>${esc(t.slice(0, 12))}</b></button>` : `<span class="stamp trace" aria-disabled="true">neatlogs trace<b>not recorded</b></span>`}
+        ${cp ? `<button class="stamp entire" type="button" data-copy="${esc(cp)}">Entire checkpoint<b>${esc(cp.slice(0, 12))}</b></button>` : `<span class="stamp entire" aria-disabled="true">Entire checkpoint<b>none</b></span>`}
+        ${ci ? `<a class="stamp ci${ci === "passed" ? " pass" : ""}" href="${esc((r.draft_pr || r.pr_url) + "/checks")}" target="_blank" rel="noopener" title="Kedge's verdict comes from running the tests itself">GitHub CI<b>${esc(ci)}</b></a>` : ""}
+      </div>
+      ${cp && r.entire_explain && !r.entire_explain.startsWith("(no") ? `<details class="cp"><summary>Read the agent's session behind the final commit</summary><pre>${esc(r.entire_explain)}</pre></details>` : ""}
+    </section>
+    <section><h2>The plan</h2><div class="plan-note"><p>${p.hypothesis ? inline(p.hypothesis) : "No plan recorded."}</p>
+      ${(p.steps || []).length ? `<ol>${p.steps.map((x) => `<li>${inline(x)}</li>`).join("")}</ol>` : ""}
+      <p style="margin-top:12px">Allowed: ${(p.allowed_files || []).map((f) => `<code>${esc(f)}</code>`).join(" ")}</p></div></section>`;
+}
+
+function renderSheets() {
+  $("#sheetList").innerHTML = runs.map((r) => {
+    const v = verdict(r);
+    const pick = picks.indexOf(r.run_id);
+    return `<li><button class="sheet" type="button" data-id="${esc(r.run_id)}"
+      aria-current="${!race && current && r.run_id === current.run_id}" ${race && pick >= 0 ? `data-pick="${pick}"` : ""}>
+      <span class="sheet-no">${no(r)}</span><span class="sheet-title">${esc(r.title || prRef(r.pr_url))}</span>
+      <span class="sheet-sub">${esc(prRef(r.pr_url))} · ${score(r)}${r.guard === false ? " · no guard" : ""}${r.storm ? ` · ${esc(r.storm)}` : ""}</span>
+      <span class="sheet-verdict ${v.cls}">${esc(v.word)}</span></button></li>`;
+  }).join("");
 }
 
 function renderTally() {
   const done = runs.filter((r) => r.status !== "running");
-  const green = runs.filter((r) => r.status === "green").length;
-  const checks = runs.reduce((n, r) => n + r.drifts, 0);
+  const kept = runs.filter((r) => verdict(r).key === "keep").length;
+  const cheats = runs.reduce((n, r) => n + r.drifts, 0);
   const lies = runs.reduce((n, r) => n + r.false_claims, 0);
-  const spend = runs.reduce((n, r) => n + Number(r.cost_usd_total || 0), 0);
-  $("#tally").innerHTML = `
-    <div><dt>Green</dt><dd class="g">${green}/${done.length}</dd></div>
-    <div><dt>Checks</dt><dd class="r">${checks}</dd></div>
-    <div><dt>False claims</dt><dd>${lies}</dd></div>
-    <div><dt>Spend</dt><dd>$${spend.toFixed(2)}</dd></div>`;
+  $("#tally").innerHTML = `<b>${kept}/${done.length}</b> kept · <b>${cheats}</b> cheats caught · <b>${lies}</b> lies overruled`;
+  if (current && !race) $("#labelSub").textContent = `sheet No. ${no(current)}`;
+  else $("#labelSub").textContent = race ? "race" : "contact sheet";
 }
 
-function renderList() {
-  const f = $("#filter").value;
-  const shown = runs.filter((r) => f === "all" || (f === "checks" && (r.drifts || r.false_claims)) ||
-    (f === "green" && r.status === "green") || (f === "open" && r.status !== "green"));
-  $("#runList").innerHTML = shown.map((r) => {
-    const s = st(r);
-    const pick = picks.indexOf(r.run_id);
-    return `<li><button class="run" type="button" data-id="${esc(r.run_id)}"
-        aria-current="${!compare && r.run_id === selected}" ${compare && pick >= 0 ? `data-pick="${"ab"[pick]}"` : ""}>
-      <span class="run-no">${String(r.no).padStart(2, "0")}</span>
-      <span class="run-body"><span class="run-title">${esc(r.title || prRef(r.pr_url))}</span>
-        <span class="run-sub"><span class="cell ${s.cell}"></span>${esc(s.text)} · ${esc(prRef(r.pr_url))}
-          ${r.guard === false ? '<span class="tag warn">No guard</span>' : ""}${r.storm ? `<span class="tag storm">${esc(r.storm)}</span>` : ""}</span></span>
-      <span class="run-score">${score(r)}</span>
-      ${miniStrip(r)}
-    </button></li>`;
-  }).join("") || `<li class="clean">No runs match this filter.</li>`;
+function show(autoplay) {
+  renderTally(); renderSheets(); renderBench();
+  if (runs.length) play(!autoplay);
 }
 
-function render() {
-  renderTally();
-  renderList();
-  if (!runs.length) { $("#stage").replaceChildren($("#emptyTpl").content.cloneNode(true)); return; }
-  if (compare) return stageCompare();
-  const r = runs.find((x) => x.run_id === selected) || runs[0];
-  selected = r.run_id;
-  stageRun(r);
-}
-
-async function load() {
+async function load(first) {
   try {
-    const res = await fetch("/api/runs", { cache: "no-store" });
-    const data = await res.json();
-    const ordered = [...data].sort((a, b) => a.run_id.localeCompare(b.run_id));
-    ordered.forEach((r, i) => (r.no = i + 1));
+    const data = await (await fetch("/api/runs", { cache: "no-store" })).json();
+    [...data].sort((a, b) => a.run_id.localeCompare(b.run_id)).forEach((r, i) => (r.no = i + 1));
     const fp = JSON.stringify(data.map((r) => [r.run_id, r.status, r.steps.length]));
-    if (fp === lastFingerprint) return;  // keep the replay animation from restarting
-    lastFingerprint = fp;
+    if (fp === fingerprint) return;
+    fingerprint = fp;
     runs = data;
-    render();
+    const want = current?.run_id || location.hash.slice(1);
+    current = runs.find((r) => r.run_id === want) || runs[0] || null;
+    if (first) show(true); else { renderTally(); renderSheets(); }
   } catch {
-    $("#stage").innerHTML = `<p class="hint">Can't reach the Kedge server. Is <code>kedge ui</code> still running?</p>`;
+    $("#bench").innerHTML = `<div class="empty"><p class="mark-note big">Lost the light.</p><p>Is <code>kedge ui</code> still running?</p></div>`;
   }
 }
 
-$("#runList").addEventListener("click", (e) => {
-  const b = e.target.closest(".run");
+/* ---------- interaction ---------- */
+$("#playBtn").addEventListener("click", () => { renderBench(); play(false); });
+$("#sheetsBtn").addEventListener("click", () => {
+  const open = $("#sheets").hidden;
+  $("#sheets").hidden = !open;
+  $("#sheetsBtn").setAttribute("aria-expanded", String(open));
+});
+$("#raceBtn").addEventListener("click", (e) => {
+  race = !race;
+  e.currentTarget.setAttribute("aria-pressed", String(race));
+  $("#raceHint").hidden = !race;
+  if (race && picks.length < 2) { $("#sheets").hidden = false; $("#sheetsBtn").setAttribute("aria-expanded", "true"); }
+  show(true);
+});
+$("#sheetList").addEventListener("click", (e) => {
+  const b = e.target.closest(".sheet");
   if (!b) return;
   const id = b.dataset.id;
-  if (compare) {
+  if (race) {
     picks = picks.includes(id) ? picks.filter((x) => x !== id) : [...picks, id].slice(-2);
+    if (picks.length === 2) { $("#sheets").hidden = true; $("#sheetsBtn").setAttribute("aria-expanded", "false"); }
   } else {
-    selected = id;
+    current = runs.find((r) => r.run_id === id);
     history.replaceState(null, "", `#${id}`);
+    $("#sheets").hidden = true; $("#sheetsBtn").setAttribute("aria-expanded", "false");
   }
-  render();
-  $("#stage").focus({ preventScroll: true });
+  show(true);
 });
-$("#filter").addEventListener("change", renderList);
-$("#compareBtn").addEventListener("click", (e) => {
-  compare = !compare;
-  e.currentTarget.setAttribute("aria-pressed", String(compare));
-  render();
-});
-$("#stage").addEventListener("click", async (e) => {
+document.addEventListener("click", async (e) => {
   const b = e.target.closest("[data-copy]");
   if (!b) return;
-  try { await navigator.clipboard.writeText(b.dataset.copy); b.lastChild.textContent = "Trace ID copied"; } catch { /* clipboard blocked */ }
+  try { await navigator.clipboard.writeText(b.dataset.copy); $("b", b).textContent = "copied"; } catch { /* clipboard blocked */ }
+});
+document.addEventListener("keydown", (e) => {
+  if (e.target.closest("input, select, textarea")) return;
+  if (e.key === " " || e.key === "Enter" && e.target === document.body) { e.preventDefault(); renderBench(); play(false); }
+  if (e.key === "Escape") { $("#sheets").hidden = true; $("#sheetsBtn").setAttribute("aria-expanded", "false"); }
+  if (e.key === "s") speed = speed === 1 ? 0.55 : 1;  // slow-motion for the video
 });
 
-selected = location.hash.slice(1) || null;
-load();
-setInterval(load, 4000);
+/* the loupe: a magnified copy of the frame under the cursor */
+const loupe = $("#loupe"), loupeIn = $("#loupeIn");
+let loupeFrame = null;
+document.addEventListener("pointermove", (e) => {
+  const fr = e.target.closest?.(".frame");
+  if (!fr || e.pointerType !== "mouse") { loupe.classList.remove("on"); loupeFrame = null; return; }
+  if (fr !== loupeFrame) {
+    loupeFrame = fr;
+    const clone = fr.cloneNode(true);
+    clone.style.width = `${fr.offsetWidth}px`;
+    clone.querySelectorAll(".note").forEach((n) => n.remove());
+    loupeIn.replaceChildren(clone);
+  }
+  const rect = fr.getBoundingClientRect(), z = 2.1, R = 110;
+  loupe.style.left = `${e.clientX - R}px`;
+  loupe.style.top = `${e.clientY - R}px`;
+  loupeIn.style.transform = `translate(${R - (e.clientX - rect.left) * z}px, ${R - (e.clientY - rect.top) * z}px) scale(${z})`;
+  loupe.classList.add("on");
+});
+
+load(true);
+setInterval(() => load(false), 5000);

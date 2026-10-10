@@ -3,68 +3,50 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kedge · Review room</title>
-<link rel="stylesheet" href="fonts.css">
-<link rel="stylesheet" href="app.css?v=7">
+<title>Kedge · Contact sheet</title>
+<link rel="stylesheet" href="fonts2.css">
+<link rel="stylesheet" href="app.css?v=22">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs>
-    <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-      <rect width="8" height="8" fill="var(--red)"/>
-      <line x1="0" y1="0" x2="0" y2="8" stroke="#0e1621" stroke-width="3" stroke-opacity=".55"/>
-    </pattern>
-  </defs>
-  <symbol id="i-anchor" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.2"/><path d="M12 7.2V21M7 11h10M4.5 14.5a7.5 7.5 0 0 0 15 0M4.5 14.5l-1.5 1.8M4.5 14.5l1.9.9M19.5 14.5l1.5 1.8M19.5 14.5l-1.9.9"/></g></symbol>
-  <symbol id="i-monitor" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4M10 8.5l4 1.5-4 1.5z"/></g></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z" fill="currentColor"/></symbol>
+  <symbol id="i-race" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h13M3 16h18"/><path d="M13 5l3 3-3 3M18 13l3 3-3 3"/></g></symbol>
   <symbol id="i-pr" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="18" r="2.2"/><path d="M6 8.2v7.6M18 15.8V10a3 3 0 0 0-3-3h-4M13 4.5 10.5 7l2.5 2.5"/></g></symbol>
-  <symbol id="i-trace" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h7M6 12h9M9 18h12"/><circle cx="3" cy="6" r=".6"/></g></symbol>
-  <symbol id="i-flag" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></g></symbol>
-  <symbol id="i-compare" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="16" rx="1"/><rect x="14" y="4" width="7" height="16" rx="1"/></g></symbol>
-  <symbol id="i-back" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-2"/></g></symbol>
+  <symbol id="i-sheets" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 7h13v13H4z"/><path d="M7 4h13v13"/></g></symbol>
 </svg>
 
-<header class="bar">
-  <a class="brand" href="#" aria-label="Kedge home">
-    <svg class="brand-mark"><use href="#i-anchor"/></svg>
-    <span class="brand-name">Kedge</span>
-    <span class="brand-room">Review room</span>
-  </a>
-  <dl class="tally" id="tally" aria-label="All runs"></dl>
-  <button class="btn ghost" id="compareBtn" type="button" aria-pressed="false" aria-label="Compare two runs">
-    <svg><use href="#i-compare"/></svg><span>Compare</span>
+<header class="lab">
+  <button class="label" id="sheetsBtn" type="button" aria-expanded="false" aria-controls="sheets">
+    <span class="label-name">Kedge</span>
+    <span class="label-sub" id="labelSub">Contact sheet</span>
+    <svg aria-hidden="true"><use href="#i-sheets"/></svg>
   </button>
+  <p class="tally" id="tally" aria-live="polite"></p>
+  <div class="lab-actions">
+    <button class="pill" id="raceBtn" type="button" aria-pressed="false"><svg aria-hidden="true"><use href="#i-race"/></svg>Race</button>
+    <button class="play" id="playBtn" type="button" aria-label="Play replay"><svg aria-hidden="true"><use href="#i-play"/></svg><span>Replay</span></button>
+  </div>
 </header>
 
-<div class="shell">
-  <nav class="fixtures" aria-label="Runs">
-    <div class="fixtures-head">
-      <h2>Fixtures</h2>
-      <label class="filter">
-        <span class="sr">Filter runs</span>
-        <select id="filter">
-          <option value="all">All runs</option>
-          <option value="checks">With checks</option>
-          <option value="green">Green</option>
-          <option value="open">Not green</option>
-        </select>
-      </label>
-    </div>
-    <ol id="runList" class="run-list"></ol>
-  </nav>
+<nav class="sheets" id="sheets" aria-label="Runs" hidden>
+  <div class="sheets-head"><h2>Sheets</h2><span id="raceHint" class="race-hint" hidden>Pick two sheets to race</span></div>
+  <ol id="sheetList"></ol>
+</nav>
 
-  <main id="stage" class="stage" tabindex="-1"></main>
-</div>
+<main class="lightbox" id="lightbox">
+  <section class="bench" id="bench" aria-label="Replay"></section>
+  <div class="loupe" id="loupe" aria-hidden="true"><div class="loupe-in" id="loupeIn"></div></div>
+  <section class="envelope" id="envelope" aria-label="Lab notes"></section>
+</main>
 
 <template id="emptyTpl">
-  <section class="empty">
-    <svg class="empty-mark"><use href="#i-monitor"/></svg>
-    <h1>No runs on the monitor yet</h1>
-    <p>Start one and it appears here live:</p>
+  <div class="empty">
+    <p class="mark-note big">No film on the box yet.</p>
+    <p>Shoot a run and it develops here:</p>
     <pre><code>uv run python -m kedge run &lt;pr-url&gt;</code></pre>
-  </section>
+  </div>
 </template>
 
-<script src="app.js?v=7" type="module"></script>
+<script src="app.js?v=22" type="module"></script>
 </body>
 </html>
