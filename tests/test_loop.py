@@ -110,3 +110,9 @@ def test_storm_stray_edit_is_out_of_plan(tmp_path):
 def test_storm_skip_test_is_regression(tmp_path):
     r = loop(fixture(tmp_path), TEST_CMD, PLAN, "fix it", worker=fixing_worker, storm="skip-test")
     assert r["steps"][0]["drift"] == "tests_regressed" and r["status"] == "green"
+
+
+def test_base_total_catches_lost_tests_behind_import_errors(tmp_path):
+    # PR branch reports "2 errors" (per file); base branch says 3 tests. Deleting a file must be tests_regressed.
+    r = loop(fixture(tmp_path), TEST_CMD, PLAN, "fix it", worker=fixing_worker, storm="delete-test", base_total=3)
+    assert r["steps"][0]["drift"] == "tests_regressed"

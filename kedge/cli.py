@@ -45,20 +45,21 @@ def run_one(pr_url, test_cmd, fork, *, setup_cmd=None, guard, storm, budget, max
     if agent == "opencode" and not os.path.exists(plugin):  # seen once: hooks "installed" but plugin file missing
         gitgh.sh(["entire", "enable", "--agent", agent, "--force"], cwd, check=False)
     log_tail = "Local test output:\n" + gitgh.test_output(cwd, test_cmd)
+    base_total = gitgh.base_total(cwd, f"origin/{pr['base']}", test_cmd)
     ci = gitgh.ci_log(pr_url, pr["head"], pr["repo"])
     if ci.strip() and not ci.startswith("(no failed CI"):
         log_tail += "\n\nCI log:\n" + ci
     pr_files = gitgh.sh(["git", "diff", "--name-only", f"origin/{pr['base']}...HEAD"], cwd, check=False).split()
     plan = worker.make_plan(pr["title"], log_tail, pr_files, cwd)
     json.dump(plan, open(os.path.join(run_dir, "plan.json"), "w"))
-    json.dump({"pr_url": pr_url, "test_cmd": test_cmd, "fork": fork, "cwd": cwd, "pr": pr, "log_tail": log_tail,
+    json.dump({"pr_url": pr_url, "test_cmd": test_cmd, "fork": fork, "cwd": cwd, "pr": pr, "log_tail": log_tail, "base_total": base_total,
                "kw": dict(guard=guard, storm=storm, budget=budget, max_rollbacks=max_rollbacks, max_steps=max_steps)},
               open(os.path.join(run_dir, "meta.json"), "w"))
     kw = dict(guard=guard, storm=storm, budget=budget, max_rollbacks=max_rollbacks, max_steps=max_steps)
-    return _drive(run_id, run_dir, cwd, pr, plan, pr_url, test_cmd, fork, log_tail, None, **kw)
+    return _drive(run_id, run_dir, cwd, pr, plan, pr_url, test_cmd, fork, log_tail, None, base_total=base_total, **kw)
 
 
-def _drive(run_id, run_dir, cwd, pr, plan, pr_url, test_cmd, fork, log_tail, state, **kw) -> dict:
+def _drive(run_id, run_dir, cwd, pr, plan, pr_url, test_cmd, fork, log_tail, state, base_total=-1, **kw) -> dict:
     trace.start(run_id, {"pr_url": pr_url, "guard": "on" if kw["guard"] else "off",
                          "storm": kw["storm"] or "off"})
     print(shiplog.header(pr["head"], kw["budget"]), file=sys.stderr, flush=True)
@@ -76,7 +77,7 @@ def _drive(run_id, run_dir, cwd, pr, plan, pr_url, test_cmd, fork, log_tail, sta
     prompt += "".join(f"\nLESSON FROM PAST RUNS: {lesson}" for lesson in supervisor.lessons_for(LESSONS, pr["repo"]))
     with trace.run_span(run_id, pr_url):
         res = supervisor.loop(cwd, test_cmd, plan, prompt, worker=worker.run_edit_step, replanner=worker.replan,
-                              log=log, run_id=run_id, state=state, save=save, **kw)
+                              log=log, run_id=run_id, state=state, save=save, base_total=base_total, **kw)
     steps_f.close()
     supervisor.record_lessons(LESSONS, pr["repo"], res["steps"], res["notes"], res["status"])
     cp = next((s["entire_checkpoint"] for s in reversed(res["steps"]) if s["entire_checkpoint"]), "")

@@ -85,3 +85,9 @@ def test_wait_ci_maps_exit_codes(monkeypatch):
     def slow(*a, **k): raise subprocess.TimeoutExpired("gh", 1)
     monkeypatch.setattr(subprocess, "run", slow)
     assert gitgh.wait_ci("u") == "timeout"
+
+
+def test_base_total_runs_tests_on_base(tmp_path):
+    cwd = _repo(tmp_path / "r")
+    assert gitgh.base_total(cwd, "HEAD", "echo '7 passed'") == 7
+    assert not (tmp_path / "r-base").exists()

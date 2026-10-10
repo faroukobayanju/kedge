@@ -47,12 +47,13 @@ def _finish(status, s):
 
 
 def loop(cwd, test_cmd, plan, prompt_base, *, worker, replanner=None, guard=True, storm=None, budget=0.5,
-         max_rollbacks=3, max_steps=6, log=lambda rec: None, run_id="test", state=None, save=lambda s: None) -> dict:
+         max_rollbacks=3, max_steps=6, log=lambda rec: None, run_id="test", state=None, save=lambda s: None,
+         base_total=-1) -> dict:
     s = state
     if not s:
         ok, best, baseline_total = gitgh.run_tests(cwd, test_cmd)
         s = {"step": 0, "good": gitgh.head(cwd), "notes": [], "seen": [], "cost": plan.get("cost_usd", 0.0),
-             "best": best, "baseline_total": baseline_total, "plan": plan, "plan_idx": 0, "steps": []}
+             "best": best, "baseline_total": max(baseline_total, base_total), "plan": plan, "plan_idx": 0, "steps": []}
         if ok:
             return _finish("already_green", s)
         save(s)

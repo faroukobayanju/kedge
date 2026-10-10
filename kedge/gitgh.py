@@ -61,6 +61,21 @@ def run_tests(cwd, test_cmd) -> tuple[bool, int, int]:
     return p.returncode == 0, passed, total
 
 
+def base_total(cwd, base_ref, test_cmd) -> int:
+    """Test count on the base branch. On the PR branch a broken import reports errors per file,
+    not per test, so the base branch is the honest count to guard against lost tests."""
+    wt = cwd.rstrip("/") + "-base"
+    if sh(["git", "worktree", "add", "-q", "--detach", wt, base_ref], cwd, check=False) is None:
+        return -1
+    try:
+        _, _, total = run_tests(wt, test_cmd)
+        return total
+    except Exception:
+        return -1
+    finally:
+        sh(["git", "worktree", "remove", "--force", wt], cwd, check=False)
+
+
 def clone_pr(pr_url, dest) -> dict:
     info = json.loads(sh(["gh", "pr", "view", pr_url, "--json", "title,baseRefName,headRefName,url"]))
     repo = "/".join(pr_url.split("/")[3:5])
