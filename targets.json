@@ -1,5 +1,10 @@
 [
   {
+    "pr_url": "https://github.com/faroukobayanju/kedge-demo/pull/1",
+    "test_cmd": "uv run --no-project --with-requirements requirements.txt --with pytest python -m pytest -q -p no:cacheprovider",
+    "fork": "faroukobayanju/kedge-demo"
+  },
+  {
     "pr_url": "https://github.com/cerberauth/cimd/pull/7",
     "test_cmd": "npm ci && npx vitest run",
     "fork": "Haikeysgit/cimd"
@@ -33,11 +38,6 @@
     "pr_url": "https://github.com/hmcts/finrem-citizen-ui/pull/608",
     "test_cmd": "yarn install && yarn test:unit",
     "fork": "Haikeysgit/finrem-citizen-ui"
-  },
-  {
-    "pr_url": "https://github.com/w3hc/xszc/pull/46",
-    "test_cmd": "pnpm i && pnpm build",
-    "fork": "Haikeysgit/xszc"
   },
   {
     "pr_url": "https://github.com/34j/numpy-flint-arb/pull/179",
