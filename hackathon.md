@@ -32,7 +32,7 @@ Pending: the builders choose which names and handles to publish.
   - **Task 3:** the worker adapter now defaults to **OpenCode**: `opencode run --format json --auto` for edits, `--agent plan` for read-only planning. Claude Code is available with `KEDGE_WORKER=claude`. Two real calls worked at $0: the edit created the file, and the plan narrowed `allowed_files` to `src/util.js` for a lodash `_.pluck` failure.
   - **Task 4:** the supervisor loop. Rollback on drift and the recovery notes are verified on a fixture repo with a stub worker. The chaos run is caught as `tests_regressed` and recovers to green, and without the guard it ships with fewer tests.
   - **Task 6:** the chaos injector, done early to unblock Task 4.
-- **Not yet done:** a real end-to-end run on a GitHub PR (needs `targets.json` and the CLI from Task 8). The Entire capture of headless OpenCode is still unresolved.
+- **Not yet done:** a real end-to-end run on a GitHub PR (needs `targets.json` and the CLI from Task 8).
 
 - **Fixed: Entire capture of headless agent runs.** Root cause, from OpenCode's log: OpenCode **v2** rejects Entire's generated plugin with `failed to load plugin … Plugin must export a default definition with an id and an effect or setup function`, so Entire never sees the session. Fix: pin **OpenCode v1.18.35** (`scripts/setup-opencode.sh`, which installs into `.tools/`). Entire's commit hook runs `opencode export`, so v1 must come first on PATH, with its own XDG data dirs. Kedge's CLI now sets this up (`worker.use_pinned_opencode`). Verified in a scratch repo: a headless `opencode run` plus `git commit` produced the trailer `Entire-Checkpoint: 01M4JS2RDRFJW0SDNYSZYK0Z8H`, and `entire checkpoint explain HEAD` shows the intent, the write tool call, the file and 44.4k tokens. 37 tests pass.
 
@@ -41,7 +41,7 @@ Pending.
 
 ## Known limitations and next steps
 - Requires `entire` on PATH (`~/.local/bin`) and `./scripts/setup-opencode.sh` run once.
-- Next: Task 1 (drift checks), Task 5 spike (neatlogs API).
+- Next: first real run on a GitHub PR (needs `targets.json`, Task 9), the Task 5 neatlogs spike, and Tasks 11–18.
 
 ## Submission
 - Submit on X by quoting the official neatlogs post, Mon Oct 12, 7:00–11:55 PM IST. Include the team, name, project, public repo and demo.
