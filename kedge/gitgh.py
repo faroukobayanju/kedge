@@ -65,12 +65,15 @@ def base_total(cwd, base_ref, test_cmd) -> int:
     """Test count on the base branch. On the PR branch a broken import reports errors per file,
     not per test, so the base branch is the honest count to guard against lost tests."""
     wt = cwd.rstrip("/") + "-base"
-    if sh(["git", "worktree", "add", "-q", "--detach", wt, base_ref], cwd, check=False) is None:
-        return -1
+    sh(["git", "worktree", "add", "-q", "--detach", wt, base_ref], cwd, check=False)
     try:
-        _, _, total = run_tests(wt, test_cmd)
-        return total
-    except Exception:
+        for _ in range(2):  # dependency resolution can fail transiently when runs share a cache
+            try:
+                total = run_tests(wt, test_cmd)[2]
+            except Exception:
+                total = -1
+            if total >= 0:
+                return total
         return -1
     finally:
         sh(["git", "worktree", "remove", "--force", wt], cwd, check=False)

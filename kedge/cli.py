@@ -46,6 +46,7 @@ def run_one(pr_url, test_cmd, fork, *, setup_cmd=None, guard, storm, budget, max
         gitgh.sh(["entire", "enable", "--agent", agent, "--force"], cwd, check=False)
     log_tail = "Local test output:\n" + gitgh.test_output(cwd, test_cmd)
     base_total = gitgh.base_total(cwd, f"origin/{pr['base']}", test_cmd)
+    print(f"🧪 base branch has {base_total if base_total >= 0 else 'unknown'} tests", file=sys.stderr, flush=True)
     ci = gitgh.ci_log(pr_url, pr["head"], pr["repo"])
     if ci.strip() and not ci.startswith("(no failed CI"):
         log_tail += "\n\nCI log:\n" + ci
