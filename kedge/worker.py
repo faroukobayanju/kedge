@@ -6,6 +6,21 @@ FALLBACK_ALLOWED = ["package.json", "package-lock.json", "yarn.lock", "pnpm-lock
                     "requirements*.txt", "pyproject.toml", "poetry.lock", "uv.lock", "src/**/*"]
 
 
+def use_pinned_opencode(root) -> bool:
+    """Put the pinned OpenCode v1 (scripts/setup-opencode.sh) first on PATH, with its own data dirs.
+
+    Entire's commit hook runs `opencode export`, so every subprocess must resolve the same binary.
+    """
+    home = os.path.join(os.path.abspath(root), ".tools", "opencode")
+    bin_dir = os.path.join(home, "node_modules", ".bin")
+    if not os.path.exists(os.path.join(bin_dir, "opencode")):
+        return False
+    os.environ["PATH"] = bin_dir + os.pathsep + os.environ.get("PATH", "")
+    for k in ("DATA", "STATE", "CACHE"):
+        os.environ[f"XDG_{k}_HOME"] = os.path.join(home, k.lower())
+    return True
+
+
 def parse_opencode(jsonl: str) -> dict:
     """Sum step costs and keep the last text event from `opencode run --format json`."""
     cost, text = 0.0, ""

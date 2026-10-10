@@ -55,3 +55,17 @@ def test_opencode_command_shape(monkeypatch):
     assert seen["args"][:4] == ["opencode", "run", "--format", "json"] and "--auto" in seen["args"]
     worker._agent("hi", "/tmp", edit=False)
     assert "--auto" not in seen["args"] and ["--agent", "plan"] == seen["args"][4:6]
+
+
+def test_pinned_opencode_env(tmp_path, monkeypatch):
+    monkeypatch.setenv("PATH", "/usr/bin")
+    for k in ("XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME"):
+        monkeypatch.delenv(k, raising=False)
+    assert worker.use_pinned_opencode(str(tmp_path)) is False  # nothing installed: env untouched
+    import os
+    assert os.environ["PATH"] == "/usr/bin"
+    (tmp_path / ".tools/opencode/node_modules/.bin").mkdir(parents=True)
+    (tmp_path / ".tools/opencode/node_modules/.bin/opencode").write_text("")
+    assert worker.use_pinned_opencode(str(tmp_path)) is True
+    assert os.environ["PATH"].startswith(str(tmp_path / ".tools/opencode/node_modules/.bin"))
+    assert os.environ["XDG_DATA_HOME"] == str(tmp_path / ".tools/opencode/data")

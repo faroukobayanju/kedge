@@ -66,6 +66,7 @@ def main(argv=None) -> int:
         p.add_argument("--max-rollbacks", type=int, default=3)
         p.add_argument("--max-steps", type=int, default=6)
     a = ap.parse_args(argv)
+    worker.use_pinned_opencode(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     kw = dict(guard=not a.no_guard, chaos=a.chaos, budget=a.budget, max_rollbacks=a.max_rollbacks,
               max_steps=a.max_steps)
     if a.cmd == "run":

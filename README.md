@@ -22,6 +22,8 @@ Work in progress. See [`hackathon.md`](hackathon.md) for the build log.
 uv sync
 uv run pytest
 cp .env.example .env   # then fill in the keys; never commit .env
+./scripts/setup-opencode.sh   # pinned OpenCode v1; v2 breaks Entire's plugin
+export PATH="$HOME/.local/bin:$PATH"   # entire CLI
 ```
 
 Package code lives in `kedge/` (flat layout), and tests live in `tests/`.

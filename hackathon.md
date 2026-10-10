@@ -34,11 +34,13 @@ Pending: the builders choose which names and handles to publish.
   - **Task 6:** the chaos injector, done early to unblock Task 4.
 - **Not yet done:** a real end-to-end run on a GitHub PR (needs `targets.json` and the CLI from Task 8). The Entire capture of headless OpenCode is still unresolved.
 
+- **Fixed: Entire capture of headless agent runs.** Root cause, from OpenCode's log: OpenCode **v2** rejects Entire's generated plugin with `failed to load plugin … Plugin must export a default definition with an id and an effect or setup function`, so Entire never sees the session. Fix: pin **OpenCode v1.18.35** (`scripts/setup-opencode.sh`, which installs into `.tools/`). Entire's commit hook runs `opencode export`, so v1 must come first on PATH, with its own XDG data dirs. Kedge's CLI now sets this up (`worker.use_pinned_opencode`). Verified in a scratch repo: a headless `opencode run` plus `git commit` produced the trailer `Entire-Checkpoint: 01M4JS2RDRFJW0SDNYSZYK0Z8H`, and `entire checkpoint explain HEAD` shows the intent, the write tool call, the file and 44.4k tokens. 37 tests pass.
+
 ## Demo
 Pending.
 
 ## Known limitations and next steps
-- The Entire capture for headless agent sessions isn't working yet (see above).
+- Requires `entire` on PATH (`~/.local/bin`) and `./scripts/setup-opencode.sh` run once.
 - Next: Task 1 (drift checks), Task 5 spike (neatlogs API).
 
 ## Submission
