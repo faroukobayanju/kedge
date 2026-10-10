@@ -100,6 +100,8 @@ def push_branch(cwd, fork, branch) -> str:
     """Push HEAD to the fork; returns the fork's default branch (the PR/trail base)."""
     sh(["git", "remote", "add", "fork", f"https://github.com/{fork}.git"], cwd, check=False)
     sh(["git", "push", "-qf", "fork", f"HEAD:{branch}"], cwd)
+    # Entire checkpoints live in refs/entire/*; publish them so they show on entire.io and the trail
+    sh(["git", "push", "-q", "fork", "refs/entire/*:refs/entire/*"], cwd, check=False)
     return json.loads(sh(["gh", "repo", "view", fork, "--json", "defaultBranchRef"]))["defaultBranchRef"]["name"]
 
 
