@@ -11,7 +11,7 @@
   },
   {
     "pr_url": "https://github.com/terngg/prompt-optimizer/pull/4",
-    "test_cmd": "npm ci && npx vitest run",
+    "test_cmd": "pnpm install && pnpm vitest run",
     "fork": "Haikeysgit/prompt-optimizer"
   },
   {
