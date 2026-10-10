@@ -10,7 +10,7 @@ Submit on X by quoting the official neatlogs post: team, name, project, public r
 | Agent improved (before/after run with numbers) | 25% | `--storm delete-test --no-guard` vs `--storm delete-test` on the same PR, table in [evidence.md](evidence.md#before-and-after) | PENDING |
 | neatlogs use | 25% | Trace links or screenshots, one per run in [evidence.md](evidence.md#neatlogs) | PENDING |
 | Entire use | 25% | `Entire-Checkpoint:` trailers on agent commits + `entire checkpoint explain` output in [evidence.md](evidence.md#entire) | PENDING |
-| cfo.ai use (pricing, costs, revenue, runway) | 25% | [business-plan.pdf](business-plan.pdf) | PENDING |
+| cfo.ai use (pricing, costs, revenue, runway) | 25% | [business-plan.pdf](business-plan.pdf) | DONE |
 | Failure recovery | 30% | A run where drift was caught, rolled back and recovered: [evidence.md](evidence.md#recovery) | PENDING |
 | Demo video | 20% | Link in [README](../README.md#for-judges) | PENDING |
 | Building in public (#neatHack) | 15% | X post links in [evidence.md](evidence.md#building-in-public) | PENDING |
