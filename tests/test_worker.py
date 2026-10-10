@@ -52,9 +52,9 @@ def test_opencode_command_shape(monkeypatch):
     monkeypatch.setattr(subprocess, "run", fake)
     monkeypatch.delenv("KEDGE_WORKER", raising=False)
     worker._agent("hi", "/tmp", edit=True)
-    assert seen["args"][:4] == ["opencode", "run", "--format", "json"] and "--auto" in seen["args"]
+    assert seen["args"][:6] == ["opencode", "run", "--format", "json", "--dir", "/tmp"] and "--auto" in seen["args"]
     worker._agent("hi", "/tmp", edit=False)
-    assert "--auto" not in seen["args"] and ["--agent", "plan"] == seen["args"][4:6]
+    assert "--auto" not in seen["args"] and ["--agent", "plan"] == seen["args"][6:8]
 
 
 def test_pinned_opencode_env(tmp_path, monkeypatch):

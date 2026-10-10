@@ -44,12 +44,17 @@ def _agent(prompt, cwd, edit) -> dict:
     if os.environ.get("KEDGE_WORKER") == "claude":
         args = ["claude", "-p", prompt, "--output-format", "json"]
         args += ["--permission-mode", "acceptEdits", "--max-turns", "15"] if edit else ["--model", "haiku", "--max-turns", "1"]
-        p = subprocess.run(args, cwd=cwd, capture_output=True, text=True, timeout=300 if edit else 120)
+        p = subprocess.run(args, cwd=cwd, capture_output=True, text=True, timeout=300 if edit else 120,
+                       stdin=subprocess.DEVNULL)  # an inherited stdin stops OpenCode loading Entire's plugin
         return json.loads(p.stdout)
     model = os.environ.get("KEDGE_MODEL", "opencode/big-pickle")
-    args = ["opencode", "run", "--format", "json"] + (["--auto"] if edit else ["--agent", "plan"]) + ["-m", model, prompt]
-    # free models occasionally stall; a step is short, so fail fast and let the loop retry
-    p = subprocess.run(args, cwd=cwd, capture_output=True, text=True, timeout=300 if edit else 120)
+    args = (["opencode", "run", "--format", "json", "--dir", cwd] + (["--auto"] if edit else ["--agent", "plan"])
+            + ["-m", model, prompt])
+    # OpenCode resolves its project from PWD, not the process cwd: without --dir/PWD it edits (and loads
+    # plugins from) the caller's directory, so Entire's plugin in the clone never sees the session.
+    # Free models occasionally stall; a step is short, so fail fast and let the loop retry.
+    p = subprocess.run(args, cwd=cwd, capture_output=True, text=True, timeout=300 if edit else 120,
+                       stdin=subprocess.DEVNULL, env={**os.environ, "PWD": os.path.abspath(cwd)})
     return parse_opencode(p.stdout)
 
 
