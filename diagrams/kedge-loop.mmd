@@ -1,0 +1,14 @@
+graph TD
+    T["⚓ Kedge: pulls your coding agent back on course"]
+    A["🔴 Red Dependabot PR"] --> B["🧭 Plan<br/>allowed files + steps"]
+    B --> C["⛵ Agent edits one step<br/>(OpenCode)"]
+    C --> D["🧪 Run tests"]
+    D --> E{"🌊 Drift?<br/>tests deleted or skipped<br/>files outside plan<br/>loop · over budget<br/>🤥 false 'all tests pass'"}
+    E -- "yes" --> F["⚓ Roll back to last good commit<br/>+ recovery note"]
+    F --> C
+    E -- "no" --> G["📍 Commit<br/>Entire checkpoint"]
+    G --> H{"Tests green?"}
+    H -- "not yet" --> C
+    H -- "yes" --> I["🏁 Draft PR"]
+    N["📡 Every step traced in neatlogs"] -.-> E
+    T ~~~ A
