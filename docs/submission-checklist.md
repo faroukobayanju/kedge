@@ -8,8 +8,8 @@ Submit on X by quoting the official neatlogs post with the team, name, project, 
 |---|---|---|
 | The agent handles a substantial task end to end | `kedge batch` over 10 real failing Dependabot/Renovate PRs: 4 of 9 fixable PRs green, unattended, $0 ([evidence](evidence.md#the-agent-handles-a-real-task-end-to-end)) | DONE |
 | The agent improved (before/after with numbers) | Same PR and sabotage: 2 of 5 tests shipped without Kedge, 5 of 5 with Kedge, twice ([evidence](evidence.md#the-agent-improved)) | DONE |
-| You used neatlogs | 4 finalized traces including the before run; one trace per run, one span per step ([evidence](evidence.md#neatlogs)) | DONE. The after trace didn't finalize, and dashboard screenshots are PENDING. |
-| You used Entire | 3 checkpoints on agent commits, public under `refs/entire/*`, plus `entire checkpoint explain` output ([evidence](evidence.md#entire)) | DONE |
+| You used neatlogs | Finalized traces for the before run and all three guarded after runs; one trace per run, one span per step ([evidence](evidence.md#neatlogs)) | DONE (dashboard screenshots PENDING) |
+| You used Entire | 4 checkpoints on agent commits, public under `refs/entire/*`, plus `entire checkpoint explain` output ([evidence](evidence.md#entire)) | DONE |
 | You used cfo.ai (pricing, costs, revenue, runway) | [business-plan.pdf](business-plan.pdf), summary in [evidence](evidence.md#cfoai) | DONE |
 | How well the tools were used | [How we used neatlogs, Entire and cfo.ai](explanation/tools.md) | DONE |
 | The agent recovers from failures | Failed agent calls retried to green on a real PR; drift rolled back and recovered ([evidence](evidence.md#the-agent-recovers-from-failures)) | DONE |

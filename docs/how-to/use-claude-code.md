@@ -12,15 +12,24 @@ Swap the worker agent: a different free OpenCode model, or headless Claude Code.
 - **A different OpenCode model:**
 
   ```bash
-  KEDGE_MODEL=opencode/<model-id> uv run kedge run <pr_url>
+  KEDGE_MODEL=opencode/<model-id> uv run python -m kedge run <pr_url>
   ```
 
   List the models with `.tools/opencode/node_modules/.bin/opencode models`.
 
+- **Claude or Nova through the neatHack LiteLLM endpoint** (OpenAI-compatible, `https://litellm.vision.aivar.app/v1`):
+
+  ```bash
+  echo 'LITELLM_API_KEY=<your key>' >> .env          # never commit .env
+  KEDGE_MODEL=litellm/claude-sonnet-4.6 uv run python -m kedge run <pr_url>
+  ```
+
+  Models: `claude-sonnet-4.6`, `claude-haiku`, `claude-opus-4.6`, `nova-pro`, `nova-lite` (listed in `kedge/opencode.json`). OpenCode stays the agent, so Entire capture and step costs work the same way. Check spend with `curl -s https://litellm.vision.aivar.app/key/info -H "Authorization: Bearer $LITELLM_API_KEY"`.
+
 - **Claude Code:**
 
   ```bash
-  KEDGE_WORKER=claude uv run kedge run <pr_url>
+  KEDGE_WORKER=claude uv run python -m kedge run <pr_url>
   ```
 
   Edits run `claude -p <prompt> --output-format json --permission-mode acceptEdits --max-turns 15`. Plans run with `--model haiku --max-turns 1`. Entire is enabled with `--agent claude-code`.

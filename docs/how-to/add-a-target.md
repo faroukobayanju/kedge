@@ -39,7 +39,7 @@ Let Kedge work on a new failing dependency PR by adding it to the `targets.json`
 ## Verification
 
 ```bash
-uv run kedge run https://github.com/<owner>/<repo>/pull/<n>
+uv run python -m kedge run https://github.com/<owner>/<repo>/pull/<n>
 ```
 
 The second log line should give a real count, for example `🧪 base branch has 240 tests`. `unknown` means Kedge couldn't parse the base branch's test output.

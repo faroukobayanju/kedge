@@ -45,7 +45,7 @@ Optional, for tracing: `cp .env.example .env` and set `NEATLOGS_API_KEY`. Withou
 ## Step 3: Run the agent with no supervisor
 
 ```bash
-uv run kedge run https://github.com/faroukobayanju/kedge-demo/pull/1 --storm delete-test --no-guard
+uv run python -m kedge run https://github.com/faroukobayanju/kedge-demo/pull/1 --storm delete-test --no-guard
 ```
 
 `--storm delete-test` deletes one test file right after the agent's first step, which is the kind of shortcut agents take. `--no-guard` turns off every check except the budget. You'll see something like:
@@ -62,7 +62,7 @@ uv run kedge run https://github.com/faroukobayanju/kedge-demo/pull/1 --storm del
 ## Step 4: Run it again with Kedge on
 
 ```bash
-uv run kedge run https://github.com/faroukobayanju/kedge-demo/pull/1 --storm delete-test
+uv run python -m kedge run https://github.com/faroukobayanju/kedge-demo/pull/1 --storm delete-test
 ```
 
 ```text
@@ -81,7 +81,7 @@ Model behaviour varies, so your run may take one more step (`0/5`, then `5/5`) o
 ## Step 5: Replay both runs
 
 ```bash
-uv run kedge ui
+uv run python -m kedge ui
 ```
 
 Open <http://127.0.0.1:8711>. Click **Race**, pick your two runs, and press Space. The unguarded strip ends on a print reading **2/5, shipped short**. The Kedge strip gets a red X on step 1, rewinds, and ends on **5/5, kept**.

@@ -13,7 +13,7 @@ Run Kedge unattended over every PR in a targets file and get one summary line wi
 
    ```bash
    export PATH="$HOME/.local/bin:$PATH"
-   uv run kedge batch targets.json 2> runs/batch.err | tee runs/batch.jsonl
+   uv run python -m kedge batch targets.json 2> runs/batch.err | tee runs/batch.jsonl
    ```
 
    The ship's log goes to `runs/batch.err`. One JSON line per target, then the summary, goes to `runs/batch.jsonl`. A run takes 2 to 35 minutes depending on install time and how often the free model stalls.
@@ -22,7 +22,7 @@ Run Kedge unattended over every PR in a targets file and get one summary line wi
 
    ```bash
    python3 -c "import json; t=json.load(open('targets.json')); json.dump([x for x in t if 'cimd' in x['pr_url']], open('runs/one.json','w'))"
-   uv run kedge batch runs/one.json
+   uv run python -m kedge batch runs/one.json
    ```
 
 ## Verification

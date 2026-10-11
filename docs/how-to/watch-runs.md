@@ -11,7 +11,7 @@ Replay any run as a film strip, and race two runs side by side.
 1. Start the dashboard from the repo root:
 
    ```bash
-   uv run kedge ui
+   uv run python -m kedge ui
    ```
 
 2. Open <http://127.0.0.1:8711>. The newest run is on the lightbox. Open the sheet list (top-left label) to pick another, or go straight to one with `http://127.0.0.1:8711/#<run_id>`.

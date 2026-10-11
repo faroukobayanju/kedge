@@ -19,6 +19,8 @@ def use_pinned_opencode(root) -> bool:
     os.environ["PATH"] = bin_dir + os.pathsep + os.environ.get("PATH", "")
     for k in ("DATA", "STATE", "CACHE"):
         os.environ[f"XDG_{k}_HOME"] = os.path.join(home, k.lower())
+    # extra providers (the neatHack LiteLLM endpoint): KEDGE_MODEL=litellm/<model>, key in LITELLM_API_KEY
+    os.environ.setdefault("OPENCODE_CONFIG", os.path.join(os.path.dirname(__file__), "opencode.json"))
     return True
 
 

@@ -36,8 +36,8 @@ export PATH="$HOME/.local/bin:$PATH"   # entire CLI
 cp .env.example .env                   # optional: neatlogs keys; never commit .env
 uv run pytest -q                       # 87 passed
 
-uv run kedge run https://github.com/faroukobayanju/kedge-demo/pull/1 --storm delete-test
-uv run kedge ui                        # replay runs at http://127.0.0.1:8711
+uv run python -m kedge run https://github.com/faroukobayanju/kedge-demo/pull/1 --storm delete-test
+uv run python -m kedge ui                        # replay runs at http://127.0.0.1:8711
 ```
 
 The PR must be listed in [`targets.json`](targets.json), with a `fork` you can push to. The full walkthrough is the [tutorial](docs/tutorial.md).

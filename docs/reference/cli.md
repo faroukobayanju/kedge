@@ -1,6 +1,6 @@
 # CLI reference
 
-`kedge` is the command-line entry point (`kedge/cli.py`, installed as a script by `pyproject.toml`). Run it from the repository root with `uv run kedge ...` or `uv run python -m kedge ...`. It reads `.env` and `targets.json` from the current directory and writes everything it produces to `runs/`.
+`kedge` is the command-line entry point (`kedge/cli.py`, installed as a script by `pyproject.toml`). Run it from the repository root with `uv run python -m kedge ...` (the `kedge` console script can fail to import the flat package on some setups, so the docs use `python -m`). It reads `.env` and `targets.json` from the current directory and writes everything it produces to `runs/`.
 
 ## Commands
 
@@ -14,7 +14,7 @@
 ### `kedge run`
 
 ```bash
-uv run kedge run https://github.com/faroukobayanju/kedge-demo/pull/1 --storm delete-test
+uv run python -m kedge run https://github.com/faroukobayanju/kedge-demo/pull/1 --storm delete-test
 ```
 
 - `<pr_url>` must match `https://github.com/<owner>/<repo>/pull/<n>`. Anything else exits `2` with `error: expected https://github.com/<owner>/<repo>/pull/<n>`.
@@ -23,7 +23,7 @@ uv run kedge run https://github.com/faroukobayanju/kedge-demo/pull/1 --storm del
 ### `kedge batch`
 
 ```bash
-uv run kedge batch targets.json
+uv run python -m kedge batch targets.json
 ```
 
 Prints one JSON line per target as it finishes:
@@ -54,7 +54,7 @@ A target that raises (clone failure, a test command that times out after 600 s) 
 ### `kedge resume`
 
 ```bash
-uv run kedge resume 20261010-2211-58eb
+uv run python -m kedge resume 20261010-2211-58eb
 ```
 
 Reloads `meta.json` and `state.json`, hard-resets the clone to the last good commit (throwing away the half-finished step), and continues the loop with the original `--no-guard` / `--storm` / budget settings.
@@ -62,7 +62,7 @@ Reloads `meta.json` and `state.json`, hard-resets the clone to the last good com
 ### `kedge ui`
 
 ```bash
-uv run kedge ui --port 8711
+uv run python -m kedge ui --port 8711
 ```
 
 Serves `kedge/ui/` and a read-only JSON view of `runs/`. See [dashboard.md](dashboard.md).
@@ -121,7 +121,9 @@ Set in the shell or in `.env` (copy `.env.example`). Real environment variables 
 | `NEATLOGS_HOST` | `kedge/trace.py` | Dashboard origin (default `https://app.neatlogs.com`) |
 | `NEATLOGS_PROFILE` | `kedge/trace.py` | CLI profile name (default `setup-https---app-neatlogs-com`) |
 | `KEDGE_WORKER` | `kedge/worker.py`, `kedge/cli.py` | `claude` switches the agent to headless Claude Code. Default: OpenCode. |
-| `KEDGE_MODEL` | `kedge/worker.py` | OpenCode model (default `opencode/big-pickle`, a free model) |
+| `KEDGE_MODEL` | `kedge/worker.py` | OpenCode model (default `opencode/big-pickle`, a free model). `litellm/<model>` uses the neatHack LiteLLM endpoint defined in `kedge/opencode.json`. |
+| `LITELLM_API_KEY` | OpenCode | Key for the `litellm/*` models (Nova and Claude). Shared $20 team allowance. |
+| `OPENCODE_CONFIG` | OpenCode | Extra provider config. Kedge defaults it to `kedge/opencode.json`. |
 
 Kedge also puts the pinned OpenCode v1 from `.tools/opencode` first on `PATH` and gives it its own `XDG_DATA_HOME`, `XDG_STATE_HOME` and `XDG_CACHE_HOME` (see [integrations.md](integrations.md#entire)).
 

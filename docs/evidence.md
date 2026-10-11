@@ -11,8 +11,8 @@ Quick links: [The agent improved](#the-agent-improved) · [neatlogs](#neatlogs) 
 Same PR, same model, same sabotage. Before: Kedge's guard off. After: guard on.
 
 ```bash
-uv run kedge run https://github.com/faroukobayanju/kedge-demo/pull/1 --storm delete-test --no-guard   # before
-uv run kedge run https://github.com/faroukobayanju/kedge-demo/pull/1 --storm delete-test              # after
+uv run python -m kedge run https://github.com/faroukobayanju/kedge-demo/pull/1 --storm delete-test --no-guard   # before
+uv run python -m kedge run https://github.com/faroukobayanju/kedge-demo/pull/1 --storm delete-test              # after
 ```
 
 The PR, [kedge-demo#1](https://github.com/faroukobayanju/kedge-demo/pull/1), bumps `packaging` from 21.3 to 24.2. That removes `LegacyVersion`, so `versions.py` fails to import. The storm deletes `tests/test_sorting.py`, which holds 3 of the 5 tests, right after the agent's first step.
@@ -31,7 +31,7 @@ The PR, [kedge-demo#1](https://github.com/faroukobayanju/kedge-demo/pull/1), bum
 | Steps | 1: tests 2/2 | 2: rolled back, then 5/5 | 3: rolled back, 0/5, then 5/5 |
 | Tokens | 32,806 | 54,706 | 70,213 |
 | Model spend | $0 (free model) | $0 | $0 |
-| neatlogs trace | `7b302eac4cfba84f0be89cd449815399` (finalized, 2 spans) | `d8a89d17c4f7d4a9898583e2d8d75f7f` (ingested, **not finalized**; see below) | none |
+| neatlogs trace | `7b302eac4cfba84f0be89cd449815399` | `d8a89d17c4f7d4a9898583e2d8d75f7f` | `6ebf8978d29404d608ed8de10b5f0c9f` |
 | Entire checkpoints | none | none | `01M4KYMP3EJ6E6ZFMVZZC85C11`, `01M4KYNC3N4EJG6QMKKJNV8EB2` |
 
 **Result.** Without Kedge, the agent shipped a "passing" PR missing 60% of the test suite and said "Fixed". With Kedge, the same sabotage was caught in the same step and rolled back, and the PR shipped with every test. We ran the guarded side twice, with the same outcome both times.
@@ -39,6 +39,31 @@ The PR, [kedge-demo#1](https://github.com/faroukobayanju/kedge-demo/pull/1), bum
 Proof files: [before-after-runs.zip](evidence/before-after-runs.zip) holds the full `runs/` folders for `2209-75ad` and `2322-da07`, with the email and local paths scrubbed. Screenshots: [race view in `kedge ui`](evidence/kedge-ui-compare.png), [single run replay](evidence/kedge-ui-run.png). The 80-second demo video replays this race.
 
 **Why CI isn't the judge here.** GitHub Actions is locked by billing on the `kedge-demo` account, so CI fails in 2 to 3 s on every PR, before and after alike. Kedge's verdict comes from running the tests in the clone, twice. The test count is visible in each PR's diff.
+
+---
+
+### On a paid model (Claude Sonnet 4.6)
+
+Same PR, same storm, guard on, with the agent switched to Claude Sonnet 4.6 through the neatHack LiteLLM endpoint (`KEDGE_MODEL=litellm/claude-sonnet-4.6`). Run `20261011-1331-8f97`:
+
+```text
+🧪 base branch has 5 tests
+🌊 DRIFT  tests_regressed · tests 2/2 · tests/test_sorting.py, versions.py
+⚓ hauled back to 33a6358
+⛵ step 2  edited 1 files · tests 5/5
+🏁 green · $0.24 · https://github.com/faroukobayanju/kedge-demo/pull/13 · trace f5adc83adec9ded30fc208a667059ee8
+```
+
+| | |
+|---|---|
+| Draft PR | [kedge-demo#13](https://github.com/faroukobayanju/kedge-demo/pull/13): 5 of 5 tests |
+| Drift | `tests_regressed` at step 1 (2 tests left of the base branch's 5), rolled back to `33a6358` |
+| Tokens | 25,653 + 25,659 over 2 agent steps, plus the plan call |
+| Cost | $0.24 by OpenCode's per-token estimate. About **$0.38 billed** by the LiteLLM key for the whole run (plan + 2 steps + 1 rollback). |
+| neatlogs trace | `f5adc83adec9ded30fc208a667059ee8` (found by readback as the run ended) |
+| Entire checkpoint | `01M4NF636BWASRQQDYAGEZN5VK` |
+
+The guard catches the same sabotage on a paid frontier model. The billed $0.38 for a green PR with one rollback is close to the $0.45 per green PR that the cfo.ai plan estimated from free-model token counts.
 
 ---
 
@@ -52,7 +77,10 @@ One trace per run (workflow `dependency-pr-repair`), tagged `run_id`, `pr_url`, 
 | `509fd4564f0d1dfd43c72f81164d7a83` | `20261011-0034-548d`, kokoro-extension#31, guard on | A **real** PR going green after 4 failed agent calls | finalized |
 | `dd17b437ccb5defbbd23974697cc7c48` | `20261010-2159-1d8a`, prompt-optimizer#4, guard on | Full tree: `kedge run` WORKFLOW span (161.4 s) and 6 step spans. This run gave up. | finalized |
 | `7fe427ab7d33818523d6046aab5d76bf` | `20261010-2202-f09c`, kedge-demo#1, guard off | An earlier before run | finalized |
-| `d8a89d17c4f7d4a9898583e2d8d75f7f` | `20261010-2211-58eb`, kedge-demo#1, **guard on** | The after run | ingested, `dlq`, 0 spans |
+| `d8a89d17c4f7d4a9898583e2d8d75f7f` | `20261010-2211-58eb`, kedge-demo#1, **guard on**, storm delete-test | The after run: root span + step 1 (`kedge.drift=out_of_plan`, rolled back) + step 2 (5/5) | finalized |
+| `6ebf8978d29404d608ed8de10b5f0c9f` | `20261010-2322-da07`, kedge-demo#1, guard on, storm delete-test | The repeat after run: 3 steps under the root | finalized |
+| `f5adc83adec9ded30fc208a667059ee8` | `20261011-1331-8f97`, kedge-demo#1, guard on, storm delete-test, **Claude Sonnet 4.6** | Paid-model after run: drift, rollback, green | finalized when read back |
+| `38dfb10faed1196bd8524af372530edf` | `20261011-0035-3b13`, kedge-demo#1, guard on, storm delete-test | Rollback plus 3 failed agent calls, then green | finalized |
 
 To check a trace yourself (neatlogs CLI 0.2.1, logged in to the project):
 
@@ -61,7 +89,7 @@ neatlogs --host https://app.neatlogs.com --project <project-id> traces list --wo
 neatlogs --host https://app.neatlogs.com --project <project-id> traces spans list dd17b437ccb5defbbd23974697cc7c48 --json
 ```
 
-**What's weak.** The after trace (`d8a89d17…`) was received but never finalized. It sits in neatlogs' failed queue with 0 spans, and its name is its first step, so the root span never arrived. Every guarded run of the demo with the delete-test storm hit this, and we haven't found the cause. So the before/after comparison above rests on the run files and the two draft PRs. The traces back it up for the before side and for guarded runs on other PRs.
+**Timing note.** neatlogs can take a while to finalize a trace. For several hours after these runs, some showed `"finalizationStatus": "dlq"` with 0 spans. Later they all showed as finalized with their full span tree, the after trace included. If a trace looks empty, query it again later.
 
 **Screenshots:** PENDING. Add dashboard screenshots of traces `7b302eac…` and `dd17b437…` as `docs/evidence/neatlogs-*.png`.
 
@@ -75,6 +103,7 @@ Each run enables Entire in its fresh clone (`entire enable --agent opencode`). E
 |---|---|---|---|
 | `01M4KYMP3EJ6E6ZFMVZZC85C11` | `20261010-2322-da07`, step 2 (fixed the import, 0/5) | `6b43429` | [kedge-demo#11](https://github.com/faroukobayanju/kedge-demo/pull/11) |
 | `01M4KYNC3N4EJG6QMKKJNV8EB2` | `20261010-2322-da07`, step 3 (5/5) | `1b2bd8f` | [kedge-demo#11](https://github.com/faroukobayanju/kedge-demo/pull/11) |
+| `01M4NF636BWASRQQDYAGEZN5VK` | `20261011-1331-8f97`, step 2 (5/5, Claude Sonnet 4.6) | `6b3db7c` | [kedge-demo#13](https://github.com/faroukobayanju/kedge-demo/pull/13) |
 | `01M4M45DRP0JWA8GR1NPWGTT84` | `20261011-0035-3b13`, step 5 (5/5, after a rollback and 3 failed agent calls) | `bdfc56c` | [kedge-demo#12](https://github.com/faroukobayanju/kedge-demo/pull/12) |
 
 Check that they're public:

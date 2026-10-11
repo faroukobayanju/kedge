@@ -18,7 +18,7 @@ Continue a run that was killed (laptop slept, Ctrl+C, crash) from its last saved
 2. Resume it:
 
    ```bash
-   uv run kedge resume <run_id>
+   uv run python -m kedge resume <run_id>
    ```
 
    Kedge resets the clone to the last good commit (dropping the half-finished step), then continues the loop. It keeps the original `--no-guard`, `--storm`, budget and limits from `meta.json`. New steps append to the same `steps.jsonl`.

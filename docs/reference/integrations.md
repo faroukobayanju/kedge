@@ -28,7 +28,7 @@ Trace tags: `run_id:<id>`, `pr_url:<url>`, `guard:on|off`, `storm:<mode>|off`.
 
 It finds the trace tagged `run_id:<id>` and stores its `traceId` in `result.json` as `trace_url`. The API returns no URL field, so Kedge stores the ID. If the trace hasn't been ingested yet, it stores `unavailable`. The trace still exists; find it later with the same command.
 
-**Known issue.** Some traces were ingested but never finalized. They show `"finalizationStatus": "dlq"` and `spansCount: 0` in `traces get`, and their trace name is the first step (`step 1 worker`) instead of `kedge run <id>`. That suggests the root span never arrived. It happened on short runs (`20261010-2211-58eb` took 2 minutes) as well as long ones, and we haven't found the cause. [Evidence](../evidence.md#neatlogs) lists which traces finalized.
+**Finalization delay.** A trace can sit in `"finalizationStatus": "dlq"` or `pending` with 0 spans, sometimes named after its first step, for hours before neatlogs finalizes it with the full tree. Every trace from our runs eventually finalized. Re-query instead of re-running.
 
 ## Entire
 

@@ -16,7 +16,7 @@ Each tool answers one question about the agent. neatlogs: **what did it do, step
 
 **Plan.** The tokens per step that neatlogs carries (and that `steps.jsonl` keeps) are the input to the cfo.ai cost model.
 
-**Open problem.** Some traces end up in neatlogs' failed queue (`dlq`, 0 spans) with the root span missing. It isn't tied to run length, and we haven't solved it. See [evidence](../evidence.md#neatlogs).
+**A false alarm worth knowing about.** For a few hours several traces showed `dlq` with 0 spans, and we suspected Kedge was losing its root span. They all finalized later with the full tree. The lesson: neatlogs finalization can lag, so check again before debugging.
 
 ## Entire: a checkpoint on every agent commit
 
