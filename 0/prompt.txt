@@ -630,3 +630,7 @@ go
 <status>completed</status>
 <summary>Background command "Hard-stop watcher: kill run if experiment spend passes $2" completed (exit code 0)</summary>
 </task-notification>
+
+---
+
+done, i ran the neatlogs login
