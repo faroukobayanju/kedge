@@ -1,7 +1,7 @@
 {
  "bpm": 120,
  "beatsPerBar": 4,
- "bars": 40,
+ "bars": 44,
  "sections": [
   {
    "id": "cover",
@@ -34,33 +34,39 @@
    "label": "04 Race (drop)"
   },
   {
-   "id": "neatlogs",
+   "id": "proof",
    "from": 20,
    "to": 24,
+   "label": "05 No proof, no PR"
+  },
+  {
+   "id": "neatlogs",
+   "from": 24,
+   "to": 28,
    "label": "05 neatlogs"
   },
   {
    "id": "entire",
-   "from": 24,
-   "to": 28,
+   "from": 28,
+   "to": 32,
    "label": "06 Entire"
   },
   {
    "id": "cfo",
-   "from": 28,
-   "to": 32,
+   "from": 32,
+   "to": 36,
    "label": "07 cfo.ai"
   },
   {
    "id": "batch",
-   "from": 32,
-   "to": 36,
+   "from": 36,
+   "to": 40,
    "label": "08 Real PRs"
   },
   {
    "id": "end",
-   "from": 36,
-   "to": 41,
+   "from": 40,
+   "to": 45,
    "label": "End"
   }
  ],
@@ -76,14 +82,14 @@
    "sound": "typing",
    "from": "type2",
    "to": "type2End",
-   "chars": 40,
+   "chars": 44,
    "gain": 0.26
   },
   {
    "sound": "typing",
    "from": "type3",
    "to": "type3End",
-   "chars": 52,
+   "chars": 53,
    "gain": 0.26
   },
   {
@@ -172,6 +178,11 @@
    "sound": "chime",
    "at": "logo",
    "gain": 0.4
+  },
+  {
+   "sound": "print",
+   "at": "proofStamp",
+   "gain": 0.45
   }
  ],
  "events": {
@@ -236,58 +247,63 @@
    0
   ],
   "type2": [
-   20,
+   24,
    1,
    0.5
   ],
   "type2End": [
-   20,
+   24,
    4,
    0
   ],
   "type3": [
-   24,
+   28,
    1,
    0.5
   ],
   "type3End": [
-   24,
+   28,
    4,
    0.5
   ],
   "pan1": [
-   27,
-   4,
-   0
-  ],
-  "margin": [
-   29,
-   3,
-   0
-  ],
-  "pan2": [
    31,
    4,
    0
   ],
+  "margin": [
+   33,
+   3,
+   0
+  ],
+  "pan2": [
+   35,
+   4,
+   0
+  ],
   "batchRings": [
-   34,
+   38,
    1,
    0
   ],
   "batchPrint": [
-   35,
+   39,
    1,
    0
   ],
   "pullback": [
-   36,
+   40,
    3,
    0
   ],
   "logo": [
-   38,
+   42,
    2,
+   0
+  ],
+  "proofStamp": [
+   22,
+   3,
    0
   ]
  }

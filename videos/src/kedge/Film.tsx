@@ -5,7 +5,7 @@ import { camera, worldTransform, type CameraKey } from "../kit/camera";
 import { step } from "../kit/spring";
 import cues from "./cues.json";
 import { C, F } from "./tokens";
-import { NOGUARD, KEDGE, SHA, SHIPLOG, CMD, TRACE, ENTIRE, ENTIRE_CMD, UNIT, BATCH } from "./data";
+import { NOGUARD, KEDGE, SHA, SHIPLOG, CMD, ENTIRE, BATCH, PROOF, NEAT_CMD, VERDICT, SPAN_OUT, ENTIRE_SEARCH_CMD, ENTIRE_FOUND, BUDGET } from "./data";
 import { Caption, CW, Laptop, LabBar, Lightbox, Lockup, Mark, Print, SCREEN, Strip, clamp01, ease, type FrameFx } from "./parts";
 
 // one beat grid for picture and sound: b(bar, beat, fraction) in seconds
@@ -48,13 +48,15 @@ const CAM: CameraKey[] = [
   [b(15, 1), LAP_X, 30, LAP_Z],
   [b(17, 4), -520, 110, 0.86],     // push in on the two prints
   [b(19, 3), LAP_X, 30, LAP_Z],
-  [b(20, 1), LAP_X, 30, LAP_Z],
-  [b(21, 3), -520, -40, 0.86],     // push in on the span waterfall
-  [b(23, 2), LAP_X, 30, LAP_Z],
-  [b(25, 3), -520, -40, 0.86],     // push in on the checkpoint
+  [b(21, 2), -520, -60, 0.86],     // push in on the proof block
+  [b(23, 3), LAP_X, 30, LAP_Z],
+  [b(24, 1), LAP_X, 30, LAP_Z],
+  [b(25, 3), -520, -40, 0.86],     // push in on the verdict
   [b(27, 2), LAP_X, 30, LAP_Z],
+  [b(29, 3), -520, -40, 0.86],     // push in on the checkpoint
+  [b(31, 2), LAP_X, 30, LAP_Z],
   [ev("pan1"), SLIP.x - 330 / 0.8, SLIP.y - 20, 0.8],   // slide along the lightbox to the cfo.ai slip
-  [b(30, 1), SLIP.x - 330 / 0.95, SLIP.y - 20, 0.95],
+  [b(34, 1), SLIP.x - 330 / 0.95, SLIP.y - 20, 0.95],
   [ev("pan2"), SHEET.x - 330 / 0.8, SHEET.y, 0.8], // down to the batch sheet
   [ev("pullback"), 682, 625, 0.44],     // pull back: the whole lightbox
 ];
@@ -66,7 +68,7 @@ export function Film(_: { fps: number }) {
     <AbsoluteFill style={{ background: C.glass, fontFamily: F.set }}>
       <Lightbox />
       {/* world: the laptop on the lightbox */}
-      <div style={{ position: "absolute", left: 0, top: 0, transformOrigin: "0 0", transform: worldTransform(view), opacity: 1 - ease((t - b(38)) / 0.8) }}>
+      <div style={{ position: "absolute", left: 0, top: 0, transformOrigin: "0 0", transform: worldTransform(view), opacity: 1 - ease((t - b(42)) / 0.8) }}>
         <div style={{ position: "absolute", left: -(SCREEN.w + 56) / 2, top: -(SCREEN.h + 62) / 2 }}>
           <Laptop><Screen t={t} /></Laptop>
         </div>
@@ -111,7 +113,7 @@ function Cover({ t }: { t: number }) {
 
 /* ---------------- what the laptop screen shows ---------------- */
 const SCENES: [number, (p: { t: number }) => ReactNode][] = [
-  [0, TerminalScene], [b(7) - 0.3, ReplayScene], [b(15), RaceScene], [b(20), TraceScene], [b(24), EntireScene],
+  [0, TerminalScene], [b(7) - 0.3, ReplayScene], [b(15), RaceScene], [b(20), ProofScene], [b(24), TraceScene], [b(28), EntireScene],
 ];
 function Screen({ t }: { t: number }) {
   let i = SCENES.length - 1;
@@ -136,45 +138,70 @@ function Term({ children, sub, fade = 1 }: { children: ReactNode; sub: string; f
 }
 const rise = (t: number, at: number) => { const u = ease((t - at) / 0.25); return { opacity: u, transform: `translateY(${(1 - u) * 8}px)` }; };
 
-function TraceScene({ t }: { t: number }) {
-  const cmd = `neatlogs traces spans list ${TRACE.id.slice(0, 12)}…`;
-  const tHead = b(21, 1), grow = ease((t - b(21, 1, 0.5)) / 1.6);
-  const TRACK = 600;
+/* ---------------- no proof, no PR: the body of a real draft PR, then a run that is held ---------------- */
+function ProofScene({ t }: { t: number }) {
+  const at = (k: number) => b(20, 3) + k * BEAT * 0.75;
+  const stamp = ease((t - ev("proofStamp")) / 0.35);
+  const held = b(23, 1);
   return (
-    <Term sub="trace" fade={ease((t - b(20)) / 0.3)}>
-      <div><span style={{ color: C.edge }}>~/kedge $ </span>{typed(t, ev("type2"), ev("type2End"), cmd)}{caret(t, ev("type2End"))}</div>
-      <div style={{ ...rise(t, tHead), marginTop: 18, font: `500 19px/1.5 ${F.mono}`, color: C.fKey }}>trace {TRACE.id.slice(0, 12)} · workflow dependency-pr-repair · guard:on</div>
-      <div style={{ ...rise(t, tHead + 0.15), display: "grid", gridTemplateColumns: `380px 130px ${TRACK}px`, alignItems: "center", marginTop: 20, rowGap: 14, font: `500 21px/1 ${F.mono}` }}>
-        <span>{TRACE.root}</span><span style={{ color: "#ffd27a" }}>WORKFLOW</span>
-        <div style={{ position: "relative", height: 22 }}>
-          <div style={{ position: "absolute", left: 0, top: 4, height: 14, width: (TRACK - 110) * grow, background: C.edge, borderRadius: 3 }} />
-          <span style={{ position: "absolute", left: (TRACK - 110) * grow + 14, top: 0, opacity: grow, color: C.fCap }}>{(TRACE.total * grow).toFixed(1)} s</span>
+    <AbsoluteFill style={{ opacity: ease((t - b(20)) / 0.3), background: C.glass }}>
+      <LabBar sub="proof" tally="8/14 kept · 10 cheats caught · 2 lies overruled" />
+      <div style={{ position: "absolute", left: 90, top: 128, width: 1100, padding: "30px 36px 30px", background: C.print, boxShadow: "0 30px 60px -20px rgba(17,18,20,.35), 0 2px 6px rgba(17,18,20,.12)" }}>
+        <div style={{ font: `600 18px/1 ${F.mono}`, letterSpacing: ".08em", color: C.ink3 }}>DRAFT PR · {PROOF.pr}</div>
+        <div style={{ marginTop: 14, font: `800 34px/1.15 ${F.set}`, color: C.ink }}>{PROOF.title}</div>
+        <div style={{ marginTop: 26, font: `900 28px/1 ${F.set}` }}>Proof</div>
+        <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "44px 280px 1fr", rowGap: 16, alignItems: "baseline", font: `500 24px/1.3 ${F.mono}` }}>
+          {PROOF.rows.map(([k, v], i) => [
+            <span key={`c${i}`} style={{ ...rise(t, at(i)), color: C.keep, font: `900 28px/1 ${F.set}` }}>✓</span>,
+            <span key={`k${i}`} style={{ ...rise(t, at(i)), color: C.ink2, font: `600 24px/1.3 ${F.set}` }}>{k}</span>,
+            <span key={`v${i}`} style={{ ...rise(t, at(i)), color: C.ink }}>{v}</span>,
+          ])}
         </div>
-        {TRACE.steps.map(([off, tok], i) => {
-          const at = b(21, 3) + i * BEAT * 0.5;
-          const u = ease((t - at) / 0.3);
-          return [
-            <span key={`a${i}`} style={{ ...rise(t, at), paddingLeft: 28, color: C.fCap }}>└ step {i + 1} worker</span>,
-            <span key={`b${i}`} style={{ ...rise(t, at), color: C.keepPos }}>TOOL</span>,
-            <div key={`c${i}`} style={{ position: "relative", height: 22, opacity: u }}>
-              <div style={{ position: "absolute", left: 0, right: 0, top: 10, height: 2, background: "#2b2e34" }} />
-              <i style={{ position: "absolute", left: (off / TRACE.total) * (TRACK - 124), top: 3, width: 14, height: 16, borderRadius: 3, background: C.keepPos, transform: `scale(${0.4 + 0.6 * u})` }} />
-              <span style={{ position: "absolute", left: (off / TRACE.total) * (TRACK - 124) > TRACK - 200 ? (off / TRACE.total) * (TRACK - 124) - 170 : (off / TRACE.total) * (TRACK - 124) + 26, top: 0, font: `500 17px/22px ${F.mono}`, color: C.fKey }}>{(tok / 1000).toFixed(1)}k tok</span>
-            </div>,
-          ];
-        })}
+        <div style={{ position: "absolute", right: 0, top: "calc(100% + 26px)", opacity: stamp, transform: `rotate(${-8 + 2 * stamp}deg) scale(${1.6 - 0.6 * stamp})`, border: `4px solid ${C.keep}`, color: C.keep, padding: "10px 16px", font: `400 30px/1 ${F.hand}` }}>proof attached</div>
+      </div>
+      <div style={{ ...rise(t, held), position: "absolute", left: 90, right: 160, top: 690, background: C.rebate, borderRadius: 10, padding: "22px 28px", font: `500 22px/1.5 ${F.mono}`, color: "#ffd27a" }}>
+        <span style={{ color: C.fKey }}>another run, trace not ingested yet:</span><br />{PROOF.held}
+      </div>
+    </AbsoluteFill>
+  );
+}
+
+/* ---------------- neatlogs: Kedge's verdict on the trace, and the span outputs it reads back as memory ---------------- */
+function TraceScene({ t }: { t: number }) {
+  const at = (k: number) => b(25, 1) + k * BEAT * 0.5;
+  const mem = (k: number) => b(26, 3) + k * BEAT * 0.75;
+  return (
+    <Term sub="trace" fade={ease((t - b(24)) / 0.3)}>
+      <div><span style={{ color: C.edge }}>~/kedge $ </span>{typed(t, ev("type2"), ev("type2End"), NEAT_CMD)}{caret(t, ev("type2End"))}</div>
+      <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "190px 1fr", rowGap: 6, font: `500 22px/1.45 ${F.mono}` }}>
+        {VERDICT.map(([k, v], i) => [
+          <span key={`k${i}`} style={{ ...rise(t, at(i)), color: C.fKey }}>{k}</span>,
+          <span key={`v${i}`} style={{ ...rise(t, at(i)), color: i === 1 ? "#ff9a92" : "#e8ebef" }}>{v}</span>,
+        ])}
+      </div>
+      <div style={{ ...rise(t, b(26, 2)), marginTop: 26, font: `500 19px/1.5 ${F.mono}`, color: C.fKey }}>span outputs the next run reads back before planning:</div>
+      <div style={{ marginTop: 8, display: "grid", gridTemplateColumns: "110px 1fr", rowGap: 8, font: `500 19px/1.45 ${F.mono}` }}>
+        {SPAN_OUT.map(([k, v], i) => [
+          <span key={`k${i}`} style={{ ...rise(t, mem(i)), color: C.keepPos }}>{k}</span>,
+          <span key={`v${i}`} style={{ ...rise(t, mem(i)), color: "#e8ebef" }}>{v}</span>,
+        ])}
       </div>
     </Term>
   );
 }
 
+/* ---------------- Entire: past fixes found before planning, and the checkpoint of the one that worked ---------------- */
 function EntireScene({ t }: { t: number }) {
-  const at = (i: number) => b(25, 1) + i * BEAT * 0.5;
-  const hi = (i: number) => (i === 3 ? clamp01((t - b(26, 3)) / 0.3) : i === 9 ? clamp01((t - b(27, 1)) / 0.3) : 0);
+  const found = (i: number) => b(29, 1) + i * BEAT * 0.5;
+  const at = (i: number) => b(30, 1) + i * BEAT * 0.35;
+  const hi = (i: number) => (i === 3 ? clamp01((t - b(30, 3)) / 0.3) : i === 9 ? clamp01((t - b(31, 1)) / 0.3) : 0);
   return (
-    <Term sub="checkpoints" fade={ease((t - b(24)) / 0.3)}>
-      <div><span style={{ color: C.edge }}>~/kedge-demo $ </span>{typed(t, ev("type3"), ev("type3End"), ENTIRE_CMD)}{caret(t, ev("type3End"))}</div>
-      <div style={{ marginTop: 10, font: `500 22px/1.55 ${F.mono}` }}>
+    <Term sub="checkpoints" fade={ease((t - b(28)) / 0.3)}>
+      <div><span style={{ color: C.edge }}>~/kedge-demo $ </span>{typed(t, ev("type3"), ev("type3End"), ENTIRE_SEARCH_CMD)}{caret(t, ev("type3End"))}</div>
+      {ENTIRE_FOUND.map((line, i) => (
+        <div key={i} style={{ ...rise(t, found(i)), font: `500 20px/1.5 ${F.mono}`, color: C.keepPos, whiteSpace: "pre" }}>🧠 {line}</div>
+      ))}
+      <div style={{ marginTop: 14, font: `500 19px/1.5 ${F.mono}` }}>
         {ENTIRE.map((line, i) => (
           <div key={i} style={{ ...rise(t, at(i)), whiteSpace: "pre", color: hi(i) > 0 ? C.grease : line.startsWith("##") ? C.edge : line.startsWith("●") ? C.keepPos : "#e8ebef", boxShadow: hi(i) > 0 ? `inset ${6 * hi(i)}px 0 0 ${C.grease}` : undefined, paddingLeft: 14 * hi(i) }}>{line}</div>
         ))}
@@ -185,29 +212,29 @@ function EntireScene({ t }: { t: number }) {
 
 /* ---------------- on the lightbox, right of the laptop: the cfo.ai slip ---------------- */
 function CfoSlip({ t }: { t: number }) {
-  const row = (i: number) => rise(t, b(28, 2) + i * BEAT * 0.5);
+  const row = (i: number) => rise(t, b(32, 2) + i * BEAT * 0.5);
   const m = ease((t - ev("margin")) / 1.2);
-  const rows: [string, string][] = [["Price", UNIT.price], ["Model spend", UNIT.model], ["Payments (3%)", UNIT.pay], ["Infrastructure", UNIT.infra]];
+  const rows: [string, string][] = [["Price per green PR", BUDGET.price], ["Target gross margin", BUDGET.margin], ["Payments (3%)", BUDGET.fees], ["Model budget per PR", BUDGET.budget]];
   return (
     <div style={{ width: 640, padding: "30px 30px 24px", background: C.print, transform: "rotate(-1.4deg)", boxShadow: "0 30px 60px -20px rgba(17,18,20,.35), 0 2px 6px rgba(17,18,20,.12)" }}>
       <div style={{ display: "flex", alignItems: "baseline" }}>
-        <span style={{ font: `900 38px/1 ${F.set}`, letterSpacing: "-0.01em" }}>Per green PR</span>
-        <span style={{ marginLeft: "auto", font: `600 14px/1 ${F.mono}`, letterSpacing: ".14em", color: C.edgeInk }}>UNIT ECONOMICS</span>
+        <span style={{ font: `900 38px/1 ${F.set}`, letterSpacing: "-0.01em" }}>pricing.json</span>
+        <span style={{ marginLeft: "auto", font: `600 14px/1 ${F.mono}`, letterSpacing: ".14em", color: C.edgeInk }}>FROM THE CFO.AI MODEL</span>
       </div>
       <div style={{ marginTop: 20, font: `500 26px/1 ${F.mono}` }}>
         {rows.map(([k, v], i) => (
-          <div key={k} style={{ ...row(i), display: "flex", padding: "12px 0", borderBottom: `1px solid ${C.glassEdge}` }}>
-            <span style={{ color: C.ink2 }}>{k}</span><span style={{ marginLeft: "auto", fontWeight: 700 }}>{v}</span>
+          <div key={k} style={{ ...row(i), display: "flex", padding: "12px 0", borderBottom: `1px solid ${C.glassEdge}`, fontWeight: i === 3 ? 800 : 500 }}>
+            <span style={{ color: i === 3 ? C.ink : C.ink2 }}>{k}</span><span style={{ marginLeft: "auto", fontWeight: 700 }}>{v}</span>
           </div>
         ))}
       </div>
       <div style={{ ...rise(t, ev("margin")), marginTop: 22, background: C.frame, color: "#f4f5f7", padding: "22px 26px", display: "flex", alignItems: "flex-end", gap: 20 }}>
-        <span style={{ font: `900 120px/.82 ${F.set}`, letterSpacing: "-0.04em", fontVariantNumeric: "tabular-nums" }}>{(UNIT.margin * m).toFixed(1)}%</span>
-        <span style={{ marginLeft: "auto", font: `900 26px/1.1 ${F.set}`, letterSpacing: ".14em", textAlign: "right", color: C.keepPos }}>GROSS<br />MARGIN</span>
+        <span style={{ font: `900 120px/.82 ${F.set}`, letterSpacing: "-0.04em", fontVariantNumeric: "tabular-nums" }}>${(BUDGET.spent * m).toFixed(2)}</span>
+        <span style={{ marginLeft: "auto", font: `900 22px/1.15 ${F.set}`, letterSpacing: ".12em", textAlign: "right", color: C.keepPos }}>SPENT<br />{BUDGET.left} MARGIN</span>
       </div>
       <div style={{ display: "flex", alignItems: "center", marginTop: 16 }}>
-        <span style={{ font: `600 13px/1.4 ${F.mono}`, letterSpacing: ".06em", color: C.ink2 }}>Modelled in cfo.ai · base case</span>
-        <span style={{ ...rise(t, b(30, 3)), marginLeft: "auto", font: `400 26px/1 ${F.hand}`, color: C.keep, transform: "rotate(-3deg)" }}>failed attempts are free</span>
+        <span style={{ font: `600 13px/1.4 ${F.mono}`, letterSpacing: ".06em", color: C.ink2 }}>kedge-demo#14 · Claude Haiku · billed by the key</span>
+        <span style={{ ...rise(t, b(34, 3)), marginLeft: "auto", font: `400 24px/1 ${F.hand}`, color: C.keep, transform: "rotate(-3deg)" }}>stops before it overspends</span>
       </div>
     </div>
   );
@@ -215,7 +242,7 @@ function CfoSlip({ t }: { t: number }) {
 
 /* ---------------- below the slip: the real batch as a contact sheet ---------------- */
 function BatchSheet({ t }: { t: number }) {
-  const dev = (i: number) => clamp01((t - b(32, 2) - i * BEAT * 0.5) / 0.5);
+  const dev = (i: number) => clamp01((t - b(36, 2) - i * BEAT * 0.5) / 0.5);
   const greens = BATCH.map((f, i) => (f.won ? i : -1)).filter((i) => i >= 0);
   const fx = (i: number): FrameFx => ({ dev: dev(i), ring: BATCH[i].won ? clamp01((t - ev("batchRings") - greens.indexOf(i) * BEAT * 0.5) / 0.6) : undefined });
   const p = ease((t - ev("batchPrint")) / 0.9);
@@ -233,10 +260,10 @@ function BatchSheet({ t }: { t: number }) {
 
 /* ---------------- end: the lightbox clears to the mark and one line ---------------- */
 function EndCard({ t }: { t: number }) {
-  const u = ease((t - b(38, 1, 0.5)) / 0.8);
+  const u = ease((t - b(42, 1, 0.5)) / 0.8);
   if (u <= 0) return null;
   const draw = clamp01((t - ev("logo")) / 1.4);
-  const line = ease((t - b(39, 1)) / 0.8);
+  const line = ease((t - b(43, 1)) / 0.8);
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", opacity: u }}>
       <div style={{ transform: `scale(${0.94 + 0.06 * u})` }}><Lockup size={1.5} draw={draw} /></div>
@@ -358,10 +385,11 @@ const CAPS = [
   { id: "catch", n: "02", label: "catch", head: "It deletes a test. Kedge strikes it.", line: "Tests drop from 5 to 2. The X goes on." },
   { id: "rewind", n: "03", label: "rewind", head: "Back to the last good commit.", line: "Then the agent fixes it properly: 5/5." },
   { id: "race", n: "04", label: "the race", head: "Same sabotage. One ships short.", line: "No guard ships 2/5. Kedge keeps 5/5." },
-  { id: "neatlogs", n: "05", label: "neatlogs", head: "Every step\nis a span.", line: "One trace per run, tagged with the PR and the guard." },
-  { id: "entire", n: "06", label: "Entire", head: "Every agent commit is a checkpoint.", line: "Intent, files and transcript, one command away." },
-  { id: "cfo", n: "07", label: "cfo.ai", head: "$10 a green PR.", line: "92.5% margin, per cfo.ai." },
-  { id: "batch", n: "08", label: "real PRs", head: "4 of 9 went green.", line: "Unattended. None shipped short." },
+  { id: "proof", n: "05", label: "proof", head: "No proof, no PR.", line: "Trace, checkpoint and cost, or it stays a branch." },
+  { id: "neatlogs", n: "06", label: "neatlogs", head: "Its memory and its record.", line: "Verdicts go on the trace. Past runs shape the plan." },
+  { id: "entire", n: "07", label: "Entire", head: "Past fixes guide the next.", line: "Every agent commit is a checkpoint." },
+  { id: "cfo", n: "08", label: "cfo.ai", head: "$0.45 for the model.", line: "cfo.ai sets the budget. This fix cost $0.12." },
+  { id: "batch", n: "09", label: "real PRs", head: "4 of 9 went green.", line: "Unattended. None shipped short." },
 ];
 function Captions({ t }: { t: number }) {
   return (

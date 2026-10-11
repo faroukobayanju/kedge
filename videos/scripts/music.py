@@ -123,13 +123,14 @@ PARTS = {
     "catch": {"pad", "arp", "kick", "hat", "bass", "clap"},
     "rewind": {"pad", "arp", "kick", "hat", "bass", "clap"},
     "race": {"pad", "arp", "kick", "hat", "bass", "clap", "lead", "open"},
+    "proof": {"pad", "arp", "kick", "hat", "bass", "clap"},
     "neatlogs": {"pad", "arp", "kick", "hat", "bass", "clap"},
     "entire": {"pad", "arp", "kick", "hat", "bass", "clap"},
     "cfo": {"pad", "arp", "kick", "hat", "bass", "clap", "open"},
     "batch": {"pad", "arp", "kick", "hat", "bass", "clap", "lead", "open"},
     "end": {"pad", "arp", "kick", "hat", "bass", "clap"},
 }
-END_DRUMS_OUT = 38  # drums and bass leave as the logo draws; pad rings out
+END_DRUMS_OUT = 42  # drums and bass leave as the logo draws; pad rings out
 
 
 def parts(bar):
@@ -237,7 +238,7 @@ add(music, REW_FROM, spool * env(n, 0.01, 0.6, 0.2, 0.1), 0.18)
 # sidechain: pad, arp and bass breathe under the kick
 duck = 1 - 0.55 * np.clip(kick_env, 0, 1)
 # energy per section: the race and the batch are the peaks, the tool scenes sit back
-ENERGY = {"cover": 1.0, "start": 0.55, "catch": 0.7, "rewind": 0.7, "race": 1.0, "neatlogs": 0.6,
+ENERGY = {"cover": 1.0, "start": 0.55, "catch": 0.7, "rewind": 0.7, "race": 1.0, "proof": 0.6, "neatlogs": 0.6,
           "entire": 0.62, "cfo": 0.8, "batch": 1.0, "end": 0.75}
 groove = np.ones(N)
 for bar in range(1, BARS + 1):
@@ -331,7 +332,21 @@ for cue in CUES["sfx"]:
         continue
     add(sfx, ev(cue["at"]) - PEAK.get(cue["sound"], 0.0), SOUNDS[cue["sound"]](), g)
 
-out = mix * 0.8 + sfx * 0.9
+# voice-over (scripts/voice.py): placed on the bar grid from voice.json, music ducks under it
+VO = json.loads((ROOT / "src/kedge/voice.json").read_text())
+vo = np.zeros(N)
+for line in VO["lines"]:
+    path = ROOT / "public/audio/vo" / f"{line['id']}.wav"
+    if not path.exists():
+        continue
+    with wave.open(str(path)) as w:
+        x = np.frombuffer(w.readframes(w.getnframes()), np.int16).astype(np.float64) / 32768
+    add(vo, b(*line["at"]), x / (np.max(np.abs(x)) + 1e-9) * 0.9)
+speaking = lp_fast((np.abs(vo) > 0.01).astype(np.float64), 4.0)  # ~40 ms smoothing of "someone is talking"
+speaking = np.clip(speaking * 3, 0, 1)
+mix *= 1 - 0.6 * speaking  # music sits back while the voice talks
+
+out = mix * 0.8 + sfx * 0.9 + vo * 0.95
 
 # small room: a short noise-tail reverb on everything except the drums' low end
 ir_n = int(1.6 * SR)
