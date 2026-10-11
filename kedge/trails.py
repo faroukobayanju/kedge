@@ -85,7 +85,7 @@ def _files_from_explain(text) -> list[str]:
     return out
 
 
-def past_fixes(cwd, query, n=2) -> list[str]:
+def past_fixes(cwd, query, repo="", dep="", n=2) -> list[str]:
     """Entire as fix memory: past agent checkpoints for the same failure, and the files each one touched."""
     try:
         p = _entire(["checkpoint", "search", query, "--all-repos"], cwd)
@@ -97,6 +97,10 @@ def past_fixes(cwd, query, n=2) -> list[str]:
         d = r.get("data", {})
         cp = d.get("matchedCheckpointId")
         if not cp or cp in seen:
+            continue
+        same_repo = repo and f'{d.get("org", "")}/{d.get("repo", "")}' == repo
+        same_dep = dep and dep.lower() in d.get("displayName", "").lower()
+        if (repo or dep) and not (same_repo or same_dep):  # search runs across repos; keep only relevant fixes
             continue
         seen.add(cp)
         try:

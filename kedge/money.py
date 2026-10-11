@@ -10,6 +10,7 @@ import os
 import urllib.request
 
 LITELLM = "https://litellm.vision.aivar.app"
+ESCALATION_COST_FACTOR = 3  # Claude Sonnet vs Haiku price per token
 LEDGER_FIELDS = ["run_id", "finished_at", "repo", "pr_url", "status", "model", "real_cost_usd", "steps",
                  "rollbacks", "price_usd", "margin"]
 

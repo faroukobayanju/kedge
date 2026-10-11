@@ -67,7 +67,7 @@ def run_one(pr_url, test_cmd, fork, *, setup_cmd=None, guard, storm, budget, max
     pr["dep"] = dep_of(pr["title"], pr["head"])
     # agent-influenced text from past runs: one line each, capped, so it can't forge prompt sections
     memory = [" ".join(m.split())[:300] for m in
-              trace.memory(pr["repo"], pr["dep"], run_id) + trails.past_fixes(cwd, f"fix {pr['title']}")]
+              trace.memory(pr["repo"], pr["dep"], run_id) + trails.past_fixes(cwd, f"fix {pr['title']}", pr["repo"], pr["dep"])]
     for line in memory:
         print(f"🧠 {line}", file=sys.stderr, flush=True)
     meter = money.Meter()

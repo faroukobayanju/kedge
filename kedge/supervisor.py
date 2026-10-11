@@ -52,7 +52,8 @@ def loop(cwd, test_cmd, plan, prompt_base, *, worker, replanner=None, guard=True
             # two rollbacks in a row: the cheap model isn't getting there, so the budget pays for the stronger one
             if os.environ.get("KEDGE_ESCALATE_MODEL"):
                 s["model"] = os.environ["KEDGE_MODEL"] = os.environ["KEDGE_ESCALATE_MODEL"]
-                s["step_costs"] = []  # cheap-model step costs would underestimate the stronger model
+                # cheap-model step costs would underestimate the stronger one; Sonnet costs ~3x Haiku per token
+                s["step_costs"] = [c * money.ESCALATION_COST_FACTOR for c in s.get("step_costs", [])]
             before = meter.read() if meter else None
             s["plan"] = replanner(s["plan"], s["notes"], cwd)
             after = meter.read() if meter else None

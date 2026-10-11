@@ -146,3 +146,20 @@ def test_noop_step_not_regressed_with_base_total(tmp_path):
         return {"cost_usd": 0.0, "text": "", "error": None}
     r = loop(fixture(tmp_path), TEST_CMD, PLAN, "fix it", worker=noop, max_steps=2, base_total=3)
     assert [s["drift"] for s in r["steps"]] == [None, None]
+
+
+def test_escalation_scales_expected_cost(tmp_path, monkeypatch):
+    # two cheap $0.10 steps drift and trigger a replan onto the stronger model; its first step is expected
+    # to cost 3 x $0.10, so with $0.45 spent of a $0.60 budget Kedge stops instead of paying for it
+    monkeypatch.setenv("KEDGE_MODEL", "litellm/claude-haiku")
+    monkeypatch.setenv("KEDGE_ESCALATE_MODEL", "litellm/claude-sonnet-4.6")
+    calls = []
+
+    def stray(prompt, cwd):
+        calls.append(1)
+        open(f"{cwd}/STRAY{len(calls)}.md", "w").write("x")
+        return {"cost_usd": 0.10, "text": "", "error": None}
+    r = loop(fixture(tmp_path), TEST_CMD, {**PLAN, "cost_usd": 0.25}, "fix", worker=stray,
+             replanner=lambda p, n, c: {**p, "cost_usd": 0.0}, budget=0.60, max_steps=6)
+    assert len(calls) == 2 and r["steps"][-1]["action"] == "budget_stop"
+

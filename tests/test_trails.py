@@ -73,3 +73,17 @@ def test_past_fixes(monkeypatch):
     lines = trails.past_fixes("/tmp", "packaging", n=5)
     assert lines == ['Entire checkpoint C1 (o/r): "Fix import", touched [\'versions.py\']',
                      'Entire checkpoint C2 (o/x): "Other"']
+
+
+def test_past_fixes_keep_only_same_repo_or_dep(monkeypatch):
+    search = {"results": [{"data": {"matchedCheckpointId": "A", "org": "o", "repo": "r", "displayName": "Fix x"}},
+                          {"data": {"matchedCheckpointId": "B", "org": "z", "repo": "z", "displayName": "Fix packaging import"}},
+                          {"data": {"matchedCheckpointId": "C", "org": "z", "repo": "z", "displayName": "Fix vitest"}}]}
+
+    class P:
+        def __init__(self, out):
+            self.stdout, self.returncode = out, 0
+    monkeypatch.setattr(trails, "_entire", lambda args, cwd: P(json.dumps(search)) if args[1] == "search" else P(""))
+    lines = trails.past_fixes("/tmp", "q", repo="o/r", dep="packaging", n=5)
+    assert [ln.split()[2] for ln in lines] == ["A", "B"]
+

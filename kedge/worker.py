@@ -97,7 +97,9 @@ def _plan_call(prompt, cwd, extra_allowed=()) -> dict:
     cost, text = float(d.get("total_cost_usd", 0.0)), d.get("result", "")
     try:
         p = json.loads(text[text.index("{"): text.rindex("}") + 1])
-        return {"hypothesis": p["hypothesis"], "allowed_files": p["allowed_files"],
+        # a plan may never whitelist tests: editing a test to pass is the cheat Kedge exists to catch
+        allowed = [g for g in p["allowed_files"] if not TESTLIKE.search(g)] or FALLBACK_ALLOWED + list(extra_allowed)
+        return {"hypothesis": p["hypothesis"], "allowed_files": allowed,
                 "steps": p.get("steps") or DEFAULT_STEPS, "cost_usd": cost}
     except (ValueError, KeyError):
         return {"hypothesis": "unknown", "allowed_files": FALLBACK_ALLOWED + list(extra_allowed),

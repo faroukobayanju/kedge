@@ -109,3 +109,10 @@ def test_failed_replan_keeps_previous_files(monkeypatch):
     monkeypatch.setattr(worker, "_agent", lambda p, c, edit: {"result": "", "total_cost_usd": 0.0})
     p = worker.replan({"hypothesis": "h", "allowed_files": ["versions.py"], "steps": []}, [], "/tmp")
     assert "versions.py" in p["allowed_files"]
+
+
+def test_plan_never_whitelists_tests(monkeypatch):
+    out = '{"hypothesis": "h", "allowed_files": ["src/a.js", "tests/unit/A.test.jsx", "src/b.spec.ts"], "steps": ["x"]}'
+    monkeypatch.setattr(worker, "_agent", lambda prompt, cwd, edit: {"result": out, "total_cost_usd": 0.0})
+    assert worker.make_plan("t", "log", [], "/tmp")["allowed_files"] == ["src/a.js"]
+

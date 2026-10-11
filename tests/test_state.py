@@ -59,3 +59,4 @@ def test_escalation_switches_model_and_resets_cost_history(tmp_path, monkeypatch
              max_steps=3, budget=5.0)
     assert seen[:2] == ["litellm/claude-haiku"] * 2 and seen[2] == "litellm/claude-sonnet-4.6"
     assert any(s["action"] == "replan" for s in r["steps"])
+
