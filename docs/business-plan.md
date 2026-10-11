@@ -1,6 +1,6 @@
 # Kedge business plan
 
-Built with [cfo.ai](https://cfo.ai) (Ari, AI CFO) on Oct 10, 2026, during neatHack. The 24-month operating model runs Oct 2026 – Sep 2028. Every figure below comes from cfo.ai's exported model: [Base](business-plan-base.xlsx) and [Upside](business-plan-upside.xlsx).
+Built with [cfo.ai](https://cfo.ai) (Ari, AI CFO) on Oct 10, 2026, during neatHack. The 24-month operating model runs Oct 2026 – Sep 2028. Every figure below comes from cfo.ai's exported Base and Upside models (the PDF is [business-plan.pdf](business-plan.pdf)).
 
 ## What we sell
 

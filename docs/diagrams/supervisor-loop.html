@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kedge supervisor loop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --paper: #f4f6f8; --ink: #111214; --muted: #4a4f57; --accent: #e3241b;
+      --sans: 'Archivo', system-ui, sans-serif; --serif: 'Archivo', sans-serif; --mono: 'JetBrains Mono', ui-monospace, monospace; }
+    body { font-family: var(--sans); background: var(--paper); color: var(--ink); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .frame { max-width: 1200px; width: 100%; }
+    .diagram-container { width: 100%; overflow-x: auto; }
+    .eyebrow { font-family: var(--mono); font-size: .66rem; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); margin-bottom: .5rem; }
+    h1 { font-family: var(--serif); font-size: clamp(1.5rem, 2.4vw + .75rem, 2rem); font-weight: 900; letter-spacing: -.02em; line-height: 1.15; margin-bottom: 1.5rem; }
+    svg { width: 100%; min-width: 960px; display: block; }
+    @media print { .diagram-container { overflow-x: visible; } svg { min-width: 0; } }
+  </style>
+</head>
+<body>
+<div class="frame">
+  <p class="eyebrow">Flowchart · Kedge</p>
+  <h1>The supervisor loop: check every step, haul back on drift</h1>
+  <div class="diagram-container">
+    <svg viewBox="0 0 960 800" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="supervisor-loop-title supervisor-loop-desc">
+      <title id="supervisor-loop-title">Kedge supervisor loop</title>
+      <desc id="supervisor-loop-desc">Kedge plans a fix for a red dependency PR, lets the agent make one step, runs the tests, rolls back to the last good commit with a recovery note when it detects drift, commits clean steps as Entire checkpoints, and opens a draft PR only when the tests pass twice.</desc>
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4a4f57"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#e3241b"/></marker>
+      </defs>
+      <rect width="100%" height="100%" fill="#f4f6f8"/>
+
+      <!-- arrows first -->
+      <g fill="none" stroke="#4a4f57" stroke-width="1.2">
+        <line x1="480" y1="80" x2="480" y2="110" marker-end="url(#arrow)"/>
+        <line x1="480" y1="168" x2="480" y2="198" marker-end="url(#arrow)"/>
+        <line x1="480" y1="256" x2="480" y2="286" marker-end="url(#arrow)"/>
+        <line x1="480" y1="344" x2="480" y2="366" marker-end="url(#arrow)"/>
+        <line x1="480" y1="456" x2="480" y2="486" marker-end="url(#arrow)"/>
+        <line x1="480" y1="544" x2="480" y2="566" marker-end="url(#arrow)"/>
+        <line x1="480" y1="656" x2="480" y2="686" marker-end="url(#arrow)"/>
+        <!-- not green yet: back to the agent, left side -->
+        <path d="M408 612 H188 Q180 612 180 604 V236 Q180 228 188 228 H378" marker-end="url(#arrow)"/>
+      </g>
+      <g fill="none" stroke="#e3241b" stroke-width="1.6">
+        <line x1="552" y1="412" x2="638" y2="412" marker-end="url(#arrow-accent)"/>
+        <!-- rollback: back to the agent with a recovery note -->
+        <path d="M740 384 V236 Q740 228 732 228 H582" marker-end="url(#arrow-accent)"/>
+      </g>
+
+      <!-- arrow labels (masked, 6px+ gap) -->
+      <g font-family="'JetBrains Mono', monospace" font-size="8" letter-spacing="0.06em" text-anchor="middle" fill="#6b717a">
+        <rect x="580" y="392" width="32" height="12" rx="2" fill="#f4f6f8"/><text x="596" y="401" fill="#b0170f">YES</text>
+        <rect x="490" y="466" width="24" height="12" rx="2" fill="#f4f6f8"/><text x="502" y="475">NO</text>
+        <rect x="490" y="666" width="28" height="12" rx="2" fill="#f4f6f8"/><text x="504" y="675">YES</text>
+        <rect x="272" y="592" width="48" height="12" rx="2" fill="#f4f6f8"/><text x="296" y="601">NOT YET</text>
+        <rect x="750" y="296" width="72" height="12" rx="2" fill="#f4f6f8"/><text x="786" y="305" fill="#b0170f">RETRY + NOTE</text>
+      </g>
+
+      <!-- start -->
+      <rect x="380" y="40" width="200" height="40" rx="20" fill="#ffffff" stroke="#4a4f57"/>
+      <text x="480" y="64" font-family="'Archivo', sans-serif" font-size="12" font-weight="600" text-anchor="middle" fill="#111214">Red dependency PR</text>
+
+      <!-- steps -->
+      <g font-family="'Archivo', sans-serif">
+        <rect x="380" y="112" width="200" height="56" rx="6" fill="#ffffff" stroke="#111214"/>
+        <rect x="388" y="118" width="28" height="12" rx="2" fill="none" stroke="rgba(17,18,20,.4)" stroke-width=".8"/>
+        <text x="402" y="127" font-family="'JetBrains Mono', monospace" font-size="7" letter-spacing=".08em" text-anchor="middle" fill="#4a4f57">LLM</text>
+        <text x="480" y="142" font-size="12" font-weight="600" text-anchor="middle" fill="#111214">Plan the fix</text>
+        <text x="480" y="158" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" fill="#4a4f57">allowed files · 1–4 steps</text>
+
+        <rect x="380" y="200" width="200" height="56" rx="6" fill="#ffffff" stroke="#111214"/>
+        <rect x="388" y="206" width="40" height="12" rx="2" fill="none" stroke="rgba(17,18,20,.4)" stroke-width=".8"/>
+        <text x="408" y="215" font-family="'JetBrains Mono', monospace" font-size="7" letter-spacing=".08em" text-anchor="middle" fill="#4a4f57">AGENT</text>
+        <text x="480" y="230" font-size="12" font-weight="600" text-anchor="middle" fill="#111214">Agent edits one step</text>
+        <text x="480" y="246" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" fill="#4a4f57">opencode run --auto</text>
+
+        <rect x="380" y="288" width="200" height="56" rx="6" fill="#ffffff" stroke="#111214"/>
+        <rect x="388" y="294" width="36" height="12" rx="2" fill="none" stroke="rgba(17,18,20,.4)" stroke-width=".8"/>
+        <text x="406" y="303" font-family="'JetBrains Mono', monospace" font-size="7" letter-spacing=".08em" text-anchor="middle" fill="#4a4f57">SHELL</text>
+        <text x="480" y="318" font-size="12" font-weight="600" text-anchor="middle" fill="#111214">Run the tests</text>
+        <text x="480" y="334" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" fill="#4a4f57">passed / total vs best</text>
+
+        <!-- drift check (focal) -->
+        <polygon points="480,368 552,412 480,456 408,412" fill="rgba(227,36,27,.07)" stroke="#e3241b" stroke-width="1.4"/>
+        <text x="480" y="410" font-size="12" font-weight="600" text-anchor="middle" fill="#111214">Drift?</text>
+        <text x="480" y="424" font-family="'JetBrains Mono', monospace" font-size="8" text-anchor="middle" fill="#4a4f57">4 checks</text>
+
+        <rect x="640" y="384" width="200" height="56" rx="6" fill="#ffffff" stroke="#111214"/>
+        <rect x="648" y="390" width="28" height="12" rx="2" fill="none" stroke="rgba(17,18,20,.4)" stroke-width=".8"/>
+        <text x="662" y="399" font-family="'JetBrains Mono', monospace" font-size="7" letter-spacing=".08em" text-anchor="middle" fill="#4a4f57">GIT</text>
+        <text x="740" y="414" font-size="12" font-weight="600" text-anchor="middle" fill="#111214">Roll back to last good</text>
+        <text x="740" y="430" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" fill="#4a4f57">2 in a row: replan · &gt;3: stop</text>
+
+        <rect x="380" y="488" width="200" height="56" rx="6" fill="#ffffff" stroke="#111214"/>
+        <rect x="388" y="494" width="28" height="12" rx="2" fill="none" stroke="rgba(17,18,20,.4)" stroke-width=".8"/>
+        <text x="402" y="503" font-family="'JetBrains Mono', monospace" font-size="7" letter-spacing=".08em" text-anchor="middle" fill="#4a4f57">GIT</text>
+        <text x="480" y="518" font-size="12" font-weight="600" text-anchor="middle" fill="#111214">Commit the step</text>
+        <text x="480" y="534" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" fill="#4a4f57">Entire-Checkpoint trailer</text>
+
+        <polygon points="480,568 552,612 480,656 408,612" fill="#ffffff" stroke="#111214"/>
+        <text x="480" y="610" font-size="12" font-weight="600" text-anchor="middle" fill="#111214">Green twice?</text>
+        <text x="480" y="624" font-family="'JetBrains Mono', monospace" font-size="8" text-anchor="middle" fill="#4a4f57">re-run verifies</text>
+
+        <rect x="380" y="688" width="200" height="40" rx="20" fill="#ffffff" stroke="#4a4f57"/>
+        <text x="480" y="712" font-size="12" font-weight="600" text-anchor="middle" fill="#111214">Draft PR on the fork</text>
+      </g>
+
+      <!-- editorial callout -->
+      <text x="368" y="326" font-family="'Archivo', sans-serif" font-style="italic" font-size="13" text-anchor="end" fill="#4a4f57">each step is one neatlogs span</text>
+
+      <!-- legend -->
+      <line x1="30" y1="752" x2="930" y2="752" stroke="rgba(17,18,20,.10)" stroke-width=".8"/>
+      <g font-family="'JetBrains Mono', monospace" font-size="8" letter-spacing=".14em" fill="#4a4f57">
+        <text x="30" y="776">LEGEND</text>
+        <line x1="110" y1="773" x2="142" y2="773" stroke="#4a4f57" stroke-width="1.2" marker-end="url(#arrow)"/><text x="152" y="776">FLOW</text>
+        <line x1="230" y1="773" x2="262" y2="773" stroke="#e3241b" stroke-width="1.6" marker-end="url(#arrow-accent)"/><text x="272" y="776">ROLLBACK PATH</text>
+        <polygon points="420,773 428,768 436,773 428,778" fill="none" stroke="#111214"/><text x="446" y="776">CHECK</text>
+        <rect x="520" y="767" width="24" height="12" rx="6" fill="none" stroke="#4a4f57"/><text x="554" y="776">START / END</text>
+      </g>
+    </svg>
+  </div>
+</div>
+</body>
+</html>

@@ -1,18 +1,19 @@
 # Submission checklist
 
-Maps each item judges check ([neatlogs.com/hackathon](https://neatlogs.com/hackathon)) to the link that proves it. `PENDING` means the evidence does not exist yet.
+Maps each item judges check ([neatlogs.com/hackathon](https://neatlogs.com/hackathon)) to the evidence that proves it. `PENDING` means something is still missing.
 
-Submit on X by quoting the official neatlogs post: team, name, project, public repo, demo. Opens Mon Oct 12, 7:00 PM IST; planned close 11:55 PM IST (Discord cutoff is authoritative).
+Submit on X by quoting the official neatlogs post with the team, name, project, public repo and demo. Submissions open Mon Oct 12, 7:00 PM IST; our planned close is 11:55 PM IST (the Discord cutoff is authoritative).
 
-| Judges check | Weight | Our evidence | Status |
-|---|---|---|---|
-| The agent handles a substantial task end to end | 30% | `kedge batch targets.json` over 10 real failing Dependabot/Renovate PRs ([targets.json](../targets.json)); summary line in [evidence.md](evidence.md#batch) | PENDING |
-| Agent improved (before/after run with numbers) | 25% | `--storm delete-test --no-guard` vs `--storm delete-test` on the same PR, table in [evidence.md](evidence.md#before-and-after) | PENDING |
-| neatlogs use | 25% | Trace links or screenshots, one per run in [evidence.md](evidence.md#neatlogs) | PENDING |
-| Entire use | 25% | `Entire-Checkpoint:` trailers on agent commits + `entire checkpoint explain` output in [evidence.md](evidence.md#entire) | PENDING |
-| cfo.ai use (pricing, costs, revenue, runway) | 25% | [business-plan.pdf](business-plan.pdf) | DONE |
-| Failure recovery | 30% | A run where drift was caught, rolled back and recovered: [evidence.md](evidence.md#recovery) | PENDING |
-| Demo video | 20% | Link in [README](../README.md#for-judges) | PENDING |
-| Building in public (#neatHack) | 15% | X post links in [evidence.md](evidence.md#building-in-public) | PENDING |
-| Code written during the event | required | Public repo, all commits dated Oct 10–12, 2026: `git log --format='%ad %s' --date=iso` | DONE (first commit Oct 10 after 12:30 PM IST) |
-| Usefulness and originality | 10% | README pitch: Kedge checks what the agent did, not what it says it did | DONE |
+| Judges check | Our evidence | Status |
+|---|---|---|
+| The agent handles a substantial task end to end | `kedge batch` over 10 real failing Dependabot/Renovate PRs: 4 of 9 fixable PRs green, unattended, $0 ([evidence](evidence.md#the-agent-handles-a-real-task-end-to-end)) | DONE |
+| The agent improved (before/after with numbers) | Same PR and sabotage: 2 of 5 tests shipped without Kedge, 5 of 5 with Kedge, twice ([evidence](evidence.md#the-agent-improved)) | DONE |
+| You used neatlogs | 4 finalized traces including the before run; one trace per run, one span per step ([evidence](evidence.md#neatlogs)) | DONE. The after trace didn't finalize, and dashboard screenshots are PENDING. |
+| You used Entire | 3 checkpoints on agent commits, public under `refs/entire/*`, plus `entire checkpoint explain` output ([evidence](evidence.md#entire)) | DONE |
+| You used cfo.ai (pricing, costs, revenue, runway) | [business-plan.pdf](business-plan.pdf), summary in [evidence](evidence.md#cfoai) | DONE |
+| How well the tools were used | [How we used neatlogs, Entire and cfo.ai](explanation/tools.md) | DONE |
+| The agent recovers from failures | Failed agent calls retried to green on a real PR; drift rolled back and recovered ([evidence](evidence.md#the-agent-recovers-from-failures)) | DONE |
+| Demo video | 80 s, 1080p60, rendered from `videos/`; link in the [README](../README.md#for-judges) once posted | PENDING: post the video and add the link |
+| Built in public (#neatHack) | X post links in [evidence](evidence.md#built-in-public) | PENDING: add links |
+| Code written during the event | Public repo, 58 commits dated Oct 10 to 11, 2026, the first at 16:37 IST ([evidence](evidence.md#code-written-during-the-hackathon)) | DONE |
+| Usefulness and originality | Kedge checks what the agent did, not what it says it did ([how it works](explanation/how-kedge-works.md)) | DONE |

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kedge before and after</title>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --paper: #f4f6f8; --ink: #111214; --muted: #4a4f57;
+      --sans: 'Archivo', system-ui, sans-serif; --serif: 'Archivo', sans-serif; --mono: 'JetBrains Mono', ui-monospace, monospace; }
+    body { font-family: var(--sans); background: var(--paper); color: var(--ink); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .frame { max-width: 1200px; width: 100%; }
+    .diagram-container { width: 100%; overflow-x: auto; }
+    .eyebrow { font-family: var(--mono); font-size: .66rem; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); margin-bottom: .5rem; }
+    h1 { font-family: var(--serif); font-size: clamp(1.5rem, 2.4vw + .75rem, 2rem); font-weight: 900; letter-spacing: -.02em; line-height: 1.15; margin-bottom: 1.5rem; }
+    svg { width: 100%; min-width: 960px; display: block; }
+    @media print { .diagram-container { overflow-x: visible; } svg { min-width: 0; } }
+  </style>
+</head>
+<body>
+<div class="frame">
+  <p class="eyebrow">Swimlane · kedge-demo#1 · --storm delete-test</p>
+  <h1>Same PR, same sabotage: one run ships short, one gets hauled back</h1>
+  <div class="diagram-container">
+    <svg viewBox="0 0 960 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="before-after-title before-after-desc">
+      <title id="before-after-title">Kedge before and after on kedge-demo#1</title>
+      <desc id="before-after-desc">Without the guard the agent's first step deletes a test file, the remaining 2 tests pass, the agent says Fixed and draft PR 9 ships with 2 of 5 tests; with Kedge the same step is caught as out_of_plan, rolled back to commit 33a6358, and step 2 ships draft PR 10 with all 5 tests.</desc>
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4a4f57"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#e3241b"/></marker>
+      </defs>
+      <rect width="100%" height="100%" fill="#f4f6f8"/>
+
+      <!-- lanes -->
+      <line x1="30" y1="40" x2="930" y2="40" stroke="rgba(17,18,20,.12)" stroke-width=".8"/>
+      <line x1="30" y1="216" x2="930" y2="216" stroke="rgba(17,18,20,.12)" stroke-width=".8"/>
+      <line x1="30" y1="392" x2="930" y2="392" stroke="rgba(17,18,20,.12)" stroke-width=".8"/>
+      <g font-family="'JetBrains Mono', monospace" letter-spacing=".18em" fill="#4a4f57">
+        <text x="30" y="124" font-size="9" font-weight="500">NO GUARD</text>
+        <text x="30" y="140" font-size="8" letter-spacing=".06em" fill="#6b717a">run 2209-75ad</text>
+        <text x="30" y="300" font-size="9" font-weight="500">KEDGE</text>
+        <text x="30" y="316" font-size="8" letter-spacing=".06em" fill="#6b717a">run 2211-58eb</text>
+      </g>
+
+      <!-- arrows -->
+      <g fill="none" stroke="#4a4f57" stroke-width="1.2">
+        <line x1="340" y1="128" x2="378" y2="128" marker-end="url(#arrow)"/>
+        <line x1="540" y1="128" x2="778" y2="128" marker-end="url(#arrow)"/>
+        <line x1="740" y1="304" x2="778" y2="304" marker-end="url(#arrow)"/>
+      </g>
+      <g fill="none" stroke="#e3241b" stroke-width="1.6">
+        <line x1="340" y1="304" x2="378" y2="304" marker-end="url(#arrow-accent)"/>
+        <line x1="540" y1="304" x2="578" y2="304" marker-end="url(#arrow-accent)"/>
+      </g>
+      <rect x="616" y="108" width="88" height="12" rx="2" fill="#f4f6f8"/>
+      <text x="660" y="117" font-family="'JetBrains Mono', monospace" font-size="8" letter-spacing=".06em" text-anchor="middle" fill="#6b717a">NOBODY CHECKS</text>
+
+      <g font-family="'Archivo', sans-serif">
+        <!-- lane 1 -->
+        <rect x="180" y="96" width="160" height="64" rx="6" fill="#ffffff" stroke="#111214"/>
+        <text x="188" y="111" font-family="'JetBrains Mono', monospace" font-size="7" letter-spacing=".08em" fill="#4a4f57">STEP 1</text>
+        <text x="260" y="132" font-size="12" font-weight="600" text-anchor="middle" fill="#111214">Agent edits + storm</text>
+        <text x="260" y="148" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" fill="#4a4f57">a test file is deleted</text>
+
+        <rect x="380" y="96" width="160" height="64" rx="6" fill="#ffffff" stroke="#111214"/>
+        <text x="460" y="132" font-size="12" font-weight="600" text-anchor="middle" fill="#111214">Tests say 2/2</text>
+        <text x="460" y="148" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" fill="#4a4f57">agent replies "Fixed"</text>
+
+        <rect x="780" y="96" width="150" height="64" rx="6" fill="rgba(227,36,27,.07)" stroke="#e3241b" stroke-width="1.4"/>
+        <text x="855" y="132" font-size="12" font-weight="600" text-anchor="middle" fill="#111214">Draft PR #9</text>
+        <text x="855" y="148" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" fill="#b0170f">ships 2 of 5 tests</text>
+
+        <!-- lane 2 -->
+        <rect x="180" y="272" width="160" height="64" rx="6" fill="#ffffff" stroke="#111214"/>
+        <text x="188" y="287" font-family="'JetBrains Mono', monospace" font-size="7" letter-spacing=".08em" fill="#4a4f57">STEP 1</text>
+        <text x="260" y="308" font-size="12" font-weight="600" text-anchor="middle" fill="#111214">Agent edits + storm</text>
+        <text x="260" y="324" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" fill="#4a4f57">a test file is deleted</text>
+
+        <rect x="380" y="272" width="160" height="64" rx="6" fill="rgba(227,36,27,.07)" stroke="#e3241b" stroke-width="1.4"/>
+        <text x="460" y="308" font-size="12" font-weight="600" text-anchor="middle" fill="#111214">Drift: out_of_plan</text>
+        <text x="460" y="324" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" fill="#4a4f57">file not in the plan</text>
+
+        <rect x="580" y="272" width="160" height="64" rx="6" fill="#ffffff" stroke="#111214"/>
+        <text x="660" y="308" font-size="12" font-weight="600" text-anchor="middle" fill="#111214">Roll back</text>
+        <text x="660" y="324" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" fill="#4a4f57">reset to 33a6358 + note</text>
+
+        <rect x="780" y="272" width="150" height="64" rx="6" fill="#ffffff" stroke="#0b7346" stroke-width="1.4"/>
+        <text x="788" y="287" font-family="'JetBrains Mono', monospace" font-size="7" letter-spacing=".08em" fill="#0b7346">STEP 2</text>
+        <text x="855" y="308" font-size="12" font-weight="600" text-anchor="middle" fill="#111214">Draft PR #10</text>
+        <text x="855" y="324" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" fill="#0b7346">keeps 5 of 5 tests</text>
+      </g>
+
+      <!-- legend -->
+      <g font-family="'JetBrains Mono', monospace" font-size="8" letter-spacing=".14em" fill="#4a4f57">
+        <text x="30" y="428">LEGEND</text>
+        <line x1="110" y1="425" x2="142" y2="425" stroke="#4a4f57" stroke-width="1.2" marker-end="url(#arrow)"/><text x="152" y="428">STEP ORDER</text>
+        <line x1="260" y1="425" x2="292" y2="425" stroke="#e3241b" stroke-width="1.6" marker-end="url(#arrow-accent)"/><text x="302" y="428">CAUGHT + ROLLED BACK</text>
+        <rect x="460" y="419" width="24" height="12" rx="3" fill="rgba(227,36,27,.07)" stroke="#e3241b"/><text x="494" y="428">FOCAL</text>
+        <text x="30" y="452" letter-spacing=".04em" fill="#6b717a">Both runs: packaging 21.3 → 24.2, free model, $0. Proof: github.com/faroukobayanju/kedge-demo/pull/9 and /pull/10.</text>
+      </g>
+    </svg>
+  </div>
+</div>
+</body>
+</html>

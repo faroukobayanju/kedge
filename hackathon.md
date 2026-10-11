@@ -10,10 +10,10 @@ Pending: the builders choose which names and handles to publish.
 
 ## Stack
 - Python 3.12, `uv`, `gh` CLI
-- Worker agent: OpenCode (free models), with Claude Code as an alternative. Being decided; see the build log.
+- Worker agent: OpenCode 1.18.35 with a free model (default), or headless Claude Code (`KEDGE_WORKER=claude`)
 - neatlogs: one span per supervisor step, readback through the CLI
 - Entire: checkpoints on agent commits
-- cfo.ai: business plan (pending)
+- cfo.ai: business plan ([docs/business-plan.md](docs/business-plan.md))
 
 ## Build log
 
@@ -45,7 +45,7 @@ Pending: the builders choose which names and handles to publish.
   - Judge docs scaffolded: `docs/evidence.md`, `docs/submission-checklist.md`, README "For judges". All evidence is marked PENDING until real runs exist.
 
 ## Demo
-Pending.
+80-second film rendered from `videos/` (Remotion, original soundtrack synthesized in code). Documentation: [docs/README.md](docs/README.md). Evidence: [docs/evidence.md](docs/evidence.md).
 
 ## Known limitations and next steps
 - Requires `entire` on PATH (`~/.local/bin`) and `./scripts/setup-opencode.sh` run once.
