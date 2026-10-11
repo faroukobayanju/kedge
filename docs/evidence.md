@@ -192,6 +192,17 @@ Posts on X tagged #neatHack during the hackathon:
 | 5 | The numbers | PENDING: add link |
 | 6 | Submission (quote of the official neatlogs post) | PENDING: add link |
 
+Posts on LinkedIn tagged #neatHack (Haikeys):
+
+| # | Post | Link |
+|---|---|---|
+| 1 | Announcement: entering neatHack | [lnkd.in/p/eQ6ebDhi](https://lnkd.in/p/eQ6ebDhi) |
+| 2 | The problem + the Kedge loop diagram | [lnkd.in/p/eCQ9eYWi](https://lnkd.in/p/eCQ9eYWi) |
+| 3 | The "before" run: green PR missing 3 of 5 tests | [lnkd.in/p/eUvd3E_w](https://lnkd.in/p/eUvd3E_w) |
+| 4 | Final result | PENDING: add link |
+
+Bug report filed upstream while building: [entireio/cli#2725](https://github.com/entireio/cli/issues/2725) (Entire's commit hook hangs on Windows).
+
 The build log, written as we went: [hackathon.md](../hackathon.md).
 
 ---

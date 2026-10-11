@@ -53,3 +53,13 @@ Kedge supervises AI coding agents that fix failing Dependabot/Renovate dependenc
 - **Lower model cost.** The batch ran on a free model. Every paid-model number here is an estimate from measured token counts, and it gets replaced once paid runs exist.
 - **Green rate.** At 60%, only green PRs are billed, so a higher green rate raises revenue with no extra cost.
 - **Price.** $10 is a placeholder from the plan. A human fixing one failing dependency PR costs far more in engineer time.
+
+## Built in cfo.ai
+
+Ari built the model from our inputs. This is the Base case before we added the raise: Ari flagged the cash gap and proposed the $60k raise that's now in the plan.
+
+![cfo.ai operating model, Base case](evidence/cfo-ai-base-model.png)
+
+The monthly P&L Ari generated, with the AI model costs from our batch runs and a 92.5% gross margin:
+
+![cfo.ai P&L table](evidence/cfo-ai-pnl.png)
