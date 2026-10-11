@@ -431,3 +431,31 @@ are we done building?
 ---
 
 do we need to deploy?
+
+---
+
+use  /document-generate   write our documentation. everything about kedge and all other things
+
+<pasted_content id="7781">
+Back up each claim in your submission with evidence that judges can check.
+
+The agent improved
+A run before your change and a run after it, e.g., two neatlogs traces, with the numbers you compared
+You used neatlogs
+Links to neatlogs traces from your project, or screenshots of them
+You used Entire
+Checkpoints or entire-graph output from your repository
+You used cfo.ai
+A business plan covering your agent’s pricing, costs, revenue and runway
+The agent recovers from failures
+A run where an action failed, showing what the agent did next
+You built in public
+Links to what you shared during the hackathon, tagged #neatHack
+You wrote the code during the hackathon
+A public repository with commits dated during the hackathon
+</pasted_content id="7781">
+
+Use of neatlogs, Entire and cfo.ai
+How effectively you used neatlogs, Entire and cfo.ai to build, improve and plan a business around the agent.
+
+use /diagram-design:diagram-design for diagrams
