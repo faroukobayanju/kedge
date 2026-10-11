@@ -672,3 +672,7 @@ for the cfo. my guy handles tht. tell me what to send to him
 <status>completed</status>
 <summary>Background command "Hard-stop watcher for the organic batch ($2 cap)" completed (exit code 0)</summary>
 </task-notification>
+
+---
+
+go
