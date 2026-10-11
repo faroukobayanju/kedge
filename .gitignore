@@ -6,4 +6,4 @@ __pycache__/
 .tools/
 
 # local copy of the evidence zip (unscrubbed); the public one is docs/evidence/
-evidence/
+/evidence/
