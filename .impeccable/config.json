@@ -29,6 +29,24 @@
         ],
         "createdAt": "2026-10-10T23:44:57.645Z",
         "reason": "agent decision: one-off social image rendered before the contact-sheet world; not part of the product UI"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          "docs/diagrams/*.html"
+        ],
+        "createdAt": "2026-10-11T01:22:49.712Z",
+        "reason": "diagram-design type ramp in SVG user units; rendered >=1.15x and shipped as 2x PNG"
+      },
+      {
+        "rule": "all-caps-body",
+        "value": "*",
+        "files": [
+          "docs/diagrams/*.html"
+        ],
+        "createdAt": "2026-10-11T01:22:49.729Z",
+        "reason": "short tracked legend/eyebrow labels per diagram-design, not body copy"
       }
     ]
   }
