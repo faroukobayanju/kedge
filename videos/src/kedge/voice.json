@@ -1,5 +1,5 @@
 {
- "voice": "Samantha",
+ "voice": "Ava (Premium)",
  "rate": 182,
  "lines": [
   {"id": "cover",    "at": [1, 1, 0.6], "text": "Your coding agent says it's done. Is it?"},

@@ -34,7 +34,7 @@ const blurred = join(out, "blurred-60.mov");
 const frames = Math.round(duration * 60);
 
 // 1. The 240 fps master: lossless-ish PNG frames, 4:4:4 so fine textures keep their edges. No audio.
-run("npx", ["remotion", "render", "src/index.ts", composition, master, "--props", JSON.stringify({ fps: 240 }), "--codec", "h264", "--crf", "8", "--pixel-format", "yuv444p", "--image-format", "png", "--muted", "--concurrency", "8", "--log", "error"]);
+run("npx", ["remotion", "render", "src/index.ts", composition, master, "--props", JSON.stringify({ fps: 240 }), "--codec", "h264", "--crf", "8", "--pixel-format", "yuv444p", "--image-format", "png", "--muted", "--concurrency", "4", "--log", "error"]);
 
 // 2. The mix, once, at 60 fps (audio does not depend on fps).
 run("npx", ["remotion", "render", "src/index.ts", composition, audio, "--codec", "wav", "--log", "error"]);
