@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Kedge">
+  <!-- Kedge mark: one frame of film, and the editor's red hook hauling it back on course -->
+  <rect x="0" y="0" width="120" height="120" rx="10" fill="#0b0b0c"/>
+  <g fill="#ffffff">
+    <rect x="12" y="9" width="14" height="9" rx="2"/><rect x="40" y="9" width="14" height="9" rx="2"/>
+    <rect x="66" y="9" width="14" height="9" rx="2"/><rect x="94" y="9" width="14" height="9" rx="2"/>
+    <rect x="12" y="102" width="14" height="9" rx="2"/><rect x="40" y="102" width="14" height="9" rx="2"/>
+    <rect x="66" y="102" width="14" height="9" rx="2"/><rect x="94" y="102" width="14" height="9" rx="2"/>
+  </g>
+  <rect x="10" y="26" width="100" height="68" fill="#1b1d21"/>
+  <path d="M93 44 C 92 33, 70 30, 56 35 C 40 41, 34 58, 44 70 C 54 81, 78 80, 88 68"
+        fill="none" stroke="#e3241b" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M78 32 L 95 45 L 102 26" fill="none" stroke="#e3241b" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

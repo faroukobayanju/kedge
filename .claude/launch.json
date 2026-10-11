@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {"name": "kedge-ui", "runtimeExecutable": "uv", "runtimeArgs": ["run", "python", "-m", "kedge", "ui", "--port", "8711"], "port": 8711}
+  ]
+}
