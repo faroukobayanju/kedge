@@ -189,13 +189,13 @@ The business plan was built with cfo.ai's Ari on Oct 10, 2026: [business-plan.md
 | | |
 |---|---|
 | Pricing | $10 per green PR. Failed attempts are free. |
-| Costs per green PR | about $0.45 model spend (from about 62k measured tokens per green PR, at paid-model rates, grossed up for a 60% green rate) + $0.30 payments + $0 infrastructure |
-| Gross margin | 92.5% |
+| Costs per green PR | $0.45 model spend (the per-run cap; Haiku was billed $0.15 for a green PR, and failed attempts at a 60% green rate add at most $0.30) + $0.30 payments + $0 infrastructure |
+| Gross margin | 92.5% (Stress: 68.5%) |
 | Revenue | Base: $6,000/month at 50 teams (Sep 2027). Upside: $36,000/month at 200 teams. |
-| Runway | Base: $60k raise in Apr 2027, $14,430 cash and 5 months of runway at month 24. Upside: self-funding, $358,192 cash at month 24. |
-| Break-even | 74 teams at 20 PRs/month |
+| Runway | Base: $60k raise in Apr 2027, $14,430 cash and 5 months of runway at month 24. Upside: self-funding, $358,192 cash at month 24. Stress: needs $72,354 minimum; the $60k raise runs out in Jun 2028. |
+| Break-even | 74 teams at 20 PRs/month (Stress: 100 teams) |
 
-The cost input is our own measurement: tokens per green PR from `steps.jsonl`. The batch ran on a free model ($0), so the $0.45 is a priced estimate, not a bill. How the plan shaped what we built: [tools.md](explanation/tools.md#cfoai-pricing-a-supervisor).
+The cost inputs are billed runs from `runs/ledger.csv`: $0.15 (Haiku) and $0.38 (Sonnet) for one green PR each. The Stress scenario uses the uncapped Sonnet batch on real repos, billed $5.70 for 2 green PRs ($2.85 each), and shows what the $0.45 cap protects. How the plan shaped what we built: [tools.md](explanation/tools.md#cfoai-pricing-a-supervisor).
 
 ---
 
