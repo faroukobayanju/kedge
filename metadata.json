@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4NM3P0EX265CT6D6AD8XKBV",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 4,
+  "files_touched": [
+    "videos/scripts/music.py",
+    "videos/scripts/voice.py",
+    "videos/src/kedge/Film.tsx",
+    "videos/src/kedge/cues.json",
+    "videos/src/kedge/data.ts",
+    "videos/src/kedge/voice.json"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1508,
+    "cache_creation_tokens": 3540447,
+    "cache_read_tokens": 371735856,
+    "output_tokens": 759979,
+    "api_call_count": 749
+  }
+}
