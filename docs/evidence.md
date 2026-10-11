@@ -185,12 +185,11 @@ Posts on X tagged #neatHack during the hackathon:
 
 | # | Post | Link |
 |---|---|---|
-| 1 | The idea | PENDING: add link |
-| 2 | Architecture (the Kedge loop diagram) | PENDING: add link |
-| 3 | First trace | PENDING: add link |
-| 4 | Drift caught | PENDING: add link |
-| 5 | The numbers | PENDING: add link |
-| 6 | Submission (quote of the official neatlogs post) | PENDING: add link |
+| 1 | The idea + the Kedge loop diagram | [x.com/…/2108761351665385830](https://x.com/faroukobayanju/status/2108761351665385830) |
+| 2 | Build update | [x.com/…/2108884315685683695](https://x.com/faroukobayanju/status/2108884315685683695) |
+| 3 | Build update | [x.com/…/2109020537162961033](https://x.com/faroukobayanju/status/2109020537162961033) |
+| 4 | Kedge works end to end: before/after and batch numbers | [x.com/…/2109232395526574364](https://x.com/faroukobayanju/status/2109232395526574364) |
+| 5 | Submission (quote of the official neatlogs post) | PENDING: add link |
 
 Posts on LinkedIn tagged #neatHack (Haikeys):
 
@@ -199,7 +198,7 @@ Posts on LinkedIn tagged #neatHack (Haikeys):
 | 1 | Announcement: entering neatHack | [lnkd.in/p/eQ6ebDhi](https://lnkd.in/p/eQ6ebDhi) |
 | 2 | The problem + the Kedge loop diagram | [lnkd.in/p/eCQ9eYWi](https://lnkd.in/p/eCQ9eYWi) |
 | 3 | The "before" run: green PR missing 3 of 5 tests | [lnkd.in/p/eUvd3E_w](https://lnkd.in/p/eUvd3E_w) |
-| 4 | Final result | PENDING: add link |
+| 4 | Final result: Kedge works end to end, with the demo video | [linkedin.com/posts/…7514999563615899648](https://www.linkedin.com/posts/imisioluwa-obaseki-537298318_neathack-activity-7514999563615899648-yjCD) |
 
 Bug report filed upstream while building: [entireio/cli#2725](https://github.com/entireio/cli/issues/2725) (Entire's commit hook hangs on Windows).
 
