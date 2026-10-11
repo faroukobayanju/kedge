@@ -10,6 +10,7 @@
 | `kedge batch <targets.json>` | Run every target in the file, one after another, then print a summary line. | `0` (a failing target never stops the batch) |
 | `kedge resume <run_id>` | Continue a run that crashed or was killed, from its saved state. | Same as `run`; `2` if `runs/<run_id>/state.json` is missing |
 | `kedge ui [--port N]` | Serve the run dashboard on `http://127.0.0.1:N` (default `8711`). | Runs until Ctrl+C |
+| `kedge prove <run_id>` | Open the PR for a `green_unproven` run once its neatlogs trace and Entire checkpoints exist. | `0` PR opened, `1` still missing proof, `2` not a `green_unproven` run |
 
 ### `kedge run`
 
@@ -73,7 +74,8 @@ Serves `kedge/ui/` and a read-only JSON view of `runs/`. See [dashboard.md](dash
 |---|---|---|---|
 | `--storm {delete-test,skip-test,stray-edit}` | choice | off | After the agent's **first** step, sabotage the work tree on purpose (see [Storms](#storms)). Used to prove the guard works. |
 | `--no-guard` | flag | guard on | Turn off every drift check except the budget. This is the "before" run. |
-| `--budget` | float, USD | `0.50` | Stop with `over_budget` once model spend passes this. |
+| `--budget` | float, USD | from `pricing.json` ($0.45) | Model spend allowed for one PR. By default it comes from the cfo.ai model: price × (1 − target margin) − payment fees. |
+| `--allow-unproven` | flag | off | Open a PR even without a neatlogs trace and Entire checkpoints. Local development only. |
 | `--max-rollbacks` | int | `3` | Give up after more rollbacks than this. |
 | `--max-steps` | int | `6` | Give up after this many agent steps. |
 
@@ -122,7 +124,8 @@ Set in the shell or in `.env` (copy `.env.example`). Real environment variables 
 | `NEATLOGS_PROFILE` | `kedge/trace.py` | CLI profile name (default `setup-https---app-neatlogs-com`) |
 | `KEDGE_WORKER` | `kedge/worker.py`, `kedge/cli.py` | `claude` switches the agent to headless Claude Code. Default: OpenCode. |
 | `KEDGE_MODEL` | `kedge/worker.py` | OpenCode model (default `opencode/big-pickle`, a free model). `litellm/<model>` uses the neatHack LiteLLM endpoint defined in `kedge/opencode.json`. |
-| `LITELLM_API_KEY` | OpenCode | Key for the `litellm/*` models (Nova and Claude). Shared $20 team allowance. |
+| `LITELLM_API_KEY` | OpenCode, `kedge/money.py` | Key for the `litellm/*` models (Nova and Claude). Shared $20 team allowance. Kedge also reads its real spend to cost each step. |
+| `KEDGE_ESCALATE_MODEL` | `kedge/supervisor.py` | Model to switch to when Kedge replans after two rollbacks, for example Haiku first and then `litellm/claude-sonnet-4.6`. |
 | `OPENCODE_CONFIG` | OpenCode | Extra provider config. Kedge defaults it to `kedge/opencode.json`. |
 
 Kedge also puts the pinned OpenCode v1 from `.tools/opencode` first on `PATH` and gives it its own `XDG_DATA_HOME`, `XDG_STATE_HOME` and `XDG_CACHE_HOME` (see [integrations.md](integrations.md#entire)).

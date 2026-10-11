@@ -17,7 +17,7 @@ Shared files:
 
 | File | Contents |
 |---|---|
-| `runs/lessons.jsonl` | `{"repo", "note"}` lines. A recovery note becomes a lesson only when its run rolled back **and** still went green. The last 3 lessons go into every new prompt as `LESSON FROM PAST RUNS`. They are not filtered by repo. |
+| `runs/ledger.csv` | One row per run: `run_id, finished_at, repo, pr_url, status, model, real_cost_usd, steps, rollbacks, price_usd, margin`. This is the cost data to load into cfo.ai to refresh the plan. |
 
 ## Step record (`steps.jsonl`)
 
@@ -25,10 +25,10 @@ Shared files:
 |---|---|---|
 | `run_id` | str | |
 | `step` | int | Step number (a replan reuses the current number) |
-| `action` | str | `worker`, `worker_error` (the agent call failed) or `replan` |
+| `action` | str | `worker`, `worker_error` (the agent call failed), `replan` or `budget_stop` (stopped before a step the budget couldn't cover) |
 | `files_changed` | list[str] | Files changed in the work tree after the step |
 | `tests_passed`, `tests_total` | int | `-1` when the output couldn't be parsed |
-| `cost_usd`, `cost_usd_total` | float | This step / the run so far |
+| `cost_usd`, `cost_usd_total` | float | This step / the run so far. With a `litellm/*` model, from the key's real bill. |
 | `tokens` | int | Tokens the agent CLI reported for this step |
 | `drift` | str or null | See [drift-checks.md](drift-checks.md) |
 | `rolled_back` | bool | |
@@ -51,7 +51,8 @@ Real example (run `20261010-2322-da07`, step 2):
 
 | `status` | Meaning |
 |---|---|
-| `green` | Tests pass (twice, with the guard on). A branch is pushed and a draft PR or trail is opened. |
+| `green` | Tests pass (twice, with the guard on) and the proof exists. A branch is pushed and a draft PR or trail is opened. |
+| `green_unproven` | Tests pass, but the neatlogs trace or an Entire checkpoint is missing. The branch is pushed, no PR. `kedge prove <run_id>` opens it once the proof exists. |
 | `already_green` | Tests already passed before any step. Nothing to do. |
 | `gave_up` | Out of steps, too many rollbacks, or over budget. Nothing is pushed. |
 | `error: …` | (batch only) The run raised before finishing |

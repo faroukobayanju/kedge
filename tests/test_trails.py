@@ -1,3 +1,4 @@
+import json
 import subprocess
 
 from kedge import trails
@@ -46,3 +47,29 @@ def test_post_findings_resolves_recovered(monkeypatch):
     monkeypatch.setattr(subprocess, "run", fake)
     assert trails.post_findings("/tmp", "me/r", "kedge/x", STEPS) == 2
     assert sum(1 for c in calls if c[1:4] == ["trail", "finding", "resolve"]) == 2
+
+
+def test_files_from_explain():
+    text = "● Checkpoint X\n## Intent\nfix it\n## Files (2)\n\n- `versions.py`\n- `requirements.txt`\n\n── Transcript"
+    assert trails._files_from_explain(text) == ["versions.py", "requirements.txt"]
+
+
+def test_past_fixes(monkeypatch):
+    search = {"results": [{"data": {"matchedCheckpointId": "C1", "repo": "o/r", "displayName": "Fix import"}},
+                          {"data": {"matchedCheckpointId": "C1", "repo": "o/r", "displayName": "dup"}},
+                          {"data": {"sessionId": "s-no-checkpoint"}},
+                          {"data": {"matchedCheckpointId": "C2", "repo": "o/x", "displayName": "Other"}},
+                          {"data": {"matchedCheckpointId": "C3", "repo": "o/x", "displayName": "Cheat"}}]}
+
+    class P:
+        def __init__(self, out):
+            self.stdout, self.returncode = out, 0
+
+    def fake(args, cwd):
+        if args[1] == "search":
+            return P(json.dumps(search))
+        return P({"C1": "## Files (1)\n- `versions.py`\n", "C3": "## Files (1)\n- `tests/test_x.py`\n"}.get(args[2], ""))
+    monkeypatch.setattr(trails, "_entire", fake)
+    lines = trails.past_fixes("/tmp", "packaging", n=5)
+    assert lines == ['Entire checkpoint C1 (o/r): "Fix import", touched [\'versions.py\']',
+                     'Entire checkpoint C2 (o/x): "Other"']

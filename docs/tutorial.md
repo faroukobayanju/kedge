@@ -8,7 +8,7 @@ In about 15 minutes you'll run a coding agent twice on the same failing Dependab
 - [`gh`](https://cli.github.com/), logged in (`gh auth login`)
 - The [Entire](https://entire.io) CLI 0.11.4 on your `PATH` (it installs to `~/.local/bin`)
 - A fork of [`faroukobayanju/kedge-demo`](https://github.com/faroukobayanju/kedge-demo) under your account. Kedge pushes its branch and draft PR there.
-- Optional: a neatlogs API key, if you want a trace of each run
+- A neatlogs API key and a neatlogs CLI login. Kedge opens a PR only with proof (a neatlogs trace plus Entire checkpoints). Without them, add `--allow-unproven` to the run commands.
 
 ## Step 1: Install Kedge and its agent
 
@@ -40,7 +40,7 @@ entire --version          # Entire CLI 0.11.4
 
 The PR bumps `packaging` from 21.3 to 24.2. `packaging` 22 removed `LegacyVersion`, so `versions.py` fails to import and every test errors.
 
-Optional, for tracing: `cp .env.example .env` and set `NEATLOGS_API_KEY`. Without it Kedge runs the same and skips tracing.
+For the proof: `cp .env.example .env` and set `NEATLOGS_API_KEY`. Without it Kedge still runs and catches drift, but a green run stops at `green_unproven` and opens no PR, unless you add `--allow-unproven`.
 
 ## Step 3: Run the agent with no supervisor
 

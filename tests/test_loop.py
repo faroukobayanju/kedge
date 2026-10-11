@@ -62,7 +62,30 @@ def test_budget_stops_worker_calls(tmp_path):
         calls.append(1)
         return {"cost_usd": 0.4, "text": "", "error": None}
     r = loop(fixture(tmp_path), TEST_CMD, PLAN, "fix it", worker=pricey, budget=0.5)
-    assert r["status"] == "gave_up" and len(calls) == 2 and r["steps"][-1]["drift"] == "over_budget"
+    # step 1 cost $0.40; a second step is expected to cost the same, which would pass $0.50, so it never starts
+    assert r["status"] == "gave_up" and len(calls) == 1
+    assert r["steps"][-1]["drift"] == "over_budget" and r["steps"][-1]["action"] == "budget_stop"
+
+
+def test_cost_comes_from_the_meter_when_present(tmp_path):
+    class Meter:
+        def __init__(self):
+            self.spend = 1.0
+
+        def read(self):
+            self.spend += 0.25  # each read sees the bill grow, so one step costs 0.25
+            return self.spend
+    r = loop(fixture(tmp_path), TEST_CMD, PLAN, "fix it", worker=fixing_worker, meter=Meter())
+    assert r["status"] == "green" and r["steps"][0]["cost_usd"] == 0.25
+
+
+def test_recovery_note_quotes_the_agent(tmp_path):
+    def liar(prompt, cwd):
+        fixing_worker(prompt, cwd)
+        open(f"{cwd}/STRAY.md", "w").write("x")
+        return {"cost_usd": 0.0, "text": "All done, tests pass.", "error": None}
+    r = loop(fixture(tmp_path), TEST_CMD, PLAN, "fix it", worker=liar, max_steps=1)
+    assert 'Your last reply said: "All done, tests pass."' in r["notes"][0]
 
 
 def test_already_green(tmp_path):

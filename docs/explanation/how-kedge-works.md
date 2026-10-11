@@ -18,12 +18,13 @@ Same PR, same storm, guard on (`20261010-2211-58eb`): step 1 was caught as `out_
 
 1. **Ground truth first.** Kedge clones the PR and runs the tests itself. It doesn't need CI: CI was locked on one of our accounts, and this kept working. It counts the tests on the base branch in a separate worktree, then reads the latest failed CI log if there is one.
 2. **Plan.** A read-only planner call (OpenCode `--agent plan`, or Claude Haiku) returns a hypothesis, a short list of steps, and the **allowed files**: the narrow set of globs a real fix should need. The allowed files are what turn "the agent edited a test" from an opinion into a rule.
-3. **One step at a time.** The agent gets the PR, the plan, the failure output, the current plan step, past lessons, and any recovery notes. It is told to do ONE step and stop. Small steps keep rollbacks cheap and make each one a clean unit to check.
+3. **One step at a time.** The agent gets the PR, the plan, the failure output, the current plan step, what past runs did (from neatlogs and Entire), and any recovery notes. It is told to do ONE step and stop. Small steps keep rollbacks cheap and make each one a clean unit to check.
 4. **Check.** Tests, then [drift checks](../reference/drift-checks.md) in a fixed order: budget, loop, test regression, files outside the plan. A green result has to reproduce on a second run before Kedge believes it.
 5. **Roll back or keep.** On drift: `git reset --hard` to the last good commit, remember the diff hash so the same attempt counts as a `loop` next time, and add a plain-language recovery note. On a clean step with changes: commit it. That commit is the new "last good", and Entire attaches a checkpoint to it.
 6. **Escalate.** Two rollbacks in a row means the plan is wrong, so Kedge asks for a different one. More than `--max-rollbacks` rollbacks, more than `--max-steps` steps, or over budget, and Kedge gives up instead of shipping something bad.
 7. **Ship.** Green twice: push `kedge/<run_id>` and `refs/entire/*` to the fork, open an Entire Trail (or a plain draft PR) with the report as the body, and post each drift as a finding.
-8. **Remember.** A recovery note that preceded a rollback the run then recovered from is saved as a lesson and given to future runs.
+8. **Remember.** Every step's summary is written to its neatlogs span, and the run's outcome to the root span. The next run on the same repo or dependency reads them back before planning, along with past Entire checkpoints that fixed the same failure.
+9. **No proof, no PR.** With the guard on, a green run opens a PR only if its neatlogs trace exists and every kept commit has an Entire checkpoint. Otherwise the branch is pushed, the run is `green_unproven`, and `kedge prove <run_id>` opens the PR later. Kedge writes its verdict onto the trace as neatlogs feedback, and the PR body starts with a Proof section that has the cost and margin from the cfo.ai model.
 
 Every step record goes to three places at once: `runs/<id>/steps.jsonl`, a neatlogs span, and the ship's log on stderr. `state.json` is saved after every step, so `kedge resume` can pick up a crashed run.
 
@@ -41,7 +42,7 @@ Every step record goes to three places at once: `runs/<id>/steps.jsonl`, a neatl
 
 **Free model by default.** OpenCode's free `opencode/big-pickle` kept the whole hackathon at $0 model spend. Free models stall sometimes. Agent calls time out (300 s for edits, 120 s for plans) and show up as `worker_error` steps, and the loop simply tries again. [Evidence](../evidence.md#the-agent-recovers-from-failures) has a real run with four failed agent calls before a green step.
 
-**Lessons are global.** `lessons_for()` returns the last 3 lessons from any repo. That is simple, and it can carry an irrelevant note across repos. Filtering by repo is the obvious next step.
+**Budget from the business model.** The per-PR model budget is the cfo.ai price times (1 − target margin), minus payment fees: $0.45 at $10 and 92.5%. Step costs come from the LiteLLM key's real bill, because the agent CLI's own estimate missed about three quarters of it on our Sonnet batch. Kedge also stops before a step whose expected cost (the mean of the last three) would break the budget. The trade-off: a run can stop one step short of green. That is cheaper than paying for a step it can't afford.
 
 ## What Kedge does not do
 

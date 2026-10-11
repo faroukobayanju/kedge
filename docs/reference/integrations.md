@@ -10,6 +10,8 @@ Code: `kedge/trace.py`. SDK: `neatlogs>=1.4.26` (Python). Readback: the neatlogs
 
 **Setup.** `trace.start()` calls `neatlogs.init(api_key=NEATLOGS_API_KEY, endpoint="https://ingest.neatlogs.com", workflow_name="dependency-pr-repair", tags=[...])`. With no `NEATLOGS_API_KEY`, every trace call is a no-op.
 
+**Tags for memory.** Every trace is also tagged `repo:<owner/repo>` and `dep:<package>`.
+
 **One trace per run.**
 
 | Span | Kind | Attributes |
@@ -18,6 +20,12 @@ Code: `kedge/trace.py`. SDK: `neatlogs>=1.4.26` (Python). Readback: the neatlogs
 | `step <n> <action>` | `TOOL` (`AGENT` for `replan`) | Every field of the [step record](run-files.md#step-record-stepsjsonl), as `kedge.<field>` (lists JSON-encoded) |
 
 Trace tags: `run_id:<id>`, `pr_url:<url>`, `guard:on|off`, `storm:<mode>|off`.
+
+**Span input and output.** neatlogs doesn't return custom attributes on read, but it keeps each span's input and output preview. So every step span's `output.value` is a JSON summary (`step`, `action`, `drift`, `tests`, `files`, `rolled_back`, `false_claim`, `cost_usd`), and the root span's output is the run's outcome (`status`, `rollbacks`, `green_files`, `cost_usd`).
+
+**Memory.** Before planning, `trace.memory()` lists traces tagged with the same `repo:` or `dep:`, reads their spans with `traces raw-spans`, and turns them into lines such as `run_id:… ; drifted: step 1 tests_regressed on [...]; went green editing ['versions.py']` for the planner and the agent prompt.
+
+**Verdict.** After the run, `trace.verdict()` writes Kedge's judgement onto the trace with `feedback create`: a rating (100 clean green, −30 green after a caught drift, −100 failed), the drift kinds as `issueTypes`, and a comment listing each caught step. This needs a CLI login with the `observability:write` scope.
 
 **Readback.** After the run, `trace.trace_url()` runs the npm CLI with the service-account token, never the ingest key:
 
@@ -38,6 +46,8 @@ Code: `kedge/cli.py:run_one`, `kedge/gitgh.py`, `kedge/trails.py`. CLI: Entire 0
 
 **OpenCode version pin.** OpenCode v2 rejects Entire's plugin ("Plugin must export a default definition…"), so Entire never sees the session. `scripts/setup-opencode.sh` installs OpenCode **1.18.35** into `.tools/opencode`. `worker.use_pinned_opencode()` puts it first on `PATH` with its own XDG data dirs, because Entire's commit hook shells out to `opencode export` and must hit the same binary. The agent also runs with `--dir <clone>`, `PWD=<clone>` and `stdin=DEVNULL`. Without those, OpenCode resolves the wrong project or skips the plugin.
 
+**Fix memory.** Before planning, `trails.past_fixes()` runs `entire checkpoint search "fix <PR title>" --all-repos` in the clone, keeps the top 2 distinct checkpoints, and reads each one's `## Files` section with `entire checkpoint explain`. The planner sees lines like `Entire checkpoint 01M4M45D… (kedge-demo): "Fix packaging LegacyVersion Import Error", touched ['versions.py']`.
+
 **Explain.** At the end of a run, Kedge runs `entire checkpoint explain <last checkpoint>` and puts the output in `result.json` (`entire_explain`) and in the report and PR body.
 
 **Publishing.** `gitgh.push_branch()` also pushes `refs/entire/*` to the fork, so checkpoints are public next to the branch:
@@ -50,7 +60,15 @@ git ls-remote https://github.com/faroukobayanju/kedge-demo.git 'refs/entire/*'
 
 ## cfo.ai
 
-No code: cfo.ai is where we planned the business. The batch measured tokens per green PR from `steps.jsonl` (`tokens_per_green` in the batch summary). We gave those numbers to cfo.ai's Ari to build a 24-month operating model with Base and Upside scenarios. The result is [business-plan.md](../business-plan.md) and [business-plan.pdf](../business-plan.pdf).
+Code: `kedge/money.py`, `pricing.json`. cfo.ai has no public API, so its model reaches Kedge through `pricing.json`: price per green PR ($10), target gross margin (92.5%) and payment fee rate (3%).
+
+- **Budget:** price × (1 − margin) − price × fee = **$0.45** of model spend per PR, unless `--budget` is given.
+- **Real cost:** with a `litellm/*` model, `money.Meter` reads the key's spend from LiteLLM's `/key/info` before and after every agent call. The difference is the step's real cost.
+- **Stop before overspending:** Kedge skips a step whose expected cost would break the budget.
+- **Margin line:** every PR body says what the fix cost and the margin it leaves at the cfo.ai price.
+- **Ledger:** `runs/ledger.csv` gets one row per run, ready to load back into cfo.ai.
+
+The plan itself was built with cfo.ai's Ari: [business-plan.md](../business-plan.md) and [business-plan.pdf](../business-plan.pdf).
 
 ## Related
 

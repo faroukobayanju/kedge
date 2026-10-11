@@ -4,11 +4,14 @@ After every agent step Kedge runs the tests and calls `checks.drift()` (`kedge/c
 
 | Order | Drift | Fires when | Rolls back? | Recovery note sent to the agent |
 |---|---|---|---|---|
-| 1 | `over_budget` | Total model spend > `--budget` | No: the run stops | (none) |
+| 0 | `over_budget` (`budget_stop`) | **Before** a step: spend so far + the expected step cost (mean of the last 3) > budget | No: the run stops without paying for the step | (none) |
+| 1 | `over_budget` | After a step: total model spend > budget | No: the run stops | (none) |
 | 2 | `loop` | The step's diff hash equals one already rolled back | Yes | "You repeated a failed attempt. Try a different approach." |
 | 3 | `tests_regressed` | Passed < best passed so far, **or** total < the PR branch's starting total | Yes | "Previous attempt reduced passing/total tests. Do not delete or skip tests." |
 | 3b | `tests_regressed` | At least one test passed **and** total < the base branch's total | Yes | (same) |
 | 4 | `out_of_plan` | A changed file matches none of the plan's `allowed_files` globs | Yes | "Only edit files matching: {allowed}. You edited: {files}." |
+
+Every recovery note also quotes the agent's last reply back to it: `Your last reply said: "..."`.
 | 5 | `verify_failed` | The tests passed and nothing above fired, but a second test run fails or loses tests | Yes | "Tests passed once but failed or lost tests on re-run. Make the fix deterministic." |
 
 `--no-guard` turns off checks 2 to 5. Only the budget stays.
@@ -35,7 +38,7 @@ Kedge never counts its own tooling as an agent edit. `.entire/`, `.opencode/`, `
 |---|---|
 | Last step was `over_budget` | `give_up` |
 | More rollbacks than `--max-rollbacks` | `give_up` |
-| The last two steps both rolled back | `replan`: ask for a different plan, with the last 3 notes |
+| The last two steps both rolled back | `replan`: ask for a different plan, with the last 3 notes. If `KEDGE_ESCALATE_MODEL` is set, switch to that model from here on. |
 | Otherwise | `edit`: another agent step, with the last 3 recovery notes appended |
 
 A run that reaches `--max-steps` without going green ends `gave_up`.

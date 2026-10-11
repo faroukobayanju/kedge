@@ -7,7 +7,7 @@ HTML = Template("""<!doctype html><meta charset="utf-8"><title>Kedge run $run_id
 <style>body{font:14px system-ui;margin:2rem;max-width:960px}td,th{padding:4px 8px;border-bottom:1px solid #ddd}
 .drift{background:#fde8e8}</style>
 <h1>Kedge run $run_id: $status</h1>
-<p>CI: $ci · PR: <a href="$pr_url">$pr_url</a> · cost $$$cost · rollbacks $rollbacks · <a href="$trace_url">neatlogs trace</a></p>
+<p>CI: $ci · PR: <a href="$pr_url">$pr_url</a> · cost $$$cost · rollbacks $rollbacks · neatlogs trace <code>$trace_url</code></p>
 $voyage
 <table><tr><th>Step</th><th>Action</th><th>Files</th><th>Tests</th><th>Cost</th><th>Drift</th></tr>$rows</table>
 <h2>Entire checkpoint</h2><pre>$entire</pre>""")
@@ -48,10 +48,19 @@ def render(run_dir, meta) -> tuple[str, str]:
                            cost=f'{meta["cost_usd_total"]:.3f}', rollbacks=meta["rollbacks"],
                            trace_url=meta["trace_url"], rows=rows, ci=meta.get("ci_status", "not run"), voyage=voyage_svg(recs), entire=html.escape(meta["entire_explain"]))
     md = [f"## Kedge run `{meta['run_id']}`: {meta['status']}",
-          f"CI: {meta.get('ci_status', 'not run')} · Cost ${meta['cost_usd_total']:.3f} · rollbacks {meta['rollbacks']} · [neatlogs trace]({meta['trace_url']})", "",
+          f"CI: {meta.get('ci_status', 'not run')} · Cost ${meta['cost_usd_total']:.3f} · rollbacks {meta['rollbacks']} · neatlogs trace `{meta['trace_url']}`", "",
           "| Step | Action | Files | Tests | Cost | Drift |", "|---|---|---|---|---|---|"]
     md += [f"| {r['step']} | {r['action']} | {', '.join(r['files_changed'])} | {r['tests_passed']}/{r['tests_total']} "
            f"| ${r['cost_usd']:.3f} | {_status(r).replace('(rolled back)', 'rolled back')} |" for r in recs]
+    proof = meta.get("proof")
+    if proof:
+        md[1:1] = ["", "### Proof", f"- neatlogs trace: `{proof['trace']}` (workflow `dependency-pr-repair`)",
+                   f"- Entire checkpoints: {', '.join(f'`{c}`' for c in proof['checkpoints']) or 'none'}",
+                   f"- Kedge verdicts: {sum(1 for r in recs if r.get('drift') and r['drift'] != 'over_budget')} drift(s) "
+                   f"caught, {sum(1 for r in recs if r.get('false_claim'))} false claim(s)",
+                   f"- {proof['margin']}"]
+        if proof.get("missing"):
+            md.insert(1, f"\n> No PR opened: missing {', '.join(proof['missing'])}.")
     md += ["", "### Entire checkpoint", "```", meta["entire_explain"], "```"]
     hp, mp = os.path.join(run_dir, "report.html"), os.path.join(run_dir, "report.md")
     with open(hp, "w", encoding="utf-8") as f:

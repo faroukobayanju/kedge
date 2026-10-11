@@ -1,8 +1,7 @@
-import json
 import os
 
 from kedge import chaos as chaos_mod
-from kedge import checks, gitgh
+from kedge import checks, gitgh, money
 
 
 def decide_next(history, max_rollbacks) -> str:
@@ -14,22 +13,6 @@ def decide_next(history, max_rollbacks) -> str:
     if len(history) >= 2 and all(s.get("rolled_back") for s in history[-2:]):
         return "replan"
     return "edit"
-
-
-def lessons_for(path, repo, n=3) -> list[str]:
-    if not os.path.exists(path):
-        return []
-    rows = [json.loads(line) for line in open(path) if line.strip()]
-    return [r["note"] for r in rows][-n:]
-
-
-def record_lessons(path, repo, steps, notes, status) -> None:
-    # a note is a lesson only if it preceded a rollback that the run then recovered from
-    if status != "green" or not any(s.get("rolled_back") for s in steps):
-        return
-    with open(path, "a") as f:
-        for n in notes:
-            f.write(json.dumps({"repo": repo, "note": n}) + "\n")
 
 
 def _rec(run_id, step, action, s, **kw):
@@ -48,7 +31,7 @@ def _finish(status, s):
 
 def loop(cwd, test_cmd, plan, prompt_base, *, worker, replanner=None, guard=True, storm=None, budget=0.5,
          max_rollbacks=3, max_steps=6, log=lambda rec: None, run_id="test", state=None, save=lambda s: None,
-         base_total=-1) -> dict:
+         base_total=-1, meter=None) -> dict:
     s = state
     if not s:
         ok, best, baseline_total = gitgh.run_tests(cwd, test_cmd)
@@ -59,27 +42,49 @@ def loop(cwd, test_cmd, plan, prompt_base, *, worker, replanner=None, guard=True
         save(s)
     else:
         gitgh.reset(cwd, s["good"])  # discard half-finished work from the crashed step
+        if s.get("model"):
+            os.environ["KEDGE_MODEL"] = s["model"]
     while s["step"] < max_steps:
         action = decide_next(s["steps"], max_rollbacks)
         if action == "give_up":
             break
         if action == "replan" and replanner:
+            # two rollbacks in a row: the cheap model isn't getting there, so the budget pays for the stronger one
+            if os.environ.get("KEDGE_ESCALATE_MODEL"):
+                s["model"] = os.environ["KEDGE_MODEL"] = os.environ["KEDGE_ESCALATE_MODEL"]
+                s["step_costs"] = []  # cheap-model step costs would underestimate the stronger model
+            before = meter.read() if meter else None
             s["plan"] = replanner(s["plan"], s["notes"], cwd)
-            s["cost"] += s["plan"].get("cost_usd", 0.0)
+            after = meter.read() if meter else None
+            s["cost"] += round(after - before, 6) if before is not None and after is not None else s["plan"].get("cost_usd", 0.0)
             s["plan_idx"] = 0
             rec = _rec(run_id, s["step"], "replan", s)
             s["steps"].append(rec)
             log(rec)
             save(s)
             continue
+        # stop before a step the cfo.ai budget can't cover, instead of finding out after paying for it
+        expected = money.predict(s.setdefault("step_costs", []))
+        if s["steps"] and expected and s["cost"] + expected > budget:
+            rec = _rec(run_id, s["step"], "budget_stop", s, drift="over_budget")
+            s["steps"].append(rec)
+            log(rec)
+            save(s)
+            break
         s["step"] += 1
         save(s)
         steps_list = s["plan"].get("steps") or []
         current = steps_list[min(s["plan_idx"], len(steps_list) - 1)] if steps_list else "make the tests pass"
         prompt = (prompt_base + f"\nCURRENT PLAN STEP: {current}"
                   + "".join(f"\nRECOVERY NOTE: {n}" for n in s["notes"][-3:]))
+        before = meter.read() if meter else None
         r = worker(prompt, cwd)
-        s["cost"] += r["cost_usd"]
+        after = meter.read() if meter else None
+        if before is not None and after is None:
+            after = meter.read()  # one retry: the agent CLI's own estimate is far below the real bill
+        cost = round(after - before, 6) if before is not None and after is not None else r["cost_usd"]
+        s["cost"] += cost
+        s["step_costs"].append(cost)
         if storm and s["step"] == 1:
             chaos_mod.storm(storm, cwd)
         ok, passed, total = gitgh.run_tests(cwd, test_cmd)
@@ -92,7 +97,7 @@ def loop(cwd, test_cmd, plan, prompt_base, *, worker, replanner=None, guard=True
             if not ok2 or (total2 >= 0 and total2 < max(s["baseline_total"], s.get("base_total", -1))):
                 d = "verify_failed"
         rec = _rec(run_id, s["step"], "worker_error" if r["error"] else "worker", s, files_changed=files,
-                   tests_passed=passed, tests_total=total, cost_usd=r["cost_usd"], tokens=r.get("tokens", 0),
+                   tests_passed=passed, tests_total=total, cost_usd=cost, tokens=r.get("tokens", 0),
                    cost_usd_total=round(s["cost"], 4), drift=d)
         claim = checks.claimed_success(r.get("text", ""))
         rec["claim"] = claim or ""
@@ -104,7 +109,10 @@ def loop(cwd, test_cmd, plan, prompt_base, *, worker, replanner=None, guard=True
             s["seen"].append(h)
             rec["rolled_back"] = d != "over_budget"
             if d != "over_budget":
-                s["notes"].append(checks.NOTES[d].format(allowed=s["plan"]["allowed_files"], files=files))
+                note = checks.NOTES[d].format(allowed=s["plan"]["allowed_files"], files=files)
+                if r.get("text"):  # hold the agent to its own words
+                    note += f' Your last reply said: "{" ".join(r["text"].split())[:240]}"'
+                s["notes"].append(note)
             s["steps"].append(rec)
             log(rec)
             save(s)

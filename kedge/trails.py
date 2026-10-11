@@ -5,6 +5,8 @@ Falls back to a plain draft PR when Trails is not enabled for the repo (early ac
 import json
 import subprocess
 
+from kedge.worker import TESTLIKE
+
 SEVERITY = {"tests_regressed": "high", "false_claim": "high", "out_of_plan": "medium",
             "verify_failed": "medium", "loop": "low"}
 WHAT = {"tests_regressed": "Agent reduced passing/total tests (deleted or skipped tests).",
@@ -66,3 +68,45 @@ def post_findings(cwd, fork, branch, steps) -> int:
                 _entire(["trail", "finding", "resolve", "--repo", f"gh/{fork}", "--branch", branch, fid,
                          "-m", "Kedge recovered: rolled back and retried"], cwd)
     return posted
+
+
+def _files_from_explain(text) -> list[str]:
+    """`## Files (N)` section of `entire checkpoint explain`: lines like "- `versions.py`"."""
+    out, inside = [], False
+    for line in text.splitlines():
+        if line.startswith("## Files"):
+            inside = True
+            continue
+        if inside:
+            if line.startswith("- "):
+                out.append(line[2:].strip().strip("`"))
+            elif line.strip():
+                break
+    return out
+
+
+def past_fixes(cwd, query, n=2) -> list[str]:
+    """Entire as fix memory: past agent checkpoints for the same failure, and the files each one touched."""
+    try:
+        p = _entire(["checkpoint", "search", query, "--all-repos"], cwd)
+        results = json.loads(p.stdout).get("results", [])
+    except (OSError, subprocess.TimeoutExpired, ValueError):
+        return []
+    out, seen = [], set()
+    for r in results:
+        d = r.get("data", {})
+        cp = d.get("matchedCheckpointId")
+        if not cp or cp in seen:
+            continue
+        seen.add(cp)
+        try:
+            files = _files_from_explain(_entire(["checkpoint", "explain", cp], cwd).stdout)
+        except (OSError, subprocess.TimeoutExpired):
+            files = []
+        if any(TESTLIKE.search(f) for f in files):  # a "fix" that touched tests may be a cheat; don't teach it
+            continue
+        out.append(f'Entire checkpoint {cp} ({d.get("repo", "?")}): "{d.get("displayName", "")}"'
+                   + (f", touched {files}" if files else ""))
+        if len(out) >= n:
+            break
+    return out

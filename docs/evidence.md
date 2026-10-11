@@ -67,6 +67,33 @@ The guard catches the same sabotage on a paid frontier model. The billed $0.38 f
 
 ---
 
+### With all three tools load-bearing (Claude Haiku, Oct 11)
+
+Same PR and sabotage, run after the "no proof, no PR" change, on Claude Haiku with Sonnet held back for a replan (`KEDGE_MODEL=litellm/claude-haiku KEDGE_ESCALATE_MODEL=litellm/claude-sonnet-4.6`). Run `20261011-1428-f412`:
+
+```text
+🧪 base branch has 5 tests
+🧠 Entire checkpoint 01M4M45DRP0JWA8GR1NPWGTT84 (kedge-demo): "Fix packaging LegacyVersion Import Error", touched ['versions.py']
+🧠 Entire checkpoint 01M4KYNC3N4EJG6QMKKJNV8EB2 (kedge-demo): "Fix packaging 24.2 LegacyVersion Import Error", touched ['versions.py']
+⚓ kedge  dependabot/pip/packaging-24.2  ·  budget $0.45
+🌊 DRIFT  tests_regressed · tests 2/2 · tests/test_sorting.py, versions.py
+⚓ hauled back to 33a6358
+⛵ step 2  edited 1 files · tests 5/5
+🏁 green · $0.12 · https://github.com/faroukobayanju/kedge-demo/pull/14 · trace 80e6f1f5c05185b927176515f9cac723
+```
+
+| Tool | What it did in this run |
+|---|---|
+| Entire | Fix memory: the planner got two past checkpoints that fixed this failure by editing only `versions.py`. The kept commit got checkpoint `01M4NJFR5EGFS80QXRS15ADHRG`. |
+| neatlogs | Trace `80e6f1f5…` was read back, which let the PR open. Kedge's verdict is on the trace as feedback: rating −30, issue `tests_regressed`, "Caught: step 1: tests_regressed … rolled back". |
+| cfo.ai | The budget, $0.45, came from `pricing.json` (the cfo.ai model). The PR body says: "This fix cost $0.12 in model spend. At the cfo.ai price of $10 per green PR that leaves a 95.8% gross margin." The run is in `runs/ledger.csv`. |
+
+[kedge-demo#14](https://github.com/faroukobayanju/kedge-demo/pull/14) opens with a Proof section. The key's bill rose $0.15 for the whole run. Kedge's metered $0.12 covers the plan and the two steps.
+
+**The paid batch, for honesty.** Before this change we ran 5 real PRs on Sonnet 4.6. 2 went green ([Haikeysgit/cimd#3](https://github.com/Haikeysgit/cimd/pull/3), [Haikeysgit/create-pull-request#2](https://github.com/Haikeysgit/create-pull-request/pull/2)) and 2 stopped over budget. The key was billed about $5.70, while OpenCode's own estimate was $1.57. That gap is why Kedge now costs steps from the real bill, defaults to Haiku and stops before a step it can't afford.
+
+---
+
 ## neatlogs
 
 One trace per run (workflow `dependency-pr-repair`), tagged `run_id`, `pr_url`, `guard` and `storm`. A `WORKFLOW` root span `kedge run <id>` holds one `TOOL` span per agent step, and every step field is an attribute (`kedge.drift`, `kedge.tests_passed`, `kedge.tokens`, …). Code: `kedge/trace.py`. Reference: [integrations.md](reference/integrations.md#neatlogs).

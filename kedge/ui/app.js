@@ -31,6 +31,7 @@ const verdict = (r) => {
   if (r.status === "green" && lost(r)) return { key: "short", word: "Shipped short", cls: "v-short" };
   if (r.status === "green") return { key: "keep", word: "Kept", cls: "v-keep" };
   if (r.status === "already_green") return { key: "flat", word: "Already green", cls: "v-flat" };
+  if (r.status === "green_unproven") return { key: "hold", word: "Held: no proof", cls: "v-flat" };
   if (r.status === "running") return { key: "live", word: "Developing", cls: "v-live" };
   return { key: "out", word: "Gave up", cls: "v-out" };
 };

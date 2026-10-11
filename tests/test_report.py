@@ -1,5 +1,6 @@
 import json
 
+from kedge import report
 from kedge.report import render
 
 META = {"run_id": "r1", "pr_url": "https://x/pull/1", "status": "green", "cost_usd_total": 0.09,
@@ -45,3 +46,14 @@ def test_voyage_marks():
 
 def test_voyage_empty():
     assert voyage_svg([]).startswith("<svg")
+
+
+def test_proof_block_in_pr_body(tmp_path):
+    (tmp_path / "steps.jsonl").write_text(json.dumps({"step": 1, "action": "worker", "files_changed": ["v.py"],
+        "tests_passed": 5, "tests_total": 5, "cost_usd": 0.1, "drift": None, "rolled_back": False}) + "\n")
+    meta = {"run_id": "r1", "status": "green", "pr_url": "u", "cost_usd_total": 0.38, "rollbacks": 0,
+            "trace_url": "T1", "entire_explain": "x",
+            "proof": {"trace": "T1", "checkpoints": ["CP1"], "missing": [], "margin": "This fix cost $0.38"}}
+    _, md = report.render(str(tmp_path), meta)
+    body = open(md).read()
+    assert "### Proof" in body and "`T1`" in body and "`CP1`" in body and "This fix cost $0.38" in body

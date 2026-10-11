@@ -104,11 +104,14 @@ def _plan_call(prompt, cwd, extra_allowed=()) -> dict:
                 "steps": DEFAULT_STEPS, "cost_usd": cost}
 
 
-def make_plan(title, ci_log, files, cwd) -> dict:
+def make_plan(title, ci_log, files, cwd, memory=()) -> dict:
+    past = "".join(f"\n- {m}" for m in memory)
     return _plan_call(
         f"A dependency-bump PR fails its tests. Reply with ONLY a JSON object {SCHEMA}. "
         "allowed_files lists the minimal file globs a fix may touch.\n"
-        f"PR title: {title}\nFiles in PR: {files}\nFailure output:\n{ci_log[-4000:]}", cwd,
+        f"PR title: {title}\nFiles in PR: {files}\nFailure output:\n{ci_log[-4000:]}"
+        + (f"\nWhat past runs on this repo or dependency did (from neatlogs traces and Entire checkpoints):{past}"
+           if past else ""), cwd,
         extra_allowed=files_in_log(ci_log))
 
 

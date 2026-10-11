@@ -37,9 +37,9 @@ def _from_report(d) -> dict | None:
         return None
     text = open(p, encoding="utf-8").read()
     m = re.search(r"^## Kedge run `[^`]+`: (\w+)", text, re.M)
-    trace = re.search(r"\[neatlogs trace\]\(([^)]+)\)", text)
+    trace = re.search(r"\[neatlogs trace\]\(([^)]+)\)|neatlogs trace `([^`]+)`", text)
     ci = re.search(r"^CI: ([^·]+?) ·", text, re.M)
-    return {"status": m.group(1) if m else "unknown", "trace_url": trace.group(1) if trace else None,
+    return {"status": m.group(1) if m else "unknown", "trace_url": (trace.group(1) or trace.group(2)) if trace else None,
             "ci_status": ci.group(1).strip() if ci else None, "guard": True, "storm": None}
 
 

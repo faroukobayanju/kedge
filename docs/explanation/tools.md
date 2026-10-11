@@ -1,6 +1,6 @@
 # How we used neatlogs, Entire and cfo.ai
 
-Each tool answers one question about the agent. neatlogs: **what did it do, step by step?** Entire: **why did it write this code?** cfo.ai: **is supervising agents a business?** We used each one to build Kedge, to improve it, and to plan around it. This page says how, with the bugs each one helped us find.
+Kedge doesn't open a PR without all three. A PR needs a neatlogs trace and an Entire checkpoint on every kept commit ("no proof, no PR"), and its spending limit comes from the cfo.ai model. Each tool answers one question about the agent. neatlogs: **what did it do, step by step?** Entire: **why did it write this code?** cfo.ai: **is supervising agents a business?** We used each one to build Kedge, to improve it, and to plan around it. This page says how, with the bugs each one helped us find.
 
 ![Where the tools plug in](../diagrams/tools-map.png)
 

@@ -1,6 +1,6 @@
 import json
 
-from kedge.supervisor import decide_next, lessons_for, loop, record_lessons
+from kedge.supervisor import decide_next, loop
 from tests.test_loop import PLAN, TEST_CMD, fixing_worker, fixture
 
 
@@ -28,15 +28,6 @@ def test_decide_next():
     assert decide_next([{"drift": "over_budget", "rolled_back": False}], 3) == "give_up"
 
 
-def test_lessons_roundtrip(tmp_path):
-    p = str(tmp_path / "lessons.jsonl")
-    record_lessons(p, "o/r", [{"rolled_back": True}], ["Do not delete tests."], "green")
-    record_lessons(p, "o/r", [], ["ignored, no rollback"], "green")
-    record_lessons(p, "o/r", [{"rolled_back": True}], ["failed run note"], "gave_up")
-    assert lessons_for(p, "o/r") == ["Do not delete tests."]
-    assert lessons_for(p, "other/repo") == ["Do not delete tests."]  # lessons are global, repo is metadata
-
-
 def test_replan_after_two_rollbacks(tmp_path):
     calls = {"n": 0}
 
@@ -52,3 +43,19 @@ def test_replan_after_two_rollbacks(tmp_path):
     r = loop(fixture(tmp_path), TEST_CMD, PLAN, "fix", worker=drifting_then_fixing, replanner=replanner)
     assert [s["action"] for s in r["steps"]] == ["worker", "worker", "replan", "worker"]
     assert r["status"] == "green" and r["rollbacks"] == 2
+
+
+def test_escalation_switches_model_and_resets_cost_history(tmp_path, monkeypatch):
+    monkeypatch.setenv("KEDGE_MODEL", "litellm/claude-haiku")
+    monkeypatch.setenv("KEDGE_ESCALATE_MODEL", "litellm/claude-sonnet-4.6")
+    seen = []
+
+    def stray(prompt, cwd):
+        import os
+        seen.append(os.environ["KEDGE_MODEL"])
+        open(os.path.join(cwd, "STRAY.md"), "w").write(str(len(seen)))  # out of plan every time
+        return {"cost_usd": 0.01, "text": "", "error": None}
+    r = loop(fixture(tmp_path), TEST_CMD, PLAN, "fix", worker=stray, replanner=lambda p, n, c: {**p, "cost_usd": 0.0},
+             max_steps=3, budget=5.0)
+    assert seen[:2] == ["litellm/claude-haiku"] * 2 and seen[2] == "litellm/claude-sonnet-4.6"
+    assert any(s["action"] == "replan" for s in r["steps"])
