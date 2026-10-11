@@ -1,0 +1,46 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4NF90T2C92HC4QB19TFDZEC",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "README.md",
+    "docs/evidence.md",
+    "docs/explanation/tools.md",
+    "docs/how-to/add-a-target.md",
+    "docs/how-to/resume-a-run.md",
+    "docs/how-to/run-a-batch.md",
+    "docs/how-to/use-claude-code.md",
+    "docs/how-to/watch-runs.md",
+    "docs/plans/2026-10-10-kedge.md",
+    "docs/reference/cli.md",
+    "docs/reference/integrations.md",
+    "docs/submission-checklist.md",
+    "docs/tutorial.md",
+    "kedge/worker.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1266,
+    "cache_creation_tokens": 3316219,
+    "cache_read_tokens": 295113881,
+    "output_tokens": 634160,
+    "api_call_count": 628,
+    "subagent_tokens": {
+      "input_tokens": 0,
+      "cache_creation_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 0,
+      "api_call_count": 0
+    }
+  }
+}
