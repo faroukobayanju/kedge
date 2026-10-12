@@ -127,6 +127,7 @@ One trace per run (workflow `dependency-pr-repair`), tagged `run_id`, `pr_url`, 
 | `6ebf8978d29404d608ed8de10b5f0c9f` | `20261010-2322-da07`, kedge-demo#1, guard on, storm delete-test | The repeat after run: 3 steps under the root | finalized |
 | `f5adc83adec9ded30fc208a667059ee8` | `20261011-1331-8f97`, kedge-demo#1, guard on, storm delete-test, **Claude Sonnet 4.6** | Paid-model after run: drift, rollback, green | finalized when read back |
 | `38dfb10faed1196bd8524af372530edf` | `20261011-0035-3b13`, kedge-demo#1, guard on, storm delete-test | Rollback plus 3 failed agent calls, then green | finalized |
+| `5eb5f0c27a793aa751a0eb871c1a61f6` | `20261012-0927-f2fe`, kedge-demo#1, guard on, storm delete-test, Claude Haiku | Trace status **ERROR**: step 1 is an error span (`out_of_plan: tests 0/2 after editing [...]; rolled back`), step 2 green. Draft PR [kedge-demo#15](https://github.com/faroukobayanju/kedge-demo/pull/15) | finalized |
 
 To check a trace yourself (neatlogs CLI 0.2.1, logged in to the project):
 
@@ -137,7 +138,7 @@ neatlogs --host https://app.neatlogs.com --project <project-id> traces spans lis
 
 **Timing note.** neatlogs can take a while to finalize a trace. For several hours after these runs, some showed `"finalizationStatus": "dlq"` with 0 spans. Later they all showed as finalized with their full span tree, the after trace included. If a trace looks empty, query it again later.
 
-**Screenshots:** PENDING. Add dashboard screenshots of traces `7b302eac…` and `dd17b437…` as `docs/evidence/neatlogs-*.png`.
+**How neatlogs found our blind spot (Oct 12).** Until then neatlogs showed 0 errors across 33 traces: Kedge wrote caught drift into span text, so nothing was flagged. Kedge now marks a drifted or lying step as an error span with the reason, plus an LLM span with the model. On the next run (`5eb5f0c2…`) the daily digest flagged the error rate, the `Execution Failed` detection fired, error analysis grouped the failure as `out_of_plan`, and run comparison shows it as the one red run. The demo video's scene 06 is a screen recording of exactly this: [video](https://x.com/faroukobayanju/status/2109643801396379876).
 
 ---
 
@@ -264,7 +265,8 @@ Posts on X tagged #neatHack during the hackathon:
 | 2 | Build update | [x.com/…/2108884315685683695](https://x.com/faroukobayanju/status/2108884315685683695) |
 | 3 | Build update | [x.com/…/2109020537162961033](https://x.com/faroukobayanju/status/2109020537162961033) |
 | 4 | Kedge works end to end: before/after and batch numbers | [x.com/…/2109232395526574364](https://x.com/faroukobayanju/status/2109232395526574364) |
-| 5 | Submission (quote of the official neatlogs post) | PENDING: add link |
+| 5 | Demo video (104 s) | [x.com/…/2109643801396379876](https://x.com/faroukobayanju/status/2109643801396379876) |
+| 6 | Submission (quote of the official neatlogs post) | PENDING: add link |
 
 Posts on LinkedIn tagged #neatHack (Haikeys):
 

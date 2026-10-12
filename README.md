@@ -16,7 +16,7 @@ Built for [neatHack](https://neatlogs.com/hackathon), Oct 10 to 12, 2026, with n
 
 | What | Where |
 |---|---|
-| Demo video (80 s) | PENDING: link once posted |
+| Demo video (104 s) | [x.com/faroukobayanju/status/2109643801396379876](https://x.com/faroukobayanju/status/2109643801396379876) |
 | Every claim with evidence you can check | [docs/evidence.md](docs/evidence.md) |
 | Before/after numbers | [docs/evidence.md#the-agent-improved](docs/evidence.md#the-agent-improved) |
 | neatlogs traces | [docs/evidence.md#neatlogs](docs/evidence.md#neatlogs) |
