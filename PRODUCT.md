@@ -53,7 +53,7 @@ Kedge doesn't trust what the agent says; it checks. Drift detection is determini
 - A real green run on `cerberauth/cimd#7` through the fork `Haikeysgit/cimd`.
 - Batch over 10 targets in progress (`runs/batch-2.jsonl`).
 - neatlogs traces confirmed by CLI readback (e.g. run `20261010-2106-37b8` → trace `3009e94623c086449d3422d0d6473efe`).
-- `diagrams/kedge-loop.png` and `diagrams/first-pr-card.png`.
+- Diagrams: `docs/diagrams/` (supervisor loop, before/after, tools map).
 - Do not fabricate: drift-caught numbers from real PRs (no real `--storm` run has happened yet), customers, testimonials or pricing beyond the cfo.ai plan.
 
 ## Product Principles

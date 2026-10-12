@@ -7,3 +7,9 @@ __pycache__/
 
 # local copy of the evidence zip (unscrubbed); the public one is docs/evidence/
 /evidence/
+
+# local tooling, not part of the submission
+/.impeccable/
+/diagrams/
+/.claude/launch.json
+/.claude/skills/
