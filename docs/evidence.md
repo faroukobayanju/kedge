@@ -275,6 +275,7 @@ Posts on LinkedIn tagged #neatHack (Haikeys):
 | 2 | The problem + the Kedge loop diagram | [lnkd.in/p/eCQ9eYWi](https://lnkd.in/p/eCQ9eYWi) |
 | 3 | The "before" run: green PR missing 3 of 5 tests | [lnkd.in/p/eUvd3E_w](https://lnkd.in/p/eUvd3E_w) |
 | 4 | Final result: Kedge works end to end, with the demo video | [linkedin.com/posts/…7514999563615899648](https://www.linkedin.com/posts/imisioluwa-obaseki-537298318_neathack-activity-7514999563615899648-yjCD) |
+| 5 | We submitted Kedge (links the submission post) | [lnkd.in/p/ec7_TamC](https://lnkd.in/p/ec7_TamC) |
 
 Bug report filed upstream while building: [entireio/cli#2725](https://github.com/entireio/cli/issues/2725) (Entire's commit hook hangs on Windows).
 
