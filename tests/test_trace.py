@@ -40,6 +40,15 @@ def test_memory_reads_past_runs_on_same_repo():
     assert lines[1].startswith("run_id:r3") and "a.py" in lines[1]
 
 
+def test_incident_text():
+    base = {"tests_passed": 2, "tests_total": 5, "files_changed": ["tests/t.py"], "rolled_back": True}
+    assert trace.incident({**base, "drift": None}) is None
+    assert trace.incident({**base, "drift": "tests_regressed"}) == \
+        "tests_regressed: tests 2/5 after editing ['tests/t.py']; rolled back"
+    lie = trace.incident({**base, "drift": None, "false_claim": True, "claim": "all tests pass"})
+    assert lie == 'false_claim: agent said "all tests pass" but tests 2/5'
+
+
 def test_verdict_body():
     steps = [{"step": 1, "drift": "out_of_plan", "files_changed": ["t.py"], "tests_passed": 2, "tests_total": 2,
               "rolled_back": True, "false_claim": False},

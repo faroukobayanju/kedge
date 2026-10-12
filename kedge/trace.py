@@ -49,16 +49,40 @@ def step_summary(rec) -> dict:
             "false_claim": rec.get("false_claim", False), "cost_usd": rec.get("cost_usd", 0.0)}
 
 
+def incident(rec) -> str | None:
+    """What went wrong in this step, in words neatlogs can group into an incident, or None."""
+    tests = f"tests {rec.get('tests_passed', -1)}/{rec.get('tests_total', -1)}"
+    if rec.get("false_claim"):
+        return f"false_claim: agent said \"{rec.get('claim', '')}\" but {tests}"
+    if rec.get("drift"):
+        files = rec.get("files_changed") or []
+        return (f"{rec['drift']}: {tests} after editing {files}"
+                + ("; rolled back" if rec.get("rolled_back") else ""))
+    return None
+
+
 def record(rec, prompt="") -> None:
     if not _on:
         return
     import neatlogs
+    from opentelemetry.trace import StatusCode
     kind = "AGENT" if rec["action"] == "replan" else "TOOL"
     with neatlogs.trace(f"step {rec['step']} {rec['action']}", kind=kind) as s:
         for k, v in rec.items():
             s.set_attribute(f"kedge.{k}", json.dumps(v) if isinstance(v, (list, dict)) or v is None else v)
         s.set_attribute("input.value", prompt[-2000:] or f"step {rec['step']}")
         s.set_attribute("output.value", json.dumps(step_summary(rec)))
+        if rec.get("tokens") or rec.get("cost_usd"):  # the agent's model spend for this step, as an LLM span
+            with neatlogs.trace("agent model calls", kind="LLM") as llm:
+                llm.set_attribute("neatlogs.llm.model_name", os.environ.get("KEDGE_MODEL", "unknown"))
+                llm.set_attribute("neatlogs.llm.cost_usd", float(rec.get("cost_usd", 0.0)))
+                llm.set_attribute("neatlogs.llm.token_count.total", int(rec.get("tokens", 0)))
+                llm.set_attribute("output.value", rec.get("claim") or "")
+        why = incident(rec)
+        if why:  # an error span is what neatlogs raises incidents from
+            s.set_status(StatusCode.ERROR, why)
+            s.set_attribute("error.type", rec.get("drift") or "false_claim")
+            s.set_attribute("error.message", why)
 
 
 def summarize_run(span, res) -> None:
