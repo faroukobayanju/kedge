@@ -724,3 +724,7 @@ From Haikeys: PR #12 is up. Business plan with real costs + Stress scenario. Str
 ---
 
 yes merge it and fix the lines
+
+---
+
+incidents page is empty, go ahead
