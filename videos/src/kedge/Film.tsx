@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { AbsoluteFill, Audio, staticFile } from "remotion";
+import { AbsoluteFill, Audio, OffthreadVideo, Sequence, staticFile, useVideoConfig } from "remotion";
 import { useTime } from "../kit/time";
 import { camera, worldTransform, type CameraKey } from "../kit/camera";
 import { step } from "../kit/spring";
@@ -11,7 +11,10 @@ import { Caption, CW, Laptop, LabBar, Lightbox, Lockup, Mark, Print, SCREEN, Str
 // one beat grid for picture and sound: b(bar, beat, fraction) in seconds
 const BEAT = 60 / cues.bpm;
 export const b = (bar: number, beat = 1, frac = 0) => ((bar - 1) * cues.beatsPerBar + (beat - 1) + frac) * BEAT;
-export const DURATION = (cues.bars) * cues.beatsPerBar * BEAT;
+// the neatlogs screen recording replaces the old 8 s neatlogs scene (bars 24-28); everything after plays 16 s later
+const CLIP = { at: (24 - 1) * 4 * BEAT, len: 24 };
+const SHIFT = CLIP.len - 4 * cues.beatsPerBar * BEAT;
+export const DURATION = (cues.bars) * cues.beatsPerBar * BEAT + SHIFT;
 // named moments: the same entries time the SFX in scripts/music.py
 export const ev = (k: keyof typeof cues.events) => b(...(cues.events[k] as [number, number, number]));
 const sec = (id: string) => cues.sections.find((s) => s.id === id)!;
@@ -62,7 +65,8 @@ const CAM: CameraKey[] = [
 ];
 
 export function Film(_: { fps: number }) {
-  const t = useTime();
+  const real = useTime();
+  const t = real < CLIP.at ? real : real >= CLIP.at + CLIP.len ? real - SHIFT : CLIP.at;
   const view = camera(t, CAM);
   return (
     <AbsoluteFill style={{ background: C.glass, fontFamily: F.set }}>
@@ -78,6 +82,7 @@ export function Film(_: { fps: number }) {
       <Captions t={t} />
       <EndCard t={t} />
       <Cover t={t} />
+      <NeatlogsClip t={real - CLIP.at} />
       {/* score + UI sounds, synthesized from cues.json by scripts/music.py */}
       <Audio src={staticFile("audio/kedge.wav")} />
     </AbsoluteFill>
@@ -404,3 +409,40 @@ function Captions({ t }: { t: number }) {
 }
 
 export { Mark };
+
+/* ---------------- 06 neatlogs: the real dashboard, recorded on Oct 12 ---------------- */
+// [start s in clip, label, zoom, origin x %, origin y %]
+const SHOTS: [number, string, number, number, number][] = [
+  [0, "Daily digest: the error rate went up", 1.6, 92, 22],
+  [3, "Traces: one run failed", 1.5, 22, 18],
+  [5, "Step 1: the agent deleted a test file. Rolled back.", 1.6, 40, 72],
+  [11, "Step 2: 5/5 tests, green", 1.5, 30, 62],
+  [14, "Detection: Execution Failed", 1.5, 18, 22],
+  [17, "Error analysis: grouped by cause", 1.6, 18, 70],
+  [21, "Run comparison: the one red run", 1.5, 96, 88],
+];
+function NeatlogsClip({ t }: { t: number }) {
+  const { fps } = useVideoConfig();
+  if (t < -0.4 || t > CLIP.len + 0.4) return null;
+  const fade = ease((t + 0.4) / 0.4) * (1 - ease((t - CLIP.len) / 0.4));
+  let i = SHOTS.length - 1;
+  while (i > 0 && t < SHOTS[i][0]) i--;
+  const [t0, label, z, ox, oy] = SHOTS[i];
+  const zoom = 1 + (z - 1) * ease((t - t0 - 0.3) / 0.8);
+  return (
+    <AbsoluteFill style={{ opacity: fade, background: C.glass }}>
+      <div style={{ position: "absolute", left: 60, top: 22, display: "flex", alignItems: "baseline", gap: 18 }}>
+        <span style={{ font: `900 40px/1 ${F.set}`, color: C.ink }}>06</span>
+        <span style={{ font: `400 26px/1 ${F.hand}`, color: C.markerInk }}>neatlogs</span>
+        <span style={{ font: `700 30px/1 ${F.set}`, color: C.ink, marginLeft: 12 }}>{label}</span>
+      </div>
+      <div style={{ position: "absolute", left: 60, top: 76, width: 1800, height: 988, overflow: "hidden", borderRadius: 10, boxShadow: "0 20px 50px -20px rgba(17,18,20,.35), 0 0 0 1px #dfe4ea" }}>
+        <div style={{ width: 1800, height: 988, transformOrigin: `${ox}% ${oy}%`, transform: `scale(${zoom})` }}>
+          <Sequence from={Math.round(CLIP.at * fps)} durationInFrames={Math.round(CLIP.len * fps)} layout="none">
+            <OffthreadVideo src={staticFile("clips/neatlogs.mp4")} muted style={{ width: 1800, height: 988 }} />
+          </Sequence>
+        </div>
+      </div>
+    </AbsoluteFill>
+  );
+}

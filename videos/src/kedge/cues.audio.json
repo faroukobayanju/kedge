@@ -1,0 +1,294 @@
+{
+ "bpm": 120,
+ "beatsPerBar": 4,
+ "bars": 52,
+ "sections": [
+  {
+   "id": "cover",
+   "from": 1,
+   "to": 3,
+   "label": "Cover"
+  },
+  {
+   "id": "start",
+   "from": 3,
+   "to": 7,
+   "label": "01 Start"
+  },
+  {
+   "id": "catch",
+   "from": 7,
+   "to": 11,
+   "label": "02 Catch"
+  },
+  {
+   "id": "rewind",
+   "from": 11,
+   "to": 15,
+   "label": "03 Rewind"
+  },
+  {
+   "id": "race",
+   "from": 15,
+   "to": 20,
+   "label": "04 Race (drop)"
+  },
+  {
+   "id": "proof",
+   "from": 20,
+   "to": 24,
+   "label": "05 No proof, no PR"
+  },
+  {
+   "id": "neatlogs",
+   "from": 24,
+   "to": 36,
+   "label": "06 neatlogs dashboard (screen recording)"
+  },
+  {
+   "id": "entire",
+   "from": 36,
+   "to": 40,
+   "label": "06 Entire"
+  },
+  {
+   "id": "cfo",
+   "from": 40,
+   "to": 44,
+   "label": "07 cfo.ai"
+  },
+  {
+   "id": "batch",
+   "from": 44,
+   "to": 48,
+   "label": "08 Real PRs"
+  },
+  {
+   "id": "end",
+   "from": 48,
+   "to": 53,
+   "label": "End"
+  }
+ ],
+ "sfx": [
+  {
+   "sound": "typing",
+   "from": "type1",
+   "to": "type1End",
+   "chars": 81,
+   "gain": 0.26
+  },
+  {
+   "sound": "typing",
+   "from": "type3",
+   "to": "type3End",
+   "chars": 53,
+   "gain": 0.26
+  },
+  {
+   "sound": "click",
+   "at": "click",
+   "gain": 0.45
+  },
+  {
+   "sound": "strike",
+   "at": "strike",
+   "gain": 0.5
+  },
+  {
+   "sound": "rewind",
+   "at": "rewind",
+   "gain": 0.45
+  },
+  {
+   "sound": "ring",
+   "at": "ring",
+   "gain": 0.3
+  },
+  {
+   "sound": "ring",
+   "at": "keep",
+   "gain": 0.3
+  },
+  {
+   "sound": "print",
+   "at": "print",
+   "gain": 0.45
+  },
+  {
+   "sound": "strike",
+   "at": "raceX",
+   "gain": 0.4
+  },
+  {
+   "sound": "strike",
+   "at": "raceStrike",
+   "gain": 0.4
+  },
+  {
+   "sound": "print",
+   "at": "racePrint1",
+   "gain": 0.4
+  },
+  {
+   "sound": "print",
+   "at": "racePrint2",
+   "gain": 0.45
+  },
+  {
+   "sound": "whoosh",
+   "at": "pan1",
+   "gain": 0.35
+  },
+  {
+   "sound": "ping",
+   "at": "margin",
+   "gain": 0.35
+  },
+  {
+   "sound": "whoosh",
+   "at": "pan2",
+   "gain": 0.35
+  },
+  {
+   "sound": "pings",
+   "at": "batchRings",
+   "count": 4,
+   "stepBeats": 0.5,
+   "gain": 0.3
+  },
+  {
+   "sound": "print",
+   "at": "batchPrint",
+   "gain": 0.45
+  },
+  {
+   "sound": "whoosh",
+   "at": "pullback",
+   "gain": 0.3
+  },
+  {
+   "sound": "chime",
+   "at": "logo",
+   "gain": 0.4
+  },
+  {
+   "sound": "print",
+   "at": "proofStamp",
+   "gain": 0.45
+  }
+ ],
+ "events": {
+  "type1": [
+   3,
+   2,
+   0
+  ],
+  "type1End": [
+   4,
+   4,
+   0
+  ],
+  "click": [
+   7,
+   1,
+   0.5
+  ],
+  "strike": [
+   8,
+   3,
+   0
+  ],
+  "rewind": [
+   11,
+   1,
+   0
+  ],
+  "ring": [
+   11,
+   3,
+   0
+  ],
+  "keep": [
+   13,
+   2,
+   0
+  ],
+  "print": [
+   14,
+   1,
+   0
+  ],
+  "raceX": [
+   16,
+   3,
+   0
+  ],
+  "raceStrike": [
+   17,
+   1,
+   0
+  ],
+  "racePrint1": [
+   17,
+   3,
+   0
+  ],
+  "racePrint2": [
+   17,
+   4,
+   0
+  ],
+  "type3": [
+   36,
+   1,
+   0.5
+  ],
+  "type3End": [
+   36,
+   4,
+   0.5
+  ],
+  "pan1": [
+   39,
+   4,
+   0
+  ],
+  "margin": [
+   41,
+   3,
+   0
+  ],
+  "pan2": [
+   43,
+   4,
+   0
+  ],
+  "batchRings": [
+   46,
+   1,
+   0
+  ],
+  "batchPrint": [
+   47,
+   1,
+   0
+  ],
+  "pullback": [
+   48,
+   3,
+   0
+  ],
+  "logo": [
+   50,
+   2,
+   0
+  ],
+  "proofStamp": [
+   22,
+   3,
+   0
+  ]
+ },
+ "_note": "Audio timeline. Generated from cues.json with the 24 s neatlogs recording at bars 24-36; Film.tsx maps picture time the same way."
+}

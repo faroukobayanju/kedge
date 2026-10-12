@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
-CUES = json.loads((ROOT / "src/kedge/cues.json").read_text())
+CUES = json.loads((ROOT / "src/kedge/cues.audio.json").read_text())
 SR = 48000
 BPM, BPB, BARS = CUES["bpm"], CUES["beatsPerBar"], CUES["bars"]
 BEAT = 60 / BPM
@@ -130,7 +130,7 @@ PARTS = {
     "batch": {"pad", "arp", "kick", "hat", "bass", "clap", "lead", "open"},
     "end": {"pad", "arp", "kick", "hat", "bass", "clap"},
 }
-END_DRUMS_OUT = 42  # drums and bass leave as the logo draws; pad rings out
+END_DRUMS_OUT = 50  # drums and bass leave as the logo draws; pad rings out
 
 
 def parts(bar):

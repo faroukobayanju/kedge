@@ -13,7 +13,7 @@ from pathlib import Path
 import imageio_ffmpeg
 
 ROOT = Path(__file__).resolve().parent.parent
-CUES = json.loads((ROOT / "src/kedge/cues.json").read_text())
+CUES = json.loads((ROOT / "src/kedge/cues.audio.json").read_text())
 VO = json.loads((ROOT / "src/kedge/voice.json").read_text())
 BEAT = 60 / CUES["bpm"]
 END = CUES["bars"] * CUES["beatsPerBar"] * BEAT

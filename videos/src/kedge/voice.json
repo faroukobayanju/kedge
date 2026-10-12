@@ -2,16 +2,131 @@
  "voice": "Ava (Premium)",
  "rate": 182,
  "lines": [
-  {"id": "cover",    "at": [1, 1, 0.6], "text": "Your coding agent says it's done. Is it?"},
-  {"id": "start",    "at": [3, 1, 0.4], "text": "Kedge supervises coding agents on failing dependency PRs. This one broke every test."},
-  {"id": "catch",    "at": [7, 1, 0.4], "text": "We plant a cheat: a test file disappears. Kedge checks the test count, not the agent's word."},
-  {"id": "rewind",   "at": [11, 1, 0.4], "text": "It rolls back to the last good commit, tells the agent why, and the next step fixes it. Five of five."},
-  {"id": "race",     "at": [15, 1, 0.4], "text": "Same PR with no supervisor. The agent says fixed, and ships two tests out of five."},
-  {"id": "proof",    "at": [20, 1, 0.4], "text": "Kedge never opens a PR without proof: a neatlogs trace, an Entire checkpoint, and the cost."},
-  {"id": "neatlogs", "at": [24, 1, 0.4], "text": "neatlogs is its memory. Every verdict goes on the trace, and past runs shape the next plan."},
-  {"id": "entire",   "at": [28, 1, 0.4], "text": "Entire checkpoints every agent commit, and past fixes for the same failure guide the next one."},
-  {"id": "cfo",      "at": [32, 1, 0.4], "text": "cfo.ai sets the budget. Ten dollars a green PR leaves forty-five cents for the model. This fix cost twelve."},
-  {"id": "batch",    "at": [36, 1, 0.4], "text": "On real open-source PRs, it went green with nobody watching, and never shipped short."},
-  {"id": "end",      "at": [40, 3, 0.0], "text": "Kedge. It pulls your coding agent back on course."}
+  {
+   "id": "cover",
+   "at": [
+    1,
+    1,
+    0.6
+   ],
+   "text": "Your coding agent says it's done. Is it?"
+  },
+  {
+   "id": "start",
+   "at": [
+    3,
+    1,
+    0.4
+   ],
+   "text": "Kedge supervises coding agents on failing dependency PRs. This one broke every test."
+  },
+  {
+   "id": "catch",
+   "at": [
+    7,
+    1,
+    0.4
+   ],
+   "text": "We plant a cheat: a test file disappears. Kedge checks the test count, not the agent's word."
+  },
+  {
+   "id": "rewind",
+   "at": [
+    11,
+    1,
+    0.4
+   ],
+   "text": "It rolls back to the last good commit, tells the agent why, and the next step fixes it. Five of five."
+  },
+  {
+   "id": "race",
+   "at": [
+    15,
+    1,
+    0.4
+   ],
+   "text": "Same PR with no supervisor. The agent says fixed, and ships two tests out of five."
+  },
+  {
+   "id": "proof",
+   "at": [
+    20,
+    1,
+    0.4
+   ],
+   "text": "Kedge never opens a PR without proof: a neatlogs trace, an Entire checkpoint, and the cost."
+  },
+  {
+   "id": "neat1",
+   "at": [
+    24,
+    1,
+    0.4
+   ],
+   "text": "neatlogs caught it first: the digest flagged our error rate."
+  },
+  {
+   "id": "neat2",
+   "at": [
+    26,
+    3,
+    0
+   ],
+   "text": "The trace points to one step: the agent deleted a test file, and Kedge rolled it back."
+  },
+  {
+   "id": "neat3",
+   "at": [
+    30,
+    1,
+    0.2
+   ],
+   "text": "Step two fixed the real bug."
+  },
+  {
+   "id": "neat4",
+   "at": [
+    31,
+    2,
+    0
+   ],
+   "text": "Detections and error analysis group failures by cause, across every run, so we know what to fix next."
+  },
+  {
+   "id": "entire",
+   "at": [
+    36,
+    1,
+    0.4
+   ],
+   "text": "Entire checkpoints every agent commit, and past fixes for the same failure guide the next one."
+  },
+  {
+   "id": "cfo",
+   "at": [
+    40,
+    1,
+    0.4
+   ],
+   "text": "cfo.ai sets the budget. Ten dollars a green PR leaves forty-five cents for the model. This fix cost twelve."
+  },
+  {
+   "id": "batch",
+   "at": [
+    44,
+    1,
+    0.4
+   ],
+   "text": "On real open-source PRs, it went green with nobody watching, and never shipped short."
+  },
+  {
+   "id": "end",
+   "at": [
+    48,
+    3,
+    0.0
+   ],
+   "text": "Kedge. It pulls your coding agent back on course."
+  }
  ]
 }
