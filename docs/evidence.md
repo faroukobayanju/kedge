@@ -265,8 +265,7 @@ Posts on X tagged #neatHack during the hackathon:
 | 2 | Build update | [x.com/…/2108884315685683695](https://x.com/faroukobayanju/status/2108884315685683695) |
 | 3 | Build update | [x.com/…/2109020537162961033](https://x.com/faroukobayanju/status/2109020537162961033) |
 | 4 | Kedge works end to end: before/after and batch numbers | [x.com/…/2109232395526574364](https://x.com/faroukobayanju/status/2109232395526574364) |
-| 5 | Demo video (104 s) | [x.com/…/2109643801396379876](https://x.com/faroukobayanju/status/2109643801396379876) |
-| 6 | Submission (quote of the official neatlogs post) | PENDING: add link |
+| 5 | Submission: quote of the official neatlogs post, with the demo video (104 s) | [x.com/…/2109643801396379876](https://x.com/faroukobayanju/status/2109643801396379876) |
 
 Posts on LinkedIn tagged #neatHack (Haikeys):
 

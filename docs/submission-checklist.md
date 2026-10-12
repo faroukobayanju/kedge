@@ -14,6 +14,6 @@ Submit on X by quoting the official neatlogs post with the team, name, project, 
 | How well the tools were used | [How we used neatlogs, Entire and cfo.ai](explanation/tools.md) | DONE |
 | The agent recovers from failures | Failed agent calls retried to green on a real PR; drift rolled back and recovered ([evidence](evidence.md#the-agent-recovers-from-failures)) | DONE |
 | Demo video | 104 s, 1080p60, rendered from `videos/`: [posted on X](https://x.com/faroukobayanju/status/2109643801396379876) | DONE |
-| Built in public (#neatHack) | X post links in [evidence](evidence.md#built-in-public) | PENDING: add links |
+| Built in public (#neatHack) | 5 X posts (the last is the submission quote-post) and 4 LinkedIn posts in [evidence](evidence.md#built-in-public) | DONE |
 | Code written during the event | Public repo, 58 commits dated Oct 10 to 11, 2026, the first at 16:37 IST ([evidence](evidence.md#code-written-during-the-hackathon)) | DONE |
 | Usefulness and originality | Kedge checks what the agent did, not what it says it did ([how it works](explanation/how-kedge-works.md)) | DONE |
